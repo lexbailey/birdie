@@ -2,4 +2,5 @@
 *.tab.h
 *.yy.c
 birdie
-
+*~
+*.output
