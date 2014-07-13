@@ -12,6 +12,7 @@
 
 #include "birdie_types.h"
 #include "birdie_funcs.h"
+#include "birdie_control.h"
 
 debugbison(const char* s, ...){
 	#ifdef DEBUGBISON
@@ -27,7 +28,7 @@ void runCommand(char * in){
 }
 
 void init(){
-
+	variables = NULL;
 }
 
 %}
@@ -52,42 +53,47 @@ void init(){
 %token <twoOp>  ADD SUB MUL DIV MOD 
 %token <oneOp> INV ASSCALAR ASSTRING ASLIST
 
-%token <noval> SEMIC DELIM
+%token <noval> SEMIC DELIM OPDELIM
 %token <noval> ERR
 
 
 %type <anyval> anyNumber rawNumber command
 %type <sval> start valueList 
-%type <anyval> value procVal namedIdent namedFunc
+%type <anyval> value procVal anyVal namedIdent namedFunc
 %type <twoOp> valop2
 %type <oneOp> valop1
 
+%right OPDELIM
+%right DELIM
+%left INV ASSCALAR ASSTRING ASLIST
+
 %%
 
-start:	  command		{/*runCommand((char*)(intptr_t)$$);*/}
-	| start command		{/*runCommand((char*)(intptr_t)$2);*/}
+start:	  command SEMIC		{}
+	| start command SEMIC		{}
 	;
 
-command:  namedFunc SEMIC		{debugbison("bison: Function call: %s\n", $1.valName);}
-	| namedFunc valueList SEMIC	{debugbison("bison: Function call with params: %s\n", $1.valName);}
-	| IDENT ASSIGN procVal SEMIC	{debugbison("bison: Assigning to variable: %s\n", $1.valName); mergeAssign(&$1, &$3); $$ = $1; readVar(&$$); printVal($$);}
+command:  namedFunc		{debugbison("bison: Function call: %s\n", $1.valName);}
+	| namedFunc valueList	{debugbison("bison: Function call with params: %s\n", $1.valName);}
+	| IDENT ASSIGN anyVal	{debugbison("bison: Assigning to variable: %s\n", $1.valID); mergeAssign(&$1, &$3); readVar(&$1); $$ = $1;  printVal($$);}
 	;
-
-valueList:	  procVal			{debugbison("bison: value in list.\n");}
-		| valueList DELIM procVal	{debugbison("bison: multiple values in list.\n");}
+	
+valueList:	  anyVal			{debugbison("bison: value in list.\n");}
+		| valueList DELIM anyVal	{debugbison("bison: multiple values in list.\n");}
 		;
 
 value:	command			{debugbison("bison: command return as value.\n");}
-	//| procVal		{debugbison("bison: Processed value.\n");}
 	| namedIdent		{debugbison("bison: identifier as value. Name: %s\n", $1.valName);}
 	| anyNumber		{debugbison("bison: number as value.\n");}
 	| TEXT			{debugbison("bison: text as value. Text is %s\n", $1.valS);}
-	
 	;
 
-procVal: value
-	| value valop1		{debugbison("bison: Value oneOp.\n");}
-	| value valop2 value	{debugbison("bison: Value twoOp.\n"); $$ = reduceExpression2($1, $3, $2); printVal($$);}
+anyVal: value
+	| procVal
+	;
+
+procVal: value valop1		{debugbison("bison: Value oneOp.\n");}
+	| value OPDELIM value valop2	{debugbison("bison: Value twoOp.\n"); $$ = reduceExpression2($1, $3, $4); printVal($$);}
 	;
 
 valop2: ADD
@@ -103,7 +109,7 @@ valop1: INV
 	| ASLIST
 	;
 
-namedIdent: IDENT		{debugbison("bison: Identifier. Name: %s\n", $1.valName);}
+namedIdent: IDENT		{debugbison("bison: Identifier. Name: %s\n", $1.valID); readVar(&$1); $$ = $1;}
 	;
 
 namedFunc: FUNC			{debugbison("bison: Function. Name: %s\n", $1.valName);}

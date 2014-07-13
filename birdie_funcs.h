@@ -14,4 +14,6 @@ struct val_struct_t reduceExpression1(struct val_struct_t a, val_operation_1 op)
 
 void printVal(struct val_struct_t a);
 
+void fullReport();
+
 #endif //BIRDIE_FUNCS_INCLUDE

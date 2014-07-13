@@ -24,10 +24,12 @@ struct val_struct_t{
 
 struct val_list_item{
 	struct val_list_item *nextItem;
-	struct val_struct_t item;
+	struct val_struct_t *item;
 } ;
 
 void freeVal(struct val_struct_t*);
+
+struct val_struct_t* copyVal(struct val_struct_t*);
 
 void appendList(struct val_struct_t*, struct val_struct_t*);
 

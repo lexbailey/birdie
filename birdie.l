@@ -86,6 +86,7 @@
 "@"					{debug("\tflex: found ASLIST\n"); yylval.oneOp = voAsList; return ASLIST;}
 
 [,]					{debug("\tflex: found DELIM\n"); return DELIM;}
+[']					{debug("\tflex: found OPDELIM\n"); return OPDELIM;}
 ";"					{debug("\tflex: found SEMIC\n"); return SEMIC;}
 [ \t]					{debug("\tflex: eating white space\n");/*eat white space*/}
 [\n]					{debug("\tflex: eating new line\n");line++;/*eat new lines, increment line count*/}

@@ -3,6 +3,7 @@
 
 ///Utility function for making a copy of string and returning a pointer to it
 char *newString(char *source){
+	if (source == NULL) return NULL;
 	char *result = (char *)malloc(sizeof(char) * strlen(source)); 
 	strcpy(result, source);
 	return result;
@@ -47,10 +48,29 @@ struct val_struct_t reduceExpression1(struct val_struct_t a, val_operation_1 op)
 }
 
 void printVal(struct val_struct_t a){
-	printf("Value '%s' (Identifier '%s') is ", a.valName, a.valID);
+	printf("Value of '%s' (Identifier '%s') is ", a.valName, a.valID);
 	switch(a.valueType){
 		case vtInt:
-			printf("integer: %d\n", a.valI);
+			printf("integer: %lli", a.valI);
 		break;
+        default:
+            printf("Unknown! (Mass panic errupts now.)");
+        break;
 	}
+	printf("\n");
+}
+
+void fullReport(struct val_list_item *varList){
+    printf("Debug var list report...\n");
+    
+    //walk the list, look for the assignee
+	struct val_list_item *currentItem;
+	currentItem = varList;
+	while (currentItem != NULL){
+		printVal(*(currentItem->item));
+		//Advance to next item
+		currentItem = currentItem->nextItem;
+	}
+    
+    printf("Debug var list report end\n");
 }
