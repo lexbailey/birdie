@@ -33,4 +33,10 @@ struct val_struct_t* copyVal(struct val_struct_t*);
 
 void appendList(struct val_struct_t*, struct val_struct_t*);
 
+void initValStruct(struct val_struct_t* val);
+
+struct val_struct_t* createValStruct();
+
+void debugVal(struct val_struct_t *val);
+
 #endif //BIRDIE_TYPE_INCLUDE

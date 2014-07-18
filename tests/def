@@ -1,0 +1,172 @@
+Birdie. The scripting language for golfing.
+It's all a little bit backwards. Enjoy.
+
+Comments start with a tilda (~)
+
+~blah blah comment blah
+
+Numerical literals are backwards!
+
+7-
+is seven below zero
+
+This allows expressions to be prefix.
+
++2 4
+translates to "add four to two" (=6)
+
+and thus...
+
++2 4-
+translates to "add minus four to two" (=-2)
+
+variable names are all lower case.
+functions are upper case.
+
+functions are postfix and require that a single quote ' be put at the start of their list of inputs.
+lists of inputs are simply seperated by white space of any kind.
+
+'2 3 FOO
+
+The above calls FOO with the inputs 2 and 3
+
+Because function names cannot contain digits, the following is equivalent:
+
+'2 3FOO
+
+This is slightly shorter than a more common syntax such as c's syntax:
+
+FOO(2,3);
+
+as variable names are only lower case, a function call with an integer literal followed by a variable identifier can be really short
+
+'2barFOO
+This calls the FOO function with the arguments '2' and 'bar';
+
+again, this presents a saving over c syntax like this:
+
+FOO(2,bar);
+
+String literals are also a little odd. They start with a double quote and end with a single quote. like so...
+
+"hi'
+
+This allows double quotes to be used with no issue:
+
+"hi "Joe"'
+=> hi "Joe"
+
+single quotes within strings are possible with two single quotes in a row:
+
+"It isn''t a problem'
+=> It isn't a problem
+
+This lets you use two in a row in an argument list for a function without a space to seperate them.
+
+'"foo'"bar'QUUX
+Call the QUUX function on 'foo' and 'bar'
+
+Again, saves some chars over C syntax;
+
+QUUX("foo","bar");
+
+Variables
+To set a variable, use the equals operator;
+
+a="foo'
+b=1
+c=23.4-
+
+if you count the definitions too then this is much much cheaper then C syntax.
+it is little or no advantage over languages like perl an python. Birdie syntax beats them in other places however.
+To print a and b in perl is like this:
+print$a,$b;
+
+While in birdie it is like this:
+'a bP
+
+Most of the advantage is in the shorter name of the print function, even if perl's was shorter, birdie still wins;
+perl:   p$a,$b;
+birdie: 'a bP
+
+Stack
+Birdie also has a stack. Stack mode is entered whenever a caret (^) is detected. Exiting is done in the same way
+in this mode, each function call only needs to know how many items to lift off the stack to use for it's function.
+Suppose you have three strings on the top of the stack and you want to print them all;
+
+'3P
+
+To push onto the stack (from stack mode or normal mode) you can use the forward slash operator (/)
+
+to push the number 7 on to the stack you do this;
+
+/7
+
+to pop a value you use the back slash (\)
+this program puts 3 and 4 on the stack, enters stack mode, adds them, prints the result and then reverts to normal mode.
+
+/3
+/4
+^
++
+'1P
+^
+
+This can all be done on one line if so desired
+
+/3/4^+'1P^
+
+in this case, normal mode provides a cleaner and shorter syntax:
+
+'+3 4P
+
+This program can also work without entering stack mode by poping the values when needed
+
+/3
+/4
++\\
+'\P
+
+When in stack mode, the results of function calls are allways pushed on to the stack.
+
+When in stack mode you can call a function that takes a fixed number of inputs without specifying the number to take from the stack.
+Suppose you have a function so calculate a square root "SQRT". To calculate the square root of four you can do this:
+
+^
+/4
+'SQRT
+
+Functions that can take multiple inputs will only take one item off the stack if they are called in this way in stack mode
+
+^
+/"hi'
+/"there'
+'P          ~prints "there"
+
+
+^
+/"hi'
+/"there'
+'2P          ~prints "hithere"
+
+You can call a function multiple times in stack mode using only one line. To do this the function must take a fixed number of instructions.
+To do this, in stack mode, call a function and ask for a multiple of the fixed number of arguments.
+
+/4
+/25
+^
+'2SQRT
+
+The program above pushes 4 on to the stack and then pushes 25 on to the stack then enters stack mode. After this, the SQRT function is called twice. The SQRT function takes one input and so when asking for it to act on two inputs, it produces two results. All of the outputs are calculated and then pushed back on to the stack. The results are pushed to the stack in reverse order of calculation. This preserves some kind of order on the stack.
+In the example above the stack after the SQRT would look like this:
+
+2
+5
+
+because 2 is the square root of 4 and 5 is the sqare root of 25.
+
+r is defined as the result of the last function call.
+d is defined as the default variable, if a function requires a parameter then it will be passed d if nothing else is passed
+d is also set by some instructions.
+
+_list{}

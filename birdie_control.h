@@ -2,8 +2,12 @@
 #define BIRDIE_CONTROL_INCLUDE
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "birdie_types.h"
 #include "birdie_funcs.h"
+
+
 
 struct val_list_item *variables;
 

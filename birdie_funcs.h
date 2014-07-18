@@ -1,10 +1,12 @@
 #ifndef BIRDIE_FUNCS_INCLUDE
 #define BIRDIE_FUNCS_INCLUDE
 
-#include "birdie_types.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "birdie_types.h"
 
 char *newString(char *);
 

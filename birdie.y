@@ -23,6 +23,10 @@ debugbison(const char* s, ...){
 	#endif
 }
 
+//Current state
+	int stackMode = 0; //Stack mode, off by default
+	int autoPush = 1; //Autopush mode, on by defailt
+
 void runCommand(char * in){
 	printf("Run command: %s\n", in);
 }
@@ -45,55 +49,58 @@ void init(){
 
 
 %token <anyval> FUNC IDENT
-%token <anyval> NUMBER 
-%token <anyval> FLOAT
-%token <anyval> TEXT
+%token <anyval> NUMBER FLOAT TEXT
 
 %token <noval> ASSIGN
-%token <twoOp>  ADD SUB MUL DIV MOD 
+%token <twoOp> ADD SUB MUL DIV MOD 
 %token <oneOp> INV ASSCALAR ASSTRING ASLIST
 
-%token <noval> SEMIC DELIM OPDELIM
+%token <noval> SEMIC
+%token <noval> DELIM OPDELIM
+%token <noval> CARET UNDERSCORE
 %token <noval> ERR
 
 
 %type <anyval> anyNumber rawNumber command
-%type <sval> start valueList 
-%type <anyval> value procVal anyVal namedIdent namedFunc
+%type <sval> start  
+%type <anyval> value procVal anyVal namedIdent namedFunc valueList
 %type <twoOp> valop2
 %type <oneOp> valop1
 
-%right OPDELIM
-%right DELIM
-%left INV ASSCALAR ASSTRING ASLIST
 
 %%
 
-start:	  command SEMIC		{}
-	| start command SEMIC		{}
+start:	  command 		{}
+	| start command 	{}
 	;
 
-command:  namedFunc		{debugbison("bison: Function call: %s\n", $1.valName);}
-	| namedFunc valueList	{debugbison("bison: Function call with params: %s\n", $1.valName);}
-	| IDENT ASSIGN anyVal	{debugbison("bison: Assigning to variable: %s\n", $1.valID); mergeAssign(&$1, &$3); readVar(&$1); $$ = $1;  printVal($$);}
+command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valName); initValStruct(&$$); functionCall($2.valName);}
+	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3.valName); initValStruct(&$$); functionCallArgs($3.valName, &$2);}
+	| IDENT ASSIGN anyVal			{debugbison("bison: Assigning to variable: %s\n", $1.valID); initValStruct(&$$); mergeAssign(&$1, &$3); readVar(&$1); $$ = $1;  printVal($$);}
+	| CARET							{debugbison("Stack mode "); stackMode = ! stackMode; debugbison(stackMode?"on\n":"off\n");}
+	| UNDERSCORE					{debugbison("Autopush mode "); autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");}
 	;
 	
-valueList:	  anyVal			{debugbison("bison: value in list.\n");}
-		| valueList DELIM anyVal	{debugbison("bison: multiple values in list.\n");}
+valueList:	  anyVal				{debugbison("bison: value in list.\n");}
+		| valueList anyVal	{debugbison("bison: multiple values in list.\n");}
 		;
 
-value:	command			{debugbison("bison: command return as value.\n");}
-	| namedIdent		{debugbison("bison: identifier as value. Name: %s\n", $1.valName);}
-	| anyNumber		{debugbison("bison: number as value.\n");}
-	| TEXT			{debugbison("bison: text as value. Text is %s\n", $1.valS);}
+anyVal: procVal
 	;
 
-anyVal: value
-	| procVal
+procVal: value				{$$=$1;}
+	//| valop1 value				{debugbison("bison: Value oneOp.\n");}
+	| valop1 procVal			{debugbison("bison: Value oneOp.\n");}
+	//| valop2 value value 		{debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}
+	| valop2 procVal procVal 	{debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}
+	//| valop2 value procVal 		{debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}
+	//| valop2 procVal value 		{debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}		
 	;
 
-procVal: value valop1		{debugbison("bison: Value oneOp.\n");}
-	| value OPDELIM value valop2	{debugbison("bison: Value twoOp.\n"); $$ = reduceExpression2($1, $3, $4); printVal($$);}
+value: command				{debugbison("bison: command return as value.\n");}
+	| namedIdent			{debugbison("bison: identifier as value. Name: %s\n", $1.valName);}
+	| anyNumber				{debugbison("bison: number as value.\n");}
+	| TEXT					{debugbison("bison: text as value. Text is %s\n", $1.valS);}
 	;
 
 valop2: ADD
@@ -115,14 +122,8 @@ namedIdent: IDENT		{debugbison("bison: Identifier. Name: %s\n", $1.valID); readV
 namedFunc: FUNC			{debugbison("bison: Function. Name: %s\n", $1.valName);}
 	;
 
-//The following two rules account for a minor problem in the lexer. 
-//1+1 lexes as NUMBER NUMBER instead of NUMBER ADD NUMBER because +1 is longer than +
-//Two numbers together are therefore summed implicitly.
-//As a result, 1 1 (also lexes as NUMBER NUMBER) results in 2.
-//An implicit sum without an operater (with a space) should probably produce a warning
-
 anyNumber: 	  rawNumber
-		| anyNumber rawNumber	{debugbison("bison: Implicit sum\n"); $$ = reduceExpression2($1, $2, voAdd); printVal($$);}
+		//| anyNumber rawNumber	{debugbison("bison: Implicit sum\n"); $$ = reduceExpression2($1, $2, voAdd); printVal($$);}
 		;
 
 rawNumber: NUMBER

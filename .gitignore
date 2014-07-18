@@ -4,3 +4,7 @@
 birdie
 *~
 *.output
+*.i
+*.s
+*.o
+

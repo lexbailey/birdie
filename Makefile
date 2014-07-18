@@ -10,10 +10,10 @@ lex.yy.c: ${Program}.l ${Program}.tab.h
 	flex $<
 
 %.o: %.c %.h
-	gcc -c $< -o $@
+	gcc -c $< -o $@ -ggdb
 
 ${Program}: ${Program}.tab.c lex.yy.c ${Objects}
-	gcc -o $@ $^ -lfl
+	gcc -o $@ $^ -lfl -ggdb
 
 ${Program}.output: ${Program}.y
 	bison -d --report=state $^
