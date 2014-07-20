@@ -1,0 +1,9 @@
+PROJECT_NAME           = "Birdie hacker's reference manual"
+INPUT                  = .
+OUTPUT_DIRECTORY       = ./doxy
+OUTPUT_LANGUAGE        = English
+ENABLE_PREPROCESSING   = YES 
+MACRO_EXPANSION        = YES 
+EXPAND_ONLY_PREDEF     = YES 
+PREDEFINED             = __attribute__(x)= 
+#IMAGE_PATH             = ./screenshots

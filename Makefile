@@ -1,6 +1,6 @@
 Program = birdie
 
-Objects = birdie_types.o birdie_funcs.o birdie_control.o birdie_builtin.o
+Objects = birdie_types.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
 
 all: ${Program}
 

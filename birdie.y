@@ -5,7 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-//#define DEBUGBISON
+#define DEBUGBISON
 #ifdef DEBUGBISON
 	#include <stdarg.h>
 #endif
@@ -13,6 +13,7 @@
 #include "birdie_types.h"
 #include "birdie_funcs.h"
 #include "birdie_control.h"
+#include "birdie_stackman.h"
 
 debugbison(const char* s, ...){
 	#ifdef DEBUGBISON
@@ -23,6 +24,7 @@ debugbison(const char* s, ...){
 	#endif
 }
 
+//TODO move these to the stack state stack [stack]
 //Current state
 	int stackMode = 0; //Stack mode, off by default
 	int autoPush = 1; //Autopush mode, on by defailt
@@ -33,6 +35,7 @@ void runCommand(char * in){
 
 void init(){
 	variables = NULL;
+	initialiseAlmightyStack(); //F*%K Yeah!
 }
 
 %}
@@ -62,7 +65,8 @@ void init(){
 %token <noval> BLOCKSTART BLOCKEND
 %token <noval> PUSH POP
 %token <noval> PUSHSTACK POPSTACK
-%right <noval> IF ELSE
+%token <noval> PUSH2COND POP2COND
+%token <noval> POPCOND PUSHCOND
 
 %token <twoOp> GREATER LESS GREATEREQ LESSEQ EQ INEQ
 %token <twoOp> BOOLOR BITOR BOOLAND BITAND
@@ -83,13 +87,8 @@ start:	  block 		{}
 	| start block 		{}
 	;
 	
-block:	command						{$$ = $1;}
-	| BLOCKSTART commands BLOCKEND	{$$ = $2;}
-	| conditional block				{$$ = $3;}
-	| conditional block ELSE block	{$$ = $3;/*TODO return only the executed block, not the first block*/}
-	;
-	
-conditional: IF anyval				{/*as soon as we find an if with a condition, act on it, we may need to temporarily stop commands executing. Push to the condition stack*/}
+block:	command						{$$ = $1;debugbison("bison: single command as block\n");}
+	| BLOCKSTART commands BLOCKEND	{$$ = $2;debugbison("bison: multi command block\n");}
 	;
 	
 commands: command
@@ -98,10 +97,18 @@ commands: command
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valName); initValStruct(&$$); $$=functionCall($2.valName);}
 	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3.valName); initValStruct(&$$); $$=functionCallArgs($3.valName, &$2);}
-	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value list to variable: %s\n", $1.valID); 
+	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value to variable: %s\n", $1.valID); 
 										initValStruct(&$$); mergeAssign(&$1, &$3); readVar(&$1); $$ = $1; printVal($$);}
 	| CARET							{debugbison("bison: Stack mode "); stackMode = ! stackMode; debugbison(stackMode?"on\n":"off\n");}
 	| UNDERSCORE					{debugbison("bison: Autopush mode "); autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");}
+	| PUSH valueList SEMIC			{debugbison("bison: Push value to stack\n"); $$ = $2;}
+	| POP							{debugbison("bison: Pop stack, return value\n");/*TODO pop stack, return result*/}
+	| PUSHSTACK						{debugbison("bison: Push the stack stack\n");/*TODO push stack*/}
+	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/}
+	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(&$2); $$ = $2;}
+	| POPCOND						{debugbison("bison: Pop one condition from the condition stack\n"); $$ = *popCondition();}
+	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");$$ = $2;}
+	| POP2COND						{debugbison("bison: Pop two conditions from the condition stack\n");}
 	;
 	
 valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
@@ -122,8 +129,8 @@ value: command				        {debugbison("bison: command return as value.\n"); $$ =
 	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1.valS);}
 	;
 	
-binOp: valop2
-	|	comparisonOp
+binOp: valop2						{debugbison("bison: Binary op\n");}
+	|	comparisonOp				{debugbison("bison: Comparison op\n");}
 	;
 
 valop2: ADD
@@ -158,8 +165,7 @@ namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1.v
 namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1.valName);}
 	;
 
-anyNumber: 	  rawNumber
-		//| anyNumber rawNumber	{debugbison("bison: Implicit sum\n"); $$ = reduceExpression2($1, $2, voAdd); printVal($$);}
+anyNumber:	rawNumber
 		;
 
 rawNumber: NUMBER

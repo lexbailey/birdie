@@ -17,16 +17,44 @@ debugTypes(const char* s, ...){
 
 //#define debugTypes(x,...) (debugTypes("%s:%d - ", __FILE__, __LINE__),debugTypes(x,##__VA_ARGS__))
 
+void freeStackStateItem(struct stack_state_item_t* victim){
+	if (victim != NULL){
+	    if (victim->nextStackState != NULL){freeStackStateItem(victim->nextStackState);}
+	    free(victim);
+	}
+
+}
+
+void freeListItem(struct val_list_item *victim){
+	if (victim != NULL){
+	    if (victim->item != NULL){freeVal(victim->item);}
+	    if (victim->nextItem != NULL){freeListItem(victim->nextItem);}
+	    free(victim);
+	}
+}
 
 void freeVal(struct val_struct_t *victim){
 	if (victim != NULL){
+	
+		if (victim->isList){
+			freeListItem(victim->list);
+		}
+	
 	    if (victim->valName != NULL){free(victim->valName);}
 	    if (victim->valS != NULL){free(victim->valS);}
 	    if (victim->valID != NULL){free(victim->valID);}
+	    free(victim);
 	}
-	//TODO Free lists properly
 }
 
+/*
+void freeStackStateStackItem(struct stack_state_stack_item_t *victim){
+	if (victim != NULL){
+		if (victim->nextStackStateStack != NULL){freeStackStateItem(victim->nextStackStateStack);}
+		free(victim);
+	}
+}
+*/
 struct val_struct_t* copyVal(struct val_struct_t *data){
     if (data == NULL) return NULL;
     struct val_struct_t* newVal;
@@ -56,10 +84,44 @@ struct val_struct_t* createValStruct(){
 	return newVal;
 }
 
+void initValListItem(struct val_list_item* val){
+    val->item = NULL;
+    val->nextItem = NULL;
+}
+
+struct val_list_item* createValListItem(){
+    struct val_list_item* newVal = (struct val_list_item *)malloc(sizeof(struct val_list_item));
+    initValListItem(newVal);
+	return newVal;
+}
+
+void initStackStateItem(struct stack_state_item_t* val){
+	val->nextStackState = NULL;
+	val->stackMode = 0;
+	val->autoPush = 1;
+}
+
+struct stack_state_item_t* createStackStateItem(){
+	struct stack_state_item_t* newVal = (struct stack_state_item_t *)malloc(sizeof(struct stack_state_item_t));
+	initStackStateItem(newVal);
+	return newVal;
+}
+
+/*
+void initStackStateStackItem(struct stack_state_stack_item_t *val){
+	val->nextStackStateStack = NULL;
+}
+
+struct stack_state_stack_item_t* createStackStateStackItem(){
+	struct stack_state_stack_item_t *newVal = (struct stack_state_stack_item_t*)malloc(sizeof(struct stack_state_stack_item_t));
+	initStackStateStackItem(newVal);
+	return newVal;
+}
+*/
 void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	
 	//Get the new value into a list item container
-	struct val_list_item *newListItem = malloc(sizeof(struct val_list_item));
+	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
 
 	if (existing->isList){
@@ -86,7 +148,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	    existing->valS = NULL; //make sure our original value has forgotten about the string data that moved. This allows data to be moved out of the list without risk of a double free or segfault
 	
 		existing->isList = 1; //set the original existing val_struct_t to be a list
-		existing->list = malloc(sizeof(struct val_list_item));	//Allocate first item in this list
+		existing->list = createValListItem();	//Allocate first item in this list
 		existing->list->item = existingValue;	//Set it to be the value of the original val_struct_t
 		existing->list->nextItem = newListItem;	//New item added to list
 		
@@ -96,7 +158,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	
 	//Get the new value into a list item container
-	struct val_list_item *newListItem = malloc(sizeof(struct val_list_item));
+	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
 
 	if (existing->isList){
@@ -118,7 +180,7 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	
 		existing->isList = 1; //set the original existing val_struct_t to be a list
 		existing->list = newListItem;
-		existing->list->nextItem = malloc(sizeof(struct val_list_item));	//Allocate first item in this list 
+		existing->list->nextItem = createValListItem();	//Allocate first item in this list 
 		existing->list->nextItem->item = existingValue;//existing item added to end of list
 	}
 }
@@ -128,7 +190,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo){
 	
 		//Concat
 		struct val_list_item *listTwoItem;
-		listTwoItem = malloc(sizeof(struct val_list_item));
+		listTwoItem = createValListItem();
 		listTwoItem->item = copyVal(&listTwo);
 		listTwoItem->nextItem = listTwo.list;
 		listTwo.list = NULL;
@@ -146,7 +208,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo){
 	
 		if ((!listTwo.isList) && (!listInOut->isList)){
 			struct val_list_item *listInOutItem;
-			listInOutItem = malloc(sizeof(struct val_list_item));
+			listInOutItem = createValListItem();
 			listInOutItem->item = copyVal(listInOut);
 			listInOutItem->nextItem = NULL;
 			listInOut->isList = 1;

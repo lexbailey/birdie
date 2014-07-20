@@ -1,13 +1,27 @@
+/*!
+
+	\file birdie_types.h
+	\brief Birdie type definitions
+	\author Daniel Bailey
+	\copyright Copyright Daniel Bailey 2014
+	
+	This file defines various types used by other parts of the birdie code. It also defines some functions to manipulate these types.
+ 
+*/
+
 #ifndef BIRDIE_TYPE_INCLUDE
 #define BIRDIE_TYPE_INCLUDE
 
 #include <stdio.h>
 #include <stdlib.h>
 
+///Enumerated type for the storage type of a variable
 typedef enum {vtString, vtInt, vtFloat, vtIdentifier} val_type_t;
 
+///Enumerated type for a binary operator
 typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus} val_operation_2;
 
+///Enumerated type for a unary operator
 typedef enum {voInvert, voAsScalar, voAsString, voAsList} val_operation_1;
 
 //isList is true when this item is a list
@@ -16,11 +30,19 @@ typedef enum {voInvert, voAsScalar, voAsString, voAsList} val_operation_1;
 
 struct val_list_item;
 
+///Link list item that holds one stack state.
 struct stack_state_item_t{
-	struct stack_state_item_t *nextState;
-	int stackMode, autoPush;
-}
+	struct stack_state_item_t *nextStackState; //!< Pointer to the next item in the link list
+	int stackMode, //!< Current stack mode (on or off)
+	 autoPush;	//!< Current auto push mode (on or off)
+};
 
+//Link list item that holds one stack state stack. One of these is part of the stack state stack stack.
+//struct stack_state_stack_item_t{
+//	struct stack_state_stack_item_t *nextStackStateStack; //!< Pointer to the next item in the link list
+//};
+
+///A birdie value. This provides an abstract 'value' type. Birdie is duck typed, this struct stores a value of any type.
 struct val_struct_t{
 	val_type_t valueType;
 	char *valName;
@@ -31,12 +53,12 @@ struct val_struct_t{
 
 	int isList;
 	struct val_list_item *list;
-} ;
+};
 
 struct val_list_item{
 	struct val_list_item *nextItem;
 	struct val_struct_t *item;
-} ;
+};
 
 struct almighty_stack_item_t{
 	struct almighty_stack_item_t *nextItem;
@@ -62,9 +84,15 @@ struct almighty_stack_item_t{
 	//So, how many times can we get the word stack in to one sentance?
 	
 	//The almighty stack is made up of the stack stack, the stack state stack and the condition stack.
-}
+};
+
+void freeListItem(struct val_list_item *victim);
 
 void freeVal(struct val_struct_t*);
+
+void freeStackStateItem(struct stack_state_item_t*);
+
+//void freeStackStateStackItem(struct stack_state_stack_item_t*);
 
 struct val_struct_t* copyVal(struct val_struct_t*);
 
@@ -77,6 +105,18 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo);
 void initValStruct(struct val_struct_t* val);
 
 struct val_struct_t* createValStruct();
+
+void initValListItem(struct val_list_item* val);
+
+struct val_list_item* createValListItem();
+
+void initStackStateItem(struct stack_state_item_t* val);
+
+struct stack_state_item_t* createStackStateItem();
+
+//void initStackStateStackItem(struct stack_state_stack_item_t*);
+
+//struct stack_state_stack_item_t* createStackStateStackItem();
 
 void debugVal(struct val_struct_t *val);
 

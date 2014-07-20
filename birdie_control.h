@@ -8,8 +8,6 @@
 #include "birdie_funcs.h"
 #include "birdie_builtin.h"
 
-
-
 struct val_list_item *variables;
 
 void assign(struct val_struct_t *assignee);

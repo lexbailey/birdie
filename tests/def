@@ -3,15 +3,19 @@ Influence heavily by perl and yet looks nothing like it.
 Written by Daniel Bailey.
 Designed to get your script working in as few characters as possible.
 It's all a little bit backwards and contains hints of magic throughout. Enjoy.
+BTW. It turns out that birdie is much like lisp in some aspects but not many. I have never used lisp and so this is an accident.
 
 Comments start with a tilda (~)
 
 ~blah blah comment blah
 
-Numerical literals are backwards!
+Numerical literals are slightly backwards!
 
 7-
 is seven below zero
+
+70-
+is seventy below zero
 
 This allows expressions to be prefix.
 
@@ -127,7 +131,7 @@ This program can also work without entering stack mode by poping the values when
 
 ]3
 ]4
-+[[
+]+[[
 '[P
 
 When in stack mode you can call a function that takes a fixed number of inputs without specifying the number to take from the stack.
@@ -244,43 +248,112 @@ A code block ends with a close bracket ())
 'BAR
 )
 
-To make a block conditional, use a questionmark like so:
+In simple terms, to make a block conditional, use a questionmark and backslash like so:
 
-?a('FOO)
+?a'FOO\
 
-this will execute FOO if a is true (is an integer greater than 0 or a string of length greater than 0, for floats this is not well defined). else blocks are done with a colon:
+this will execute FOO if a is true (trueness is defined later). else blocks are done differently:
 
-?a('FOO):('BAR)
+?a('FOO):('BAR):
 
 a single command can be a block.
 
-?a'FOO:'BAR	~same as above
+?a'FOO:'BAR:	~same as above
 
-?a?b'FOO:'BAR:'QUUX		~ugly but it works, see below
+?a?b'FOO:'BAR\'QUUX:		~ugly but it works, see below
 
 ?a				~is a true?
 	?b			~is b true?
 		'FOO	~then do FOO (if a is true and b is true)
 	:			~else
 		'BAR	~do BAR	(if a is true and b is false)
-:				~else
+\				~else
 	'QUUX		~do QUUX (if a is false)
-	
-Is your mind suitably flexible? I'm about to bend it around a tight corner. :-)
+:
+
+This is a compact example. This uses the backslash in the place of two colons in the interest of using fewer characters.
+perhaps a more readable version is this:
+
+?a ?b 'FOO : 'BAR : : 'QUUX :
+
+The ?b can be seen as a seperate conditional block.
+
+?b 'FOO : 'BAR :
+
+If we reduce this to <b_cond> then we see that the 'a' conditional is similar
+
+?a <b_cond> : 'QUUX :
+
+This is all slight magic however, this is implemented in a way that lets you do some crazy things if you want to (and know what you are doing)
+So.. Is your mind suitably flexible? I'm about to bend it around a tight corner. :-)
 Drumroll please......  Introducing... the condition stack. (yes, another stack, as if it wasn't enough to have a stack of stacks controlled by a stack state stack).
 The condition stack is mostly handled internally by magic, however, you can do some prety crazy waky stuff with it.
 
+There are four conditional stack operators:
+?
+??
+:
+\
+
+The single question mark will do the following;
+ - invert the condition and then boolean AND it with the condition with the top of the stack, then push this to the stack.
+ - take the original condition and then boolean AND it with the condition that was on top of the stack (now second), then push this to the stack too.
+
+The double questionmark, does slightly less;
+ - take the original condition and then boolean AND it with the condition that is on top of the stack, then push this to the stack.
+ 
+The colon will pop one item from this stack and the backslash will pop two items. Any commands that are not condition stack commands will only execute if the top of the condition stack is a 'true' value;
+
 Lets use the last example to explain this stack...
 
-?a				~push the 'a' condition on to the condition stack (condition stack is now: 'a')
-	?b			~and '!b' with the top of the condition stack and push to the condition stack (stack is now: '& a !b', 'a') then and 'b' with the top of the condition stack and push to the condition stack (stack is now '& a b', '& a !b', 'a')
+?a				~push '!a' to the condition stack, then push the 'a' condition on to the condition stack (condition stack top is now: 'a', '!a')
+	?b			~and '!b' with the top of the condition stack and push to the condition stack. Then and 'b' with the top of the condition stack and push to the condition stack (stack top is now '& a b', '& a !b', 'a', '!a')
 		'FOO	~do foo if the top of the condition stack is true (& a b is true)
-	:			~pop the condition stack (stack is now: '& a !b', 'a')
+	:			~pop the condition stack (stack top is now: '& a !b', 'a', '!a')
 		'BAR	~do BAR	if the top of the condition stack is true (& a !b is true)
-:				~pop the condition stack (stack is now: 'a')
+\				~pop the condition stack twice (stack top is now: '!a')
 	'QUUX		~do QUUX if the top of the condition stack is true (!a is true)
+:				~pop the condition stack (stack is now at reset)
 
-d is defined as the default variable, if a function requires a parameter then it will be passed d if nothing else is passed
-d is also set by some instructions.
+In this example, even if a is false, the stack will still internally handle the b condition, this will be ignored by definition but is simpler to implement. Anyway, point is commands that don't involve the condition stack are not executed if the condition stack top is a 'false' value. That's how the magic happens.
+
+So... what is false? what is true?
+
+For an integer, this is simple, true is anything that is not exactly 0.
+For a float, this is trickyer, anything above 0 is considered true, anything below is false. This can be a gotcha, watch out.
+For a string, it is false if it is any of the following;
+ - "" (empty string)
+ - "no"
+ - "No"
+ - "NO"
+ - "0"
+ - "n"
+ - "N"
+ - "-"
+ - "off"   
+ - "Off"
+ - "OFF"
+ - "false"
+ - "False"
+ - "FALSE"
+ - "disabled"
+ - "Disabled"
+ - "DISABLED"
+ - "null"
+ - "Null"
+ - "NULL" 
+ - "nil"
+ - "Nil"
+ - "NIL"
+ - "!"
+ - "~"
+ 
+Any other value for a string is defined as true. You can probably see that this can allow some magic to happen.
+
+
+
+
+
+
 
 

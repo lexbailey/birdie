@@ -37,7 +37,7 @@ void assign(struct val_struct_t *assignee){
 	}
 	//If we made it this far then the item doesn't exist
 	//prepend new variable onto variable list
-	struct val_list_item *newItem = (struct val_list_item *)malloc(sizeof(struct val_list_item));
+	struct val_list_item *newItem = createValListItem();
 	newItem->item = copyVal(assignee);
 	newItem->nextItem = variables;
 	variables = newItem;
@@ -69,6 +69,16 @@ void readVar(struct val_struct_t *item){
 		//Advance to next item
 		currentItem = currentItem->nextItem;
 	}
+	//Oh, shoot!
+	//This variable doesn't exist yet, let's add it
+	struct val_list_item *newItem = createValListItem();
+	newItem->item = createValStruct();
+	newItem->nextItem = variables;
+	variables = newItem;
+	newItem->item->valID = newString(item->valID);
+	newItem->item->valueType = vtInt;
+	newItem->item->valI = 0;
+	*item = (*(newItem->item));
 }
 
 struct val_struct_t functionCallArgs(const char *funcName, struct val_struct_t *inputs){

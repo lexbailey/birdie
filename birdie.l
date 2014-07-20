@@ -6,7 +6,7 @@
 
     #define INITVAL initValStruct(&(yylval.anyval))
 
-	//#define DEBUGFLEX
+	#define DEBUGFLEX
 
 	unsigned long line = 1;
 
@@ -125,8 +125,10 @@
 ")"						{debug("\tflex: found BLOCKEND\n"); return BLOCKEND;}
 
 "?"						{debug("\tflex: found PUSH2COND\n"); return PUSH2COND;}
-":"						{debug("\tflex: found POP2COND\n"); return POP2COND;}
-"\"						{debug("\tflex: found POPCOND\n"); return POPCOND;}
+"\\"					{debug("\tflex: found POP2COND\n"); return POP2COND;}
+":"						{debug("\tflex: found POPCOND\n"); return POPCOND;}
+"??"					{debug("\tflex: found PUSHCOND\n"); return PUSHCOND;}
+
 
 [,]						{debug("\tflex: found DELIM\n"); return DELIM;}
 [']						{debug("\tflex: found OPDELIM\n"); return OPDELIM;}
