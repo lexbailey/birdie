@@ -1,7 +1,7 @@
 #include "birdie_funcs.h"
 //#include "freedom_fighter.h"
 
-#define DEBUGFUNC
+//#define DEBUGFUNC
 #ifdef DEBUGFUNC
 	#include <stdarg.h>
 #endif
@@ -171,20 +171,35 @@ struct val_struct_t reduceExpression1(struct val_struct_t a, val_operation_1 op)
 }
 
 void printVal(struct val_struct_t a){
-	debugFuncs("Value of '%s' (Identifier '%s') is ", a.valName, a.valID);
-	switch(a.valueType){
-		case vtInt:
-			debugFuncs("integer: %lli", a.valI);
-		break;
-		case vtFloat:
-			debugFuncs("float: %.9f", a.valF);
-		break;
-		case vtString:
-			debugFuncs("string: %s", a.valS);
-		break;
-        default:
-            debugFuncs("Unknown! (Mass panic errupts now.)");
-        break;
+
+    if (a.isList){
+        debugFuncs("'%s' (Identifier '%s') is a list.\n", a.valName, a.valID);
+        struct val_list_item *thisItem = a.list;
+		int id = 0;
+        while (thisItem != NULL){
+            debugFuncs("\tList item %d;\n", id);
+            printVal(*(thisItem->item));
+            
+            id++;
+            thisItem = thisItem->nextItem;
+        }
+    }
+    else{
+	    debugFuncs("Value of '%s' (Identifier '%s') is ", a.valName, a.valID);
+	    switch(a.valueType){
+		    case vtInt:
+			    debugFuncs("integer: %lli", a.valI);
+		    break;
+		    case vtFloat:
+			    debugFuncs("float: %.9f", a.valF);
+		    break;
+		    case vtString:
+			    debugFuncs("string: %s", a.valS);
+		    break;
+            default:
+                debugFuncs("Unknown! (Mass panic errupts now.)");
+            break;
+	    }
 	}
 	debugFuncs("\n");
 }

@@ -6,7 +6,7 @@
 
     #define INITVAL initValStruct(&(yylval.anyval))
 
-	#define DEBUGFLEX
+	//#define DEBUGFLEX
 
 	unsigned long line = 1;
 
@@ -116,9 +116,37 @@
 "^"						{debug("\tflex: found CARET\n"); return CARET;}
 "_"						{debug("\tflex: found UNDERSCORE\n"); return UNDERSCORE;}
 
+"}"						{debug("\tflex: found PUSHSTACK\n"); return PUSHSTACK;}
+"{"						{debug("\tflex: found POPSTACK\n"); return POPSTACK;}
+"]"						{debug("\tflex: found PUSH\n"); return PUSH;}
+"["						{debug("\tflex: found POP\n"); return POP;}
+
+"("						{debug("\tflex: found BLOCKSTART\n"); return BLOCKSTART;}
+")"						{debug("\tflex: found BLOCKEND\n"); return BLOCKEND;}
+
+"?"						{debug("\tflex: found PUSH2COND\n"); return PUSH2COND;}
+":"						{debug("\tflex: found POP2COND\n"); return POP2COND;}
+"\"						{debug("\tflex: found POPCOND\n"); return POPCOND;}
+
 [,]						{debug("\tflex: found DELIM\n"); return DELIM;}
 [']						{debug("\tflex: found OPDELIM\n"); return OPDELIM;}
 ";"						{debug("\tflex: found SEMIC\n"); return SEMIC;}
+
+">"						{debug("\tflex: found GREATER\n"); return GREATER;}
+"<"						{debug("\tflex: found LESS\n"); return LESS;}
+
+">="					{debug("\tflex: found GREATEREQ\n"); return GREATEREQ;}
+"<="					{debug("\tflex: found LESSEQ\n"); return LESSEQ;}
+
+"£"						{debug("\tflex: found EQ\n"); return EQ;}
+"`"						{debug("\tflex: found INEQ\n"); return INEQ;}
+
+"|"						{debug("\tflex: found BOOLOR\n"); return BOOLOR;}
+"||"					{debug("\tflex: found BITOR\n"); return BITOR;}
+
+"&"						{debug("\tflex: found BOOLAND\n"); return BOOLAND;}
+"&&"					{debug("\tflex: found BITAND\n"); return BITAND;}
+
 
 ~[^\n]*\n				{debug("\tflex: ignore comment\n");line++;}
 

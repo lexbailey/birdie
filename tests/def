@@ -1,5 +1,8 @@
 Birdie. The scripting language for golfing.
-It's all a little bit backwards. Enjoy.
+Influence heavily by perl and yet looks nothing like it.
+Written by Daniel Bailey.
+Designed to get your script working in as few characters as possible.
+It's all a little bit backwards and contains hints of magic throughout. Enjoy.
 
 Comments start with a tilda (~)
 
@@ -71,11 +74,11 @@ Again, saves some chars over C syntax;
 QUUX("foo","bar");
 
 Variables
-To set a variable, use the equals operator;
+To set a variable, use the equals operator. Variable assignments must end with a semicolon. No other commands need a semicolon to end them
 
-a="foo'
-b=1
-c=23.4-
+a="foo';
+b=1;
+c=23.4-;
 
 if you count the definitions too then this is much much cheaper then C syntax.
 it is little or no advantage over languages like perl an python. Birdie syntax beats them in other places however.
@@ -85,9 +88,9 @@ print$a,$b;
 While in birdie it is like this:
 'a bP
 
-Most of the advantage is in the shorter name of the print function, even if perl's was shorter, birdie still wins;
-perl:   p$a,$b;
-birdie: 'a bP
+Most of the advantage is in the shorter name of the print function, even if perl's was shorter, birdie still wins by lack of qualifiers before variable names;
+perl:   p$a,$b;     #7 character command minimum
+birdie: 'a bP       ~5 character command minimum
 
 Stack
 Birdie also has a stack. Stack mode is entered whenever a caret (^) is detected. Exiting is done in the same way
@@ -96,17 +99,17 @@ Suppose you have three strings on the top of the stack and you want to print the
 
 '3P
 
-To push onto the stack (from stack mode or normal mode) you can use the forward slash operator (/)
+To push onto the stack (from stack mode or normal mode) you can use the stack push operator close square bracket (])
 
 to push the number 7 on to the stack you do this;
 
-/7
+]7
 
-to pop a value you use the back slash (\)
+to pop a value you use the open square bracket operator ([)
 this program puts 3 and 4 on the stack, enters stack mode, adds them, prints the result and then reverts to normal mode.
 
-/3
-/4
+]3
+]4
 ^
 +
 '1P
@@ -114,7 +117,7 @@ this program puts 3 and 4 on the stack, enters stack mode, adds them, prints the
 
 This can all be done on one line if so desired
 
-/3/4^+'1P^
+]3]4^+'1P^
 
 in this case, normal mode provides a cleaner and shorter syntax:
 
@@ -122,51 +125,162 @@ in this case, normal mode provides a cleaner and shorter syntax:
 
 This program can also work without entering stack mode by poping the values when needed
 
-/3
-/4
-+\\
-'\P
-
-When in stack mode, the results of function calls are allways pushed on to the stack.
+]3
+]4
++[[
+'[P
 
 When in stack mode you can call a function that takes a fixed number of inputs without specifying the number to take from the stack.
 Suppose you have a function so calculate a square root "SQRT". To calculate the square root of four you can do this:
 
 ^
-/4
+]4
 'SQRT
 
 Functions that can take multiple inputs will only take one item off the stack if they are called in this way in stack mode
 
 ^
-/"hi'
-/"there'
+]"hi'
+]"there'
 'P          ~prints "there"
 
 
 ^
-/"hi'
-/"there'
+]"hi'
+]"there'
 '2P          ~prints "hithere"
 
 You can call a function multiple times in stack mode using only one line. To do this the function must take a fixed number of instructions.
 To do this, in stack mode, call a function and ask for a multiple of the fixed number of arguments.
 
-/4
-/25
+]4
+]25
 ^
 '2SQRT
 
 The program above pushes 4 on to the stack and then pushes 25 on to the stack then enters stack mode. After this, the SQRT function is called twice. The SQRT function takes one input and so when asking for it to act on two inputs, it produces two results. All of the outputs are calculated and then pushed back on to the stack. The results are pushed to the stack in reverse order of calculation. This preserves some kind of order on the stack.
 In the example above the stack after the SQRT would look like this:
 
-2
 5
+2
 
-because 2 is the square root of 4 and 5 is the sqare root of 25.
+because 2 is the square root of 4 and 5 is the sqare root of 25. 25 was the last item pushed on to the stack and so 5 is on top of the stack.
 
-r is defined as the result of the last function call.
+if in stack mode, you call a function that takes an unlimited number of arguments, it will take only the first item off the stack. This item can however be a list. More on lists later.
+
+Now this is where it gets a little bit magical. The stack is itself part of a stack. The state of the stack is also part of the stack.
+The stack state is simply autopush or not? and stack mode or not?
+Stack mode (off by default) is what you have seen already.
+Autopush mode (on by default) is where all function returns are pushed on to the stack.
+
+When your program starts, stack mode is off and autopush mode is on, you can change this and then call a function, when that function runs, it may be assuming that the default is still present and that stack mode is off. For this reason, there is a stack mode stack. When you call a function, the stack mode is automatically pushed onto the stack mode stack. The function then runs and then the stack mode is popped. It is not possible to manually push or pop the stack mode stack.
+In autopush mode, when a function returns, its result is pushed to the stack. It is possible however that the functino you called needed to make use of the stack. For this reason there is a stack stack. When a function is called, a blank stack is pushed on to the stack stack regardless of any current stack modes. When the function returns this new stack is then automatically popped from the stack stack.
+It is possible to manually push and pop this stack. The stack stack push operator is a close curly brace (}) and the stack stack pop operator is an open curly brace({)
+A function may intend to work on the copy of the stack that was there before it was called (this is not common behaviour but is possible) in this case the function starts with a stack stack pop ({) so remove its own fresh stack and ends with a push (}) so that the automatic pop behaves as expected and there is no stack stack underflow. If you want to ensure that your own stack is preserved during such a funciton call then you should push the stack stack before you do the call (and pop after if/when needed).
+
+}
+'STACKFUNCTION
+{
+
+
+LISTS!
+here is a list;
+
+2 3 4 5 6
+
+You have already seen lists. In effect, each function only takes one input, that input is a list.
+
+here is another list:
+
+"earth' "gravity' 9.8-
+
+The last list can be done with no spaces:
+
+"earth'"gravity'9.8-
+
+This can be passed to a function like the print function, with or without spaces
+
+' "earth'"gravity'9.8- P
+'"earth'"gravity'9.8-P
+
+It can also be assigned to a variable
+
+a="earth'"gravity'9.8-;
+
+That variable can then be used in the print function:
+
+'aP
+
+Now what happens when you add something else to the list?
+
+' a "foo' P
+
+In this case, you get a single longer list, "foo" is the last item in this list, the list passed to the function would be "earth'"gravity'9.8-"foo' .
+If what you wanted was a list with two items in it, the first of which is a list that contains the "earth", "gravity" and -9.8 items and the second is the string "foo" then you should use the list lister operator (,). As with all other binary operaters, this is prefix.
+
+,a"foo'
+
+You can turn a string into a list of individual characters (stored as strings of length one) by using the dollar operator ($).
+
+a=$"Blah';
+
+In this example 'a' is now a list of length 4: "B", "l", "a", "h".
+
+To access an elemnt of a list by its position in the list, use the dot operator. As allways, this is prefix.
+
+a=2 3 4 5;
+b=.a3;
+'bP         ~prints '4'
+
+BLOCKS!
+
+wow, this far and we haven't talked about blocks yet?
+
+A code block starts with an open bracket (() ... this is where things fall down with the whole idea of showing you the operator in brackets :-)
+A code block ends with a close bracket ())
+
+(
+'FOO
+'BAR
+)
+
+To make a block conditional, use a questionmark like so:
+
+?a('FOO)
+
+this will execute FOO if a is true (is an integer greater than 0 or a string of length greater than 0, for floats this is not well defined). else blocks are done with a colon:
+
+?a('FOO):('BAR)
+
+a single command can be a block.
+
+?a'FOO:'BAR	~same as above
+
+?a?b'FOO:'BAR:'QUUX		~ugly but it works, see below
+
+?a				~is a true?
+	?b			~is b true?
+		'FOO	~then do FOO (if a is true and b is true)
+	:			~else
+		'BAR	~do BAR	(if a is true and b is false)
+:				~else
+	'QUUX		~do QUUX (if a is false)
+	
+Is your mind suitably flexible? I'm about to bend it around a tight corner. :-)
+Drumroll please......  Introducing... the condition stack. (yes, another stack, as if it wasn't enough to have a stack of stacks controlled by a stack state stack).
+The condition stack is mostly handled internally by magic, however, you can do some prety crazy waky stuff with it.
+
+Lets use the last example to explain this stack...
+
+?a				~push the 'a' condition on to the condition stack (condition stack is now: 'a')
+	?b			~and '!b' with the top of the condition stack and push to the condition stack (stack is now: '& a !b', 'a') then and 'b' with the top of the condition stack and push to the condition stack (stack is now '& a b', '& a !b', 'a')
+		'FOO	~do foo if the top of the condition stack is true (& a b is true)
+	:			~pop the condition stack (stack is now: '& a !b', 'a')
+		'BAR	~do BAR	if the top of the condition stack is true (& a !b is true)
+:				~pop the condition stack (stack is now: 'a')
+	'QUUX		~do QUUX if the top of the condition stack is true (!a is true)
+
 d is defined as the default variable, if a function requires a parameter then it will be passed d if nothing else is passed
 d is also set by some instructions.
 
-_list{}
+
