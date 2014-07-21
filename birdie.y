@@ -5,7 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define DEBUGBISON
+//#define DEBUGBISON
 #ifdef DEBUGBISON
 	#include <stdarg.h>
 #endif
@@ -28,10 +28,6 @@ debugbison(const char* s, ...){
 //Current state
 	int stackMode = 0; //Stack mode, off by default
 	int autoPush = 1; //Autopush mode, on by defailt
-
-void runCommand(char * in){
-	printf("Run command: %s\n", in);
-}
 
 void init(){
 	variables = NULL;
@@ -106,9 +102,18 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valNam
 	| PUSHSTACK						{debugbison("bison: Push the stack stack\n");/*TODO push stack*/}
 	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/}
 	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(&$2); $$ = $2;}
-	| POPCOND						{debugbison("bison: Pop one condition from the condition stack\n"); $$ = *popCondition();}
+	| POPCOND						
+		{debugbison("bison: Pop one condition from the condition stack\n"); struct val_struct_t *popped = popCondition(); $$ = *popped; freeVal(popped);}
 	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");$$ = $2;}
-	| POP2COND						{debugbison("bison: Pop two conditions from the condition stack\n");}
+	| POP2COND						
+		{
+			debugbison("bison: Pop two conditions from the condition stack\n");
+			struct val_struct_t *popped = popCondition(); 
+			freeVal(popped); 
+			popped = popCondition(); 
+			$$ = *popped;
+			freeVal(popped);
+		}
 	;
 	
 valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
@@ -119,7 +124,7 @@ anyVal: procVal
 	;
 
 procVal: value				        {$$=$1;}
-	| valop1 procVal			    {debugbison("bison: Value oneOp.\n");}
+	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); initValStruct(&$$); $$ = reduceExpression1($2, $1); printVal($$);}
 	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}
 	;
 

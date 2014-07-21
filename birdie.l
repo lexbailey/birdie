@@ -6,7 +6,7 @@
 
     #define INITVAL initValStruct(&(yylval.anyval))
 
-	#define DEBUGFLEX
+	//#define DEBUGFLEX
 
 	unsigned long line = 1;
 

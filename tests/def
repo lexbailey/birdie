@@ -250,20 +250,20 @@ A code block ends with a close bracket ())
 
 In simple terms, to make a block conditional, use a questionmark and backslash like so:
 
-?a'FOO\
+?a;'FOO\
 
 this will execute FOO if a is true (trueness is defined later). else blocks are done differently:
 
-?a('FOO):('BAR):
+?a;('FOO):('BAR):
 
 a single command can be a block.
 
-?a'FOO:'BAR:	~same as above
+?a;'FOO:'BAR:	~same as above
 
-?a?b'FOO:'BAR\'QUUX:		~ugly but it works, see below
+?a;?b;'FOO:'BAR\'QUUX:		~ugly but it works, see below
 
-?a				~is a true?
-	?b			~is b true?
+?a;				~is a true?
+	?b;			~is b true?
 		'FOO	~then do FOO (if a is true and b is true)
 	:			~else
 		'BAR	~do BAR	(if a is true and b is false)
@@ -274,15 +274,15 @@ a single command can be a block.
 This is a compact example. This uses the backslash in the place of two colons in the interest of using fewer characters.
 perhaps a more readable version is this:
 
-?a ?b 'FOO : 'BAR : : 'QUUX :
+?a; ?b; 'FOO : 'BAR : : 'QUUX :
 
 The ?b can be seen as a seperate conditional block.
 
-?b 'FOO : 'BAR :
+?b; 'FOO : 'BAR :
 
 If we reduce this to <b_cond> then we see that the 'a' conditional is similar
 
-?a <b_cond> : 'QUUX :
+?a; <b_cond> : 'QUUX :
 
 This is all slight magic however, this is implemented in a way that lets you do some crazy things if you want to (and know what you are doing)
 So.. Is your mind suitably flexible? I'm about to bend it around a tight corner. :-)
@@ -306,8 +306,8 @@ The colon will pop one item from this stack and the backslash will pop two items
 
 Lets use the last example to explain this stack...
 
-?a				~push '!a' to the condition stack, then push the 'a' condition on to the condition stack (condition stack top is now: 'a', '!a')
-	?b			~and '!b' with the top of the condition stack and push to the condition stack. Then and 'b' with the top of the condition stack and push to the condition stack (stack top is now '& a b', '& a !b', 'a', '!a')
+?a;				~push '!a' to the condition stack, then push the 'a' condition on to the condition stack (condition stack top is now: 'a', '!a')
+	?b;			~and '!b' with the top of the condition stack and push to the condition stack. Then and 'b' with the top of the condition stack and push to the condition stack (stack top is now '& a b', '& a !b', 'a', '!a')
 		'FOO	~do foo if the top of the condition stack is true (& a b is true)
 	:			~pop the condition stack (stack top is now: '& a !b', 'a', '!a')
 		'BAR	~do BAR	if the top of the condition stack is true (& a !b is true)
@@ -349,6 +349,96 @@ For a string, it is false if it is any of the following;
  - "~"
  
 Any other value for a string is defined as true. You can probably see that this can allow some magic to happen.
+
+Now is a good time to define what happens when something is inverted (boolean invert with an exclamation mark - !)
+
+Inverting any string that represents is a false value is well defined. (except perhaps for emptystring which, by design, presents ten random characters)
+This is what happens...
+
+!"'			=		"d^uc9$k;'#" (as an example only. inverting an empty string gets you a random string of 10 characters. It won't always contain the word 'duck' :D)
+!"no'		=		"yes"
+!"No'		=		"Yes"
+!"NO'		=		"YES"
+!"0'		=		"1"
+!"n'		=		"y"
+!"N'		=		"Y"
+!"-'		=		"+"
+!"off'		=		"on"
+!"Off'		=		"On"
+!"OFF'		=		"ON"
+!"false'	=		"true"
+!"False'	=		"True"
+!"FALSE'	=		"TRUE"
+!"disabled'	=		"enabled"
+!"Disabled'	=		"Enabled"
+!"DISABLED'	=		"ENABLED"
+!"null'		=		"full"
+!"Null'		=		"Full"
+!"NULL'		=		"FULL"
+!"nil'		=		"123456789"
+!"Nil'		=		"abcdefghijklmnopqrstuvwqyz"
+!"NIL'		=		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+!"!'		=		"!!"
+!"~'		=		"~~"
+
+(all obvious reversals apply)
+
+!"yes'		=		"no"
+!"Yes'		=		"No"
+!"YES'		=		"NO"
+!"1'		=		"0"
+!"y'		=		"n"
+!"Y'		=		"N"
+!"+'		=		"-"
+!"on'		=		"off"
+!"On'		=		"Off"
+!"ON'		=		"OFF"
+!"true'		=		"false"
+!"True'		=		"False"
+!"TRUE'		=		"FALSE"
+!"enabled'	=		"disabled"
+!"Enabled'	=		"Disabled"
+!"ENABLED'	=		"DISABLED"
+!"full'		=		"null"
+!"Full'		=		"Null"
+!"FULL'		=		"NULL"
+!"!!'		=		"!"
+!"~~'		=		"~"
+
+For integers, this is also well defined, any non-zero value becomes zero, zero becomes 1 therefore, if you put two exclamation marks (!!) before any integer that isn't zero, it becomes 1. This trick can be used as a sort of normalise function...
+
+!0 = 1
+!1 = 0
+!2 = 0
+!3 = 0
+...
+!n = 0 for any non zero value of n
+
+!!0 = 0
+!!1 = 1
+!!2 = 1
+!!3 = 1
+...
+!!n = 1 for any non zero value of n
+
+So, if you want to clear (set to zero) an integer (let's call it 'a') if another integer (let's say 'b') is a true value (not zero) you can do this...
+
+a=*a!!b;
+
+This is no more compact than using the condition stack for such an operation:
+
+?b;a=0;\
+
+But it can find uses in other places where it is more compact.
+
+Note that inverting floats is the same as subtracting them from 0 (remember that birdie signs are backwards)
+
+!23.5-		=		23.5
+
+!0.1		=		0.1-
+
+
+
 
 
 
