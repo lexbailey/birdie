@@ -103,14 +103,28 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valNam
 	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/}
 	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(&$2); $$ = $2;}
 	| POPCOND						
-		{debugbison("bison: Pop one condition from the condition stack\n"); struct val_struct_t *popped = popCondition(); $$ = *popped; freeVal(popped);}
+		{
+			debugbison("bison: Pop one condition from the condition stack\n");
+			struct val_struct_t *popped = popCondition();
+			if (popped == NULL){
+				YYABORT;
+			}
+			$$ = *popped;
+			freeVal(popped);
+		}
 	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");$$ = $2;}
 	| POP2COND						
 		{
 			debugbison("bison: Pop two conditions from the condition stack\n");
 			struct val_struct_t *popped = popCondition(); 
+			if (popped == NULL){
+				YYABORT;
+			}
 			freeVal(popped); 
 			popped = popCondition(); 
+			if (popped == NULL){
+				YYABORT;
+			}
 			$$ = *popped;
 			freeVal(popped);
 		}

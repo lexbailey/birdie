@@ -66,6 +66,12 @@ void pushCondition(struct val_struct_t *newCondition){
 }
 struct val_struct_t *popCondition(){
 	struct val_list_item *poppedListItem = theAlmightyStack->conditionStackStack->list->item->list;
+	
+	if (theAlmightyStack->conditionStackStack->list->item->list == NULL){
+		yyerror("Condition stack underflow.\n(The current condition stack was popped when empty.)\n");
+		return NULL;
+	}
+	
 	theAlmightyStack->conditionStackStack->list->item->list = theAlmightyStack->conditionStackStack->list->item->list->nextItem; //Move the list start pointer to the second item
 	//extract data and free the popped list item
 	struct val_struct_t *poppedVal = poppedListItem->item;
