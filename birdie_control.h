@@ -16,8 +16,8 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data);
 
 void readVar(struct val_struct_t *item);
 
-struct val_struct_t functionCallArgs(const char *funcName, struct val_struct_t *inputs);
+struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs);
 
-struct val_struct_t functionCall(const char *funcName);
+struct val_struct_t *functionCall(const char *funcName);
 
 #endif //BIRDIE_CONTROL_INCLUDE

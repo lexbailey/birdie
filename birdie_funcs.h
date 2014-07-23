@@ -10,11 +10,11 @@
 
 char *newString(char *);
 
-struct val_struct_t reduceExpression2(struct val_struct_t a, struct val_struct_t b, val_operation_2 op);
+struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct_t *b, val_operation_2 op);
 
-struct val_struct_t reduceExpression1(struct val_struct_t a, val_operation_1 op);
+struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op);
 
-void printVal(struct val_struct_t a);
+void printVal(struct val_struct_t *a);
 
 void fullReport();
 

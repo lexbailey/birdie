@@ -6,6 +6,10 @@
 	#include <stdarg.h>
 #endif
 
+//TODO write a debugging function that derefferences EVERYTHING in a list so 
+//that it can be called after each operation to make the segfaults happen 
+//closer to the things that caused them.
+
 debugTypes(const char* s, ...){
 	#ifdef DEBUGTYPES
 	va_list arglist;
@@ -66,7 +70,16 @@ struct val_struct_t* copyVal(struct val_struct_t *data){
 	newVal->valI = data->valI;
 	newVal->valF = data->valF;
 	newVal->isList = data->isList;
-	newVal->list = data->list;
+	newVal->list = copyValList(data->list);
+	return newVal;
+}
+
+struct val_list_item* copyValList(struct val_list_item *data){
+    if (data == NULL) return NULL;
+    struct val_list_item* newVal;
+    newVal = createValListItem();
+    newVal->nextItem = copyValList(data->nextItem);
+	newVal->item = copyVal(data->item);
 	return newVal;
 }
 
@@ -131,7 +144,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 			printVal(*(currentItem->item));
 			currentItem = currentItem->nextItem;
 		}
-		printVal(*(currentItem->item));
+		printVal(currentItem->item);
 	    newListItem->nextItem = NULL;//this is the last item in the list
 		currentItem->nextItem = newListItem;//No longer the end of the list
 	}
@@ -185,16 +198,20 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	}
 }
 
-void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo){
-	if (listTwo.isList && listInOut->isList){
+void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
+	if (listTwo->isList && listInOut->isList){
 	
 		//Concat
+		/*
 		struct val_list_item *listTwoItem;
 		listTwoItem = createValListItem();
 		listTwoItem->item = copyVal(&listTwo);
-		listTwoItem->nextItem = listTwo.list;
-		listTwo.list = NULL;
-		listTwo.isList = 0;
+		listTwoItem->nextItem = listTwo->list;
+		listTwo->list = NULL;
+		listTwo->isList = 0;
+		*/
+		struct val_list_item *listTwoItem;
+		listTwoItem = copyValList(listTwo->list);
 		
 		
 		struct val_list_item *currentItem = listInOut->list;
@@ -206,21 +223,21 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo){
 	}
 	else{
 	
-		if ((!listTwo.isList) && (!listInOut->isList)){
+		if ((!listTwo->isList) && (!listInOut->isList)){
 			struct val_list_item *listInOutItem;
 			listInOutItem = createValListItem();
 			listInOutItem->item = copyVal(listInOut);
 			listInOutItem->nextItem = NULL;
 			listInOut->isList = 1;
 			listInOut->list = listInOutItem;
-			appendList(listInOut, copyVal(&listTwo));
+			appendList(listInOut, copyVal(listTwo));
 		}
 		else{
 			if (listInOut->isList){
-				appendList(listInOut, copyVal(&listTwo));
+				appendList(listInOut, copyVal(listTwo));
 			}
 			else{
-				prependList(listInOut, copyVal(&listTwo));
+				prependList(listInOut, copyVal(listTwo));
 			}
 		}
 	}

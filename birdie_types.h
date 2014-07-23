@@ -96,11 +96,13 @@ void freeStackStateItem(struct stack_state_item_t*);
 
 struct val_struct_t* copyVal(struct val_struct_t*);
 
+struct val_list_item* copyValList(struct val_list_item *data);
+
 void appendList(struct val_struct_t*, struct val_struct_t*);
 
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem);
 
-void concatLists(struct val_struct_t *listInOut, struct val_struct_t listTwo);
+void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo);
 
 void initValStruct(struct val_struct_t* val);
 

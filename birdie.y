@@ -5,7 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-//#define DEBUGBISON
+#define DEBUGBISON
 #ifdef DEBUGBISON
 	#include <stdarg.h>
 #endif
@@ -40,7 +40,7 @@ void init(){
 	int ival;
 	float fval;
 	char *sval;
-	struct val_struct_t anyval;
+	struct val_struct_t *anyval;
 	void *noval;
 	val_operation_1 oneOp;
 	val_operation_2 twoOp;
@@ -91,17 +91,17 @@ commands: command
 	|commands command
 	;
 
-command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valName); initValStruct(&$$); $$=functionCall($2.valName);}
-	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3.valName); initValStruct(&$$); $$=functionCallArgs($3.valName, &$2);}
-	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value to variable: %s\n", $1.valID); 
-										initValStruct(&$$); mergeAssign(&$1, &$3); readVar(&$1); $$ = $1; printVal($$);}
+command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName); $$=createValStruct(); $$=functionCall($2->valName);}
+	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName); $$=createValStruct(); $$=functionCallArgs($3->valName, $2);}
+	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value to variable: %s\n", $1->valID); 
+										$$=createValStruct(); mergeAssign($1, $3); readVar($1); $$ = $1; printVal($$);}
 	| CARET							{debugbison("bison: Stack mode "); stackMode = ! stackMode; debugbison(stackMode?"on\n":"off\n");}
 	| UNDERSCORE					{debugbison("bison: Autopush mode "); autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");}
 	| PUSH valueList SEMIC			{debugbison("bison: Push value to stack\n"); $$ = $2;}
 	| POP							{debugbison("bison: Pop stack, return value\n");/*TODO pop stack, return result*/}
 	| PUSHSTACK						{debugbison("bison: Push the stack stack\n");/*TODO push stack*/}
 	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/}
-	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(&$2); $$ = $2;}
+	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition($2); $$ = $2;}
 	| POPCOND						
 		{
 			debugbison("bison: Pop one condition from the condition stack\n");
@@ -109,7 +109,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valNam
 			if (popped == NULL){
 				YYABORT;
 			}
-			$$ = *popped;
+			$$ = popped;
 			freeVal(popped);
 		}
 	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");$$ = $2;}
@@ -125,27 +125,27 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2.valNam
 			if (popped == NULL){
 				YYABORT;
 			}
-			$$ = *popped;
+			$$ = popped;
 			freeVal(popped);
 		}
 	;
 	
 valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
-		| valueList anyVal	        {debugbison("bison: multiple values in list.\n"); concatLists(&$1, $2); $$ = $1; printVal($$); }
+		| valueList anyVal	        {debugbison("bison: multiple values in list.\n"); concatLists($1, $2); $$ = $1; printVal($$); }
 		;
 
 anyVal: procVal
 	;
 
 procVal: value				        {$$=$1;}
-	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); initValStruct(&$$); $$ = reduceExpression1($2, $1); printVal($$);}
-	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n"); initValStruct(&$$); $$ = reduceExpression2($2, $3, $1); printVal($$);}
+	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); $$=createValStruct(); $$ = reduceExpression1($2, $1); printVal($$); }
+	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n"); $$=createValStruct(); $$ = reduceExpression2($2, $3, $1); printVal($$);}
 	;
 
 value: command				        {debugbison("bison: command return as value.\n"); $$ = $1;}
-	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1.valName);}
+	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1->valName);}
 	| anyNumber				        {debugbison("bison: number as value.\n"); $$ = $1;}
-	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1.valS);}
+	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1->valS);}
 	;
 	
 binOp: valop2						{debugbison("bison: Binary op\n");}
@@ -178,10 +178,10 @@ valop1: INV
 	| ASLIST
 	;
 
-namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1.valID); readVar(&$1); $$ = $1;}
+namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); readVar($1); $$ = $1;}
 	;
 
-namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1.valName);}
+namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1->valName);}
 	;
 
 anyNumber:	rawNumber

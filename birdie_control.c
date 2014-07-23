@@ -81,14 +81,18 @@ void readVar(struct val_struct_t *item){
 	*item = (*(newItem->item));
 }
 
-struct val_struct_t functionCallArgs(const char *funcName, struct val_struct_t *inputs){
+struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
 //TODO find a better way to lookup functions that using srtcmp.
 	
 	if (strcmp(funcName, "P") == 0){
 		return print(inputs);
 	}
 
+	if (strcmp(funcName, "T") == 0){
+		return trim(inputs);
+	}
+
 }
 
-struct val_struct_t functionCall(const char *funcName){
+struct val_struct_t *functionCall(const char *funcName){
 }

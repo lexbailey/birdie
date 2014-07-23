@@ -4,7 +4,7 @@
 	#include "birdie.tab.h"
 	#include <stdarg.h>
 
-    #define INITVAL initValStruct(&(yylval.anyval))
+    #define INITVAL yylval.anyval=createValStruct(); /*initValStruct(&(yylval.anyval))*/
 
 	//#define DEBUGFLEX
 
@@ -56,50 +56,47 @@
 
 	// Parse literal string (remove end double quotes, turn pairs of double quotes into single quotes)
 	void parseLit(char **source){
-		char *output, *outP;
-		int thisChar=0;
-		int numQuot = 0;
-		while ((*source)[++thisChar]!='\0'){
-			if ((*source)[thisChar] == '\''){
-				numQuot++;
-			}
-		}
-		int newQuot = numQuot - 2;
-		newQuot >>= 1;
-		outP = output = (char *)malloc(sizeof(char) * (strlen(*source) - (numQuot-newQuot)));
-		thisChar=0;
-		int lastWasQuot =0;
-		while ((*source)[++thisChar]!='\0'){
-			if ((*source)[thisChar] != '\''){
-				*outP++ = (*source)[thisChar];
-				lastWasQuot = 0;
+		char *input;
+		input = *source;
+		int len = strlen(input);
+		char *output = malloc(sizeof(char) * (len-1)); //Allocate length minus two for the start and end quotes, plus one for null
+		int o = 0;
+		int i = 0;
+		int c = 0;//wincy spider
+		int lastWasQuot = 0;
+		//Loop through input, copy chars, look out for pairs of single quotes
+		while (input[++i] != '\0'){
+			if (input[i] != '\''){
+				output[o++] = input[i];
 			}
 			else{
 				if (lastWasQuot){
-					*outP++ = '\'';
+					output[o++] = input[i];
 					lastWasQuot = 0;
 				}
 				else{
 					lastWasQuot = 1;
 				}
-			}
+			}	
 		}
-		free(*source);
-		*source = output;
+		//Don't forget the null!
+		output[o++] = '\0';
+		*source = realloc(output, sizeof(char) * (o)); //Realloc, only changes things if we removed some quotes
 	}
+	
 	
 %}
 
 %%
 
-[A-Z]+					{debug("\tflex: found FUNC\n"); INITVAL; yylval.anyval.valName = newString(yytext); return FUNC;}
-[a-z]+					{debug("\tflex: found IDENT\n"); INITVAL; yylval.anyval.valID = newString(yytext); yylval.anyval.valName = "Identifier"; return IDENT;}
+[A-Z]+					{debug("\tflex: found FUNC\n"); INITVAL; yylval.anyval->valName = newString(yytext); return FUNC;}
+[a-z]+					{debug("\tflex: found IDENT\n"); INITVAL; yylval.anyval->valID = newString(yytext); yylval.anyval->valName = newString("Identifier"); return IDENT;}
 
-\"(([^']*)'')*([^']*)'	{debug("\tflex: found TEXT\n"); yylval.anyval.valueType = vtString; yylval.anyval.valS = newString(yytext); parseLit(&(yylval.anyval.valS)); return TEXT;}
+\"(([^']*)'')*([^']*)'	{debug("\tflex: found TEXT\n"); INITVAL; yylval.anyval->valueType = vtString; yylval.anyval->valS = newString(yytext); parseLit(&(yylval.anyval->valS)); return TEXT;}
 
-[0-9]+[-+]?				{debug("\tflex: found NUMBER\n"); INITVAL; yylval.anyval.valueType = vtInt; yylval.anyval.valI = parseNum(yytext); return NUMBER;}
+[0-9]+[-+]?				{debug("\tflex: found NUMBER\n"); INITVAL; yylval.anyval->valueType = vtInt; yylval.anyval->valI = parseNum(yytext); return NUMBER;}
 
-([0-9]*\.?[0-9]+|[0]9+\.)[-+]?		{debug("\tflex: found FLOAT\n"); INITVAL; yylval.anyval.valueType = vtFloat; yylval.anyval.valF = parseNumf(yytext); return FLOAT;}
+([0-9]*\.?[0-9]+|[0]9+\.)[-+]?		{debug("\tflex: found FLOAT\n"); INITVAL; yylval.anyval->valueType = vtFloat; yylval.anyval->valF = parseNumf(yytext); return FLOAT;}
 
 "="						{debug("\tflex: found ASSIGN\n"); return ASSIGN;}
 "+"						{debug("\tflex: found ADD\n"); yylval.twoOp = voAdd; return ADD;}
