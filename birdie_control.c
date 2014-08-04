@@ -92,7 +92,47 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 		return trim(inputs);
 	}
 
+	if (strcmp(funcName, "I") == 0){
+		return magicinput(inputs);
+	}
+
+	if (strcmp(funcName, "C") == 0){
+		return count(inputs);
+	}
+	
+	if (strcmp(funcName, "IS") == 0){
+		return strinput(inputs);
+	}
+	
+	if (strcmp(funcName, "II") == 0){
+		return intinput(inputs);
+	}
+	
+	if (strcmp(funcName, "IF") == 0){
+		return floatinput(inputs);
+	}
+
+	if (strcmp(funcName, "M") == 0){
+		return magicTypeSort(inputs);
+	}
+	
+
 }
 
 struct val_struct_t *functionCall(const char *funcName){
+	if (strcmp(funcName, "I") == 0){
+		return magicinput(NULL);
+	}
+	
+	if (strcmp(funcName, "IS") == 0){
+		return strinput(NULL);
+	}
+	
+	if (strcmp(funcName, "II") == 0){
+		return intinput(NULL);
+	}
+	
+	if (strcmp(funcName, "IF") == 0){
+		return floatinput(NULL);
+	}
 }

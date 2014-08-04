@@ -38,7 +38,7 @@ void initialiseAlmightyStack(){
 			almightyStackStack->conditionStackStack->list->item->list->item->valueType = vtInt;
 			almightyStackStack->conditionStackStack->list->item->list->item->valI = 1; //Condition stack starts off as true
 			
-		almightyStackStack->theConditionStack = almightyStackStack->conditionStackStack->list->item;
+		almightyStackStack->theConditionStack = almightyStackStack->conditionStackStack->list->item->list->item;
 			
 		//And lastly, the stack state stack
 		almightyStackStack->stackStateStack = createStackStateItem();
@@ -62,12 +62,13 @@ void pushCondition(struct val_struct_t *newCondition){
 	newConditionItem->item = copyVal(newCondition);
 	newConditionItem->nextItem = theAlmightyStack->conditionStackStack->list->item->list;
 	theAlmightyStack->conditionStackStack->list->item->list = newConditionItem;
-	almightyStackStack->theConditionStack = almightyStackStack->conditionStackStack->list->item;
+	almightyStackStack->theConditionStack = almightyStackStack->conditionStackStack->list->item->list->item;
 }
+
 struct val_struct_t *popCondition(){
 	struct val_list_item *poppedListItem = theAlmightyStack->conditionStackStack->list->item->list;
 	
-	if (theAlmightyStack->conditionStackStack->list->item->list == NULL){
+	if (poppedListItem == NULL){
 		yyerror("Condition stack underflow.\n(The current condition stack was popped when empty.)\n");
 		return NULL;
 	}
@@ -79,6 +80,17 @@ struct val_struct_t *popCondition(){
 	poppedListItem->nextItem = NULL;
 	freeListItem(poppedListItem);
 	
+	//Point to new top val
+	//theAlmightyStack->theConditionStack = almightyStackStack->conditionStackStack->list->item->list->item;
+	
+
+	struct val_struct_t *cSS = almightyStackStack->conditionStackStack;
+	struct val_list_item *cSSL = cSS->list;
+	struct val_struct_t *cSSLI = cSSL->item;
+	struct val_list_item *cSSLIL = cSSLI->list;
+	struct val_struct_t *cSSLILI = cSSLIL->item;
+	theAlmightyStack->theConditionStack = cSSLILI;
+		
 	return poppedVal; //caller must handle the free!
 }
 

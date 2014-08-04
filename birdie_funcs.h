@@ -14,6 +14,10 @@ struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct
 
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op);
 
+struct val_struct_t *valInvert(struct val_struct_t *in);
+
+int isTrueVal(struct val_struct_t *input);
+
 void printVal(struct val_struct_t *a);
 
 void fullReport();

@@ -167,7 +167,8 @@ struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct
 	}
 }
 
-struct val_struct_t *valInvert(struct val_struct_t *a){
+struct val_struct_t *valInvert(struct val_struct_t *in){
+	struct val_struct_t *a = copyVal(in);
 	if (a->isList){
 		//Oo. List, erm...
 		//Recurse!
@@ -271,8 +272,50 @@ struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 o
 	}
 }
 
-void printVal(struct val_struct_t *a){
+int isTrueVal(struct val_struct_t *input){
+	switch (input->valueType){
+		case vtInt:
+			return (input->valI !=0);
+			break;
+		case vtFloat:
+			return (input->valF > 0);
+			break;
+		case vtString:
+			if (strcmp(input->valS, "") == 0){return 0;}
+			if (strcmp(input->valS, "no") == 0){return 0;}
+			if (strcmp(input->valS, "No") == 0){return 0;}
+			if (strcmp(input->valS, "NO") == 0){return 0;}
+			if (strcmp(input->valS, "0") == 0){return 0;}
+			if (strcmp(input->valS, "n") == 0){return 0;}
+			if (strcmp(input->valS, "N") == 0){return 0;}
+			if (strcmp(input->valS, "-") == 0){return 0;}
+			if (strcmp(input->valS, "off") == 0){return 0;}
+			if (strcmp(input->valS, "Off") == 0){return 0;}
+			if (strcmp(input->valS, "OFF") == 0){return 0;}
+			if (strcmp(input->valS, "false") == 0){return 0;}
+			if (strcmp(input->valS, "False") == 0){return 0;}
+			if (strcmp(input->valS, "FALSE") == 0){return 0;}
+			if (strcmp(input->valS, "disabled") == 0){return 0;}
+			if (strcmp(input->valS, "Disabled") == 0){return 0;}
+			if (strcmp(input->valS, "DISABLED") == 0){return 0;}
+			if (strcmp(input->valS, "null") == 0){return 0;}
+			if (strcmp(input->valS, "Null") == 0){return 0;}
+			if (strcmp(input->valS, "NULL") == 0){return 0;}
+			if (strcmp(input->valS, "nil") == 0){return 0;}
+			if (strcmp(input->valS, "Nil") == 0){return 0;}
+			if (strcmp(input->valS, "NIL") == 0){return 0;}
+			if (strcmp(input->valS, "!") == 0){return 0;}
+			if (strcmp(input->valS, "~") == 0){return 0;}
+			if (strcmp(input->valS, "f") == 0){return 0;}
+			if (strcmp(input->valS, "F") == 0){return 0;}
+			return 1;
+			break;
+	}
+	return 0; //erm?
+}
 
+void printVal(struct val_struct_t *a){
+	if (a == NULL){debugFuncs("Null value passsed to printVal.\n"); return;}
     if (a->isList){
         debugFuncs("'%s' (Identifier '%s') is a list.\n", a->valName, a->valID);
         struct val_list_item *thisItem = a->list;
@@ -298,7 +341,7 @@ void printVal(struct val_struct_t *a){
 			    debugFuncs("string: %s", a->valS);
 		    break;
             default:
-                debugFuncs("Unknown! (Mass panic errupts now because this is a bug.)");
+                debugFuncs("Unknown! (Mass panic errupts now because this is a bug.)\n");
             break;
 	    }
 	}

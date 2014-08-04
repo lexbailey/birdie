@@ -132,6 +132,10 @@ struct stack_state_stack_item_t* createStackStateStackItem(){
 }
 */
 void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
+	debugTypes("Append Incoming existing list\n");
+	debugVal(existing);
+	debugTypes("Append Incoming item\n");
+	debugVal(newItem);
 	
 	//Get the new value into a list item container
 	struct val_list_item *newListItem = createValListItem();
@@ -141,7 +145,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 		struct val_list_item *currentItem = existing->list;
 		//walk the list, look for the end
 		while (currentItem->nextItem != NULL){
-			printVal(*(currentItem->item));
+			printVal((currentItem->item));
 			currentItem = currentItem->nextItem;
 		}
 		printVal(currentItem->item);
@@ -169,7 +173,10 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 }
 
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
-	
+	debugTypes("Prepend Incoming existing list\n");
+	debugVal(existing);
+	debugTypes("Prepend Incoming item\n");
+	debugVal(newItem);
 	//Get the new value into a list item container
 	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
@@ -199,6 +206,10 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 }
 
 void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
+	debugTypes("Conc Incoming and outgoing list\n");
+	debugVal(listInOut);
+	debugTypes("Conc Incoming list 2\n");
+	debugVal(listTwo);
 	if (listTwo->isList && listInOut->isList){
 	
 		//Concat
@@ -241,9 +252,9 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 			}
 		}
 	}
-	
+	debugTypes("Output list is:\n");
 	debugVal(listInOut);
-	debugVal(listInOut->list->item);
+	//debugVal(listInOut->list->item);
 }
 
 void debugVal(struct val_struct_t *val){
@@ -264,6 +275,13 @@ void debugVal(struct val_struct_t *val){
 	
 	while (myList != NULL){
 		debugTypes("\t\t\t%p\n", myList->item);
+		myList = myList->nextItem;
+	}
+	
+	myList = val->list;
+	
+	while (myList != NULL){
+		debugVal(myList->item);
 		myList = myList->nextItem;
 	}
 }

@@ -15,6 +15,8 @@
 #include "birdie_control.h"
 #include "birdie_stackman.h"
 
+extern unsigned long line;
+
 debugbison(const char* s, ...){
 	#ifdef DEBUGBISON
 	va_list arglist;
@@ -91,28 +93,76 @@ commands: command
 	|commands command
 	;
 
-command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName); $$=createValStruct(); $$=functionCall($2->valName);}
-	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName); $$=createValStruct(); $$=functionCallArgs($3->valName, $2);}
+command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
+										if (isTrueVal(topOfConditionStack())){
+											$$=createValStruct(); $$=functionCall($2->valName);
+										}
+										else{
+											debugbison("bison: condition is false, ignore command.\n");
+										}
+									}
+	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName);
+										if (isTrueVal(topOfConditionStack())){
+											$$=createValStruct(); $$=functionCallArgs($3->valName, $2);
+										}
+										else{
+											debugbison("bison: condition is false, ignore command.\n");
+										}
+									}
 	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value to variable: %s\n", $1->valID); 
-										$$=createValStruct(); mergeAssign($1, $3); readVar($1); $$ = $1; printVal($$);}
-	| CARET							{debugbison("bison: Stack mode "); stackMode = ! stackMode; debugbison(stackMode?"on\n":"off\n");}
-	| UNDERSCORE					{debugbison("bison: Autopush mode "); autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");}
-	| PUSH valueList SEMIC			{debugbison("bison: Push value to stack\n"); $$ = $2;}
-	| POP							{debugbison("bison: Pop stack, return value\n");/*TODO pop stack, return result*/}
-	| PUSHSTACK						{debugbison("bison: Push the stack stack\n");/*TODO push stack*/}
-	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/}
+										if (isTrueVal(topOfConditionStack())){
+											$$=createValStruct(); mergeAssign($1, $3); readVar($1); $$ = $1; printVal($$);
+										}
+										else{
+											debugbison("bison: condition is false, ignore command.\n");
+										}
+									}
+	| CARET							{debugbison("bison: Stack mode set:\n"); 
+										if (isTrueVal(topOfConditionStack())){
+											stackMode = ! stackMode; debugbison(stackMode?"on\n":"off\n");
+										}
+									}
+	| UNDERSCORE					{debugbison("bison: Autopush mode set:\n"); 
+										if (isTrueVal(topOfConditionStack())){
+											autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");
+										}
+									}
+	| PUSH valueList SEMIC			{debugbison("bison: Push value to stack\n"); 
+										if (isTrueVal(topOfConditionStack())){
+											$$ = $2;
+										}
+									}
+	| POP							{debugbison("bison: Pop stack, return value\n");
+										if (isTrueVal(topOfConditionStack())){
+											/*TODO pop stack, return result*/
+										}
+									}
+	| PUSHSTACK						{debugbison("bison: Push the stack stack\n");
+										if (isTrueVal(topOfConditionStack())){
+											/*TODO push stack*/
+										}
+									}
+	| POPSTACK						{debugbison("bison: Pop the stack stack\n");/*TODO pop stack*/
+										if (isTrueVal(topOfConditionStack())){
+											/*TODO pop stack*/
+										}
+									}
 	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition($2); $$ = $2;}
-	| POPCOND						
-		{
-			debugbison("bison: Pop one condition from the condition stack\n");
-			struct val_struct_t *popped = popCondition();
-			if (popped == NULL){
-				YYABORT;
-			}
-			$$ = popped;
-			freeVal(popped);
-		}
-	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");$$ = $2;}
+	| POPCOND						{
+										debugbison("bison: Pop one condition from the condition stack\n");
+										struct val_struct_t *popped = popCondition();
+										if (popped == NULL){
+											YYABORT;
+										}
+										$$ = popped;
+										freeVal(popped);
+									}
+	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");
+										struct val_struct_t *inv = valInvert($2);
+										pushCondition(inv);
+										pushCondition($2);
+										$$ = $2;
+									}
 	| POP2COND						
 		{
 			debugbison("bison: Pop two conditions from the condition stack\n");
@@ -131,15 +181,35 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 	;
 	
 valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
-		| valueList anyVal	        {debugbison("bison: multiple values in list.\n"); concatLists($1, $2); $$ = $1; printVal($$); }
+		| valueList anyVal	        {debugbison("bison: multiple values in list.\n"); 
+										struct val_struct_t * inter = copyVal($1);
+										concatLists(inter, $2);
+										//$2 has been consumed!
+										freeVal($2);
+										$$ = inter;
+										printVal($$);
+									}
 		;
 
 anyVal: procVal
 	;
 
 procVal: value				        {$$=$1;}
-	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); $$=createValStruct(); $$ = reduceExpression1($2, $1); printVal($$); }
-	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n"); $$=createValStruct(); $$ = reduceExpression2($2, $3, $1); printVal($$);}
+	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); 
+										$$=createValStruct();
+										$$ = reduceExpression1($2, $1);
+										//$2 has been consumed
+										freeVal($2);
+										printVal($$);
+									}
+	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n");
+										$$=createValStruct();
+										$$ = reduceExpression2($2, $3, $1);
+										//$2 and $3 have been consumed
+										freeVal($2);
+										freeVal($3);
+										printVal($$);
+									}
 	;
 
 value: command				        {debugbison("bison: command return as value.\n"); $$ = $1;}
@@ -193,11 +263,64 @@ rawNumber: NUMBER
 
 %%
 
+FILE *argIn = NULL;
+
 main(int argc, char ** argv){
 	init();
+	//Where is my input?
+	if (argc > 1){
+		char * inputFile = argv[1];
+		argIn = fopen(inputFile, "r");
+		if (argIn == NULL){
+			printf("Error opening input file.\n");
+			return -1;
+		}
+	}
+	else{
+		argIn = stdin;
+	}
 	yyparse();
+	if (argIn != NULL){
+		fclose(argIn);
+	}
 }
 
 yyerror(char* s){
-	fprintf(stderr, "Error: %s\n", s);
+	fprintf(stderr, "Error on line %lu: %s\n", line, s);
+}
+
+int flexInput( char *buf, int *read, int max) {
+
+	if ( argIn == stdin ) //Interactive mode, read until a newline
+	{ 
+		int c = '*'; 
+		size_t n; 
+		for ( n = 0; n < max && 
+			     (c = getc( argIn )) != EOF && c != '\n'; ++n ) 
+			buf[n] = (char) c; 
+		if ( c == '\n' ) 
+			buf[n++] = (char) c; 
+		if ( c == EOF && ferror( argIn ) ) 
+			fprintf(stdout, "unable to read stdin\n" ); 
+		*read = n; 
+	} 
+	else { 
+		/*
+		errno=0; 
+		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) 
+			{ 
+			if( errno != EINTR) 
+				{ 
+				YY_FATAL_ERROR( "input in flex scanner failed" ); 
+				break; 
+				} 
+			errno=0; 
+			clearerr(yyin); 
+			} 
+		*/			
+		*read = fread(buf, sizeof(char), max, argIn);
+	}
+
+    
+    return 0;
 }
