@@ -1,0 +1,10 @@
+#!/usr/bin/env birdie
+'"Please enter a number
+'P
+input='IS;
+'input": 'P
+?input;
+'"This evaluates to true
+'P:'"This evaluates to false
+'P:
+

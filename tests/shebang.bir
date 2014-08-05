@@ -1,0 +1,7 @@
+#!/usr/bin/env birdie
+'"Hello from birdie
+'P
+?'123"
+'P;'"The last function returned true
+'P:'"The last function returned false
+'P:
