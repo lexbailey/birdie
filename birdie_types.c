@@ -6,7 +6,7 @@
 	#include <stdarg.h>
 #endif
 
-//TODO write a debugging function that derefferences EVERYTHING in a list so 
+//TODO write a debugging function that dereferences EVERYTHING in a list so
 //that it can be called after each operation to make the segfaults happen 
 //closer to the things that caused them.
 
@@ -63,10 +63,13 @@ struct val_struct_t* copyVal(struct val_struct_t *data){
     if (data == NULL) return NULL;
     struct val_struct_t* newVal;
     newVal = createValStruct();
-    newVal->valID = (char*)newString(data->valID);
-    newVal->valName = (char*)newString(data->valName);
+    newVal->valID =
+    		newString(data->valID);
+    newVal->valName =
+    		newString(data->valName);
 	newVal->valueType = data->valueType;
-	newVal->valS = (char*)newString(data->valS);
+	newVal->valS =
+			newString(data->valS);
 	newVal->valI = data->valI;
 	newVal->valF = data->valF;
 	newVal->isList = data->isList;
@@ -284,4 +287,13 @@ void debugVal(struct val_struct_t *val){
 		debugVal(myList->item);
 		myList = myList->nextItem;
 	}
+}
+
+char *newString(char *source){
+	if (source == NULL) { return NULL;}
+	char *result;
+	size_t sourceLen = sizeof(char) * (strlen(source)+1);
+	result = (char *)malloc(sourceLen);
+	strcpy(result, source);
+	return result;
 }

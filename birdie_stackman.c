@@ -54,7 +54,10 @@ void popStackStack(){
 
 void push(struct val_struct_t *newItem){
 }
+
 struct val_struct_t *pop(){
+	//TODO
+	return NULL;
 }
 
 void pushCondition(struct val_struct_t *newCondition){
@@ -100,13 +103,21 @@ void popAlmightyStackStack(){
 }
 
 struct val_struct_t *topOfStack(){
+	//TODO
+	return NULL;
 }
 struct val_struct_t *topOfStackStack(){
+	//TODO
+	return NULL;
 }
 struct val_struct_t *topOfConditionStack(){
 	return theAlmightyStack->theConditionStack;
 }
 struct stack_state_item_t *topOfStackStateStack(){
+	//TODO
+	return NULL;
 }
 struct val_struct_t *topOfAlmightyStack(){
+	//TODO
+	return NULL;
 }

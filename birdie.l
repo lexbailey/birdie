@@ -66,20 +66,8 @@
     		lastyylval.anyval = NULL;
     	}
     	
-    	//lastyylval = yylval;
-    	lastyylval.ival = yylval.ival;
-		lastyylval.fval = yylval.fval;
-		lastyylval.sval = newString(yylval.sval);
-		lastyylval.anyval = copyVal(yylval.anyval);
-		lastyylval.oneOp = yylval.oneOp;
-		lastyylval.twoOp = yylval.twoOp;
+    	lastyylval = yylval;
 		
-    	//if (lastyylval.sval != NULL) {
-    	//	lastyylval.sval = newString (lastyylval.sval); //get a copy of it
-    	//}
-    	//if (lastyylval.anyval != NULL) {
-    	//	lastyylval.anyval = copyVal (lastyylval.anyval);
-    	//}
     	debug("\tflex: last yylval...\n");
     	debug("\tflex: sval: %s\n", lastyylval.sval);
     	debug("\tflex: ival: %d\n", lastyylval.ival);
@@ -217,35 +205,7 @@
 	                        strcpy(number, yytext+1);
 	                        returnMulti = atoi(number)-2;
 	                        free(number);
-	                        //yylval = lastyylval;
-	                        //if (yylval.sval != NULL) {
-							//	yylval.sval = newString (yylval.sval); //get a copy of it
-							//}
-							//if (yylval.anyval != NULL) {
-							//	yylval.anyval = copyVal (yylval.anyval);
-							//}
-							
-							
-							
-							//if (lastyylval.sval != NULL) {
-							//	free (lastyylval.sval);
-							//	lastyylval.sval = NULL;
-							//}
-							//if (lastyylval.anyval != NULL) {
-							//	freeVal (lastyylval.anyval);
-							//	lastyylval.anyval = NULL;
-							//}
-			
-							//lastyylval = yylval;
-							//yylval.ival = lastyylval.ival;
-							//yylval.fval = lastyylval.fval;
-							//yylval.sval = newString(lastyylval.sval);
-							//yylval.anyval = copyVal(lastyylval.anyval);
-							//yylval.oneOp = lastyylval.oneOp;
-							//yylval.twoOp = lastyylval.twoOp;
-							
-							
-							
+													
 	                        return lastReturnToken;
                        
 						}

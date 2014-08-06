@@ -14,6 +14,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
+
+#define FLOAT_SPEC "%.3f"
+#define INT_SPEC "%" PRId64
+
+///The int type that the user will be using. 64 bit integer by default.
+typedef int64_t user_int;
 
 ///Enumerated type for the storage type of a variable
 typedef enum {vtString, vtInt, vtFloat, vtIdentifier} val_type_t;
@@ -47,7 +55,7 @@ struct val_struct_t{
 	val_type_t valueType;
 	char *valName;
 	char *valS;
-	int64_t valI;
+	user_int valI;
 	double valF;
 	char *valID;
 
@@ -121,5 +129,8 @@ struct stack_state_item_t* createStackStateItem();
 //struct stack_state_stack_item_t* createStackStateStackItem();
 
 void debugVal(struct val_struct_t *val);
+
+///Utility function for making a copy of string and returning a pointer to it
+char *newString(char *);
 
 #endif //BIRDIE_TYPE_INCLUDE

@@ -15,19 +15,6 @@ debugFuncs(const char* s, ...){
 	#endif
 }
 
-#define FLOAT_SPEC "%.3f"
-#define INT_SPEC "%lli"
-
-///Utility function for making a copy of string and returning a pointer to it
-char *newString(char *source){
-	if (source == NULL) { return NULL;}
-	char *result;
-	size_t sourceLen = sizeof(char) * (strlen(source)+1);
-	result = (char *)malloc(sourceLen); 
-	strcpy(result, source);
-	return result;
-}
-
 /*
  *	Set of functions that define how operations reduce in an expression.
  *	As a whole, these functions handle all types for all operations
@@ -178,7 +165,7 @@ struct val_struct_t *valInvert(struct val_struct_t *in){
 			currentItem->item = valInvert(currentItem->item);
 			currentItem = currentItem->nextItem;
 		}
-		return;
+		return a;
 	}
 	
 	char * oldstring = a->valS;
@@ -255,7 +242,7 @@ struct val_struct_t *valInvert(struct val_struct_t *in){
 			
 			#undef END_STRING_INV
 	}
-	
+	return a;
 }
 
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op){
@@ -270,6 +257,7 @@ struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 o
 		case voAsList:
 		break;
 	}
+	return NULL;
 }
 
 int isTrueVal(struct val_struct_t *input){

@@ -82,7 +82,7 @@ void readVar(struct val_struct_t *item){
 }
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
-//TODO find a better way to lookup functions that using srtcmp.
+//TODO find a better way to lookup functions that using strcmp.
 	
 	if (strcmp(funcName, "P") == 0){
 		return print(inputs);
@@ -116,7 +116,7 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 		return magicTypeSort(inputs);
 	}
 	
-
+	return NULL;
 }
 
 struct val_struct_t *functionCall(const char *funcName){
@@ -135,4 +135,5 @@ struct val_struct_t *functionCall(const char *funcName){
 	if (strcmp(funcName, "IF") == 0){
 		return floatinput(NULL);
 	}
+	return NULL;
 }

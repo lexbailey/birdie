@@ -5,10 +5,10 @@ void printRawVal(struct val_struct_t input){
 
     switch(input.valueType){
 	    case vtInt:
-		    printf("%lli", input.valI);
+		    printf(INT_SPEC, input.valI);
 	    break;
 	    case vtFloat:
-		    printf("%.9f", input.valF);
+		    printf(FLOAT_SPEC, input.valF);
 	    break;
 	    case vtString:
 		    printf("%s", input.valS);
@@ -56,7 +56,7 @@ struct val_struct_t *print(struct val_struct_t *inputs){
 	*/
 
 	struct val_struct_t *returnVal = createValStruct();
-	returnVal->valName = (char *)newString("P");
+	returnVal->valName = newString("P");
 	returnVal->valueType = vtInt;
 	returnVal->valI = recPrint(inputs);
 	return returnVal;
@@ -122,7 +122,7 @@ struct val_struct_t *trim(struct val_struct_t *inputs){
 	
 	struct val_struct_t *returnVal = createValStruct();
 	returnVal = copyVal(inputs);
-	returnVal->valName = (char *)newString("T");
+	returnVal->valName = newString("T");
 	recTrim(returnVal);
 	return returnVal;
 }
@@ -165,7 +165,7 @@ struct val_struct_t *count(struct val_struct_t *inputs){
 	*/
 	
 	struct val_struct_t *returnVal = createValStruct();
-	returnVal->valName = (char *)newString("C");
+	returnVal->valName = newString("C");
 	returnVal->valueType = vtInt;
 	returnVal->valI = recCount(inputs);
 	return returnVal;
@@ -219,7 +219,6 @@ void recMagicTypeSort(struct val_struct_t *inputs){
 	else{
 		magicTypeSortRawVal(inputs);
 	}
-	return count;
 }
 
 struct val_struct_t *magicTypeSort(struct val_struct_t *inputs){
@@ -243,7 +242,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtString;
-		thisItem->item->valName = (char *)newString("IS");
+		thisItem->item->valName = newString("IS");
 		char input[1024];
 		scanf("%1023s", input);
 		thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -253,7 +252,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtString;
-	thisItem->item->valName = (char *)newString("IS");
+	thisItem->item->valName = newString("IS");
 	char input[1024];
 	scanf("%1023s", input);
 	thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -277,7 +276,7 @@ struct val_struct_t *strinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtString;
-		thisItem->item->valName = (char *)newString("IS");
+		thisItem->item->valName = newString("IS");
 		char input[1024];
 		scanf("%1023s", input);
 		thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -287,7 +286,7 @@ struct val_struct_t *strinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtString;
-	thisItem->item->valName = (char *)newString("IS");
+	thisItem->item->valName = newString("IS");
 	char input[1024];
 	scanf("%1023s", input);
 	thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -309,7 +308,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtInt;
-		thisItem->item->valName = (char *)newString("IS");
+		thisItem->item->valName = newString("IS");
 		int32_t input;
 		scanf("%d", &input);
 		thisItem->item->valI = input;
@@ -318,7 +317,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtInt;
-	thisItem->item->valName = (char *)newString("IS");
+	thisItem->item->valName = newString("IS");
 	int32_t input;
 	scanf("%d", &input);
 	thisItem->item->valI = input;
@@ -339,7 +338,7 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtFloat;
-		thisItem->item->valName = (char *)newString("IS");
+		thisItem->item->valName = newString("IS");
 		double input;
 		scanf("%lf", &input);
 		thisItem->item->valF = input;
@@ -348,7 +347,7 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtFloat;
-	thisItem->item->valName = (char *)newString("IS");
+	thisItem->item->valName = newString("IS");
 	double input;
 	scanf("%lf", &input);
 	thisItem->item->valF = input;

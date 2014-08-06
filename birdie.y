@@ -285,7 +285,7 @@ main(int argc, char ** argv){
 	}
 }
 
-yyerror(char* s){
+void yyerror(char* s){
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
 

@@ -4,11 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "birdie_types.h"
-
-char *newString(char *);
 
 struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct_t *b, val_operation_2 op);
 
