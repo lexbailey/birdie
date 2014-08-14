@@ -13,3 +13,6 @@ birdie
 hack_doxy/
 user_doxy/
 user_dox/
+tests/verification/outputs/
+tests/verification/errors/
+
