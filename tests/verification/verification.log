@@ -1,0 +1,6 @@
+Birdie tests that failed or errored...
+Files ./outputs/arithmetic and ./expect/arithmetic differ
+----------------------------------------
+Total tests ran: 3
+Total tests that failed: 1
+Total tests that produced errors: 0

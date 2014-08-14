@@ -5,7 +5,9 @@
 #include <time.h>
 #include <stdlib.h>
 
+#ifdef GLOBAL_DEBUG
 #define DEBUGBISON
+#endif
 #ifdef DEBUGBISON
 	#include <stdarg.h>
 #endif
@@ -16,6 +18,8 @@
 #include "birdie_stackman.h"
 
 extern unsigned long line;
+
+void yyerror(char* msg);
 
 debugbison(const char* s, ...){
 	#ifdef DEBUGBISON
@@ -38,6 +42,9 @@ void init(){
 
 %}
 
+%define api.pure full
+%define api.push-pull push
+
 %union {
 	int ival;
 	float fval;
@@ -49,7 +56,7 @@ void init(){
 }
 
 
-%token <anyval> FUNC IDENT
+%token <anyval> FUNC IDENT NEGIDENT
 %token <anyval> NUMBER FLOAT TEXT
 
 %token <noval> ASSIGN
@@ -203,7 +210,6 @@ procVal: value				        {$$=$1;}
 										printVal($$);
 									}
 	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n");
-										$$=createValStruct();
 										$$ = reduceExpression2($2, $3, $1);
 										//$2 and $3 have been consumed
 										freeVal($2);
@@ -213,9 +219,9 @@ procVal: value				        {$$=$1;}
 	;
 
 value: command				        {debugbison("bison: command return as value.\n"); $$ = $1;}
-	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1->valName);}
+	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1->valName); readVar($1); $$ = copyVal($1); printVal($1);}
 	| anyNumber				        {debugbison("bison: number as value.\n"); $$ = $1;}
-	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1->valS);}
+	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1->valS); $$ = $1;}
 	;
 	
 binOp: valop2						{debugbison("bison: Binary op\n");}
@@ -249,6 +255,7 @@ valop1: INV
 	;
 
 namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); readVar($1); $$ = $1;}
+	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID); readVar($1); $$ = valNegate($1);}
 	;
 
 namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1->valName);}
@@ -262,7 +269,7 @@ rawNumber: NUMBER
 	;
 
 %%
-
+/*
 FILE *argIn = NULL;
 
 main(int argc, char ** argv){
@@ -284,43 +291,9 @@ main(int argc, char ** argv){
 		fclose(argIn);
 	}
 }
-
+*/
 void yyerror(char* s){
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
 
-int flexInput( char *buf, int *read, int max) {
 
-	if ( argIn == stdin ) //Interactive mode, read until a newline
-	{ 
-		int c = '*'; 
-		size_t n; 
-		for ( n = 0; n < max && 
-			     (c = getc( argIn )) != EOF && c != '\n'; ++n ) 
-			buf[n] = (char) c; 
-		if ( c == '\n' ) 
-			buf[n++] = (char) c; 
-		if ( c == EOF && ferror( argIn ) ) 
-			fprintf(stdout, "unable to read stdin\n" ); 
-		*read = n; 
-	} 
-	else { 
-		/*
-		errno=0; 
-		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) 
-			{ 
-			if( errno != EINTR) 
-				{ 
-				YY_FATAL_ERROR( "input in flex scanner failed" ); 
-				break; 
-				} 
-			errno=0; 
-			clearerr(yyin); 
-			} 
-		*/			
-		*read = fread(buf, sizeof(char), max, argIn);
-	}
-
-    
-    return 0;
-}

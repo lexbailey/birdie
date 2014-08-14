@@ -17,14 +17,56 @@
 #include <string.h>
 #include <inttypes.h>
 
+///Format specifier to use for printing floats
 #define FLOAT_SPEC "%.3f"
+///Format specifier to use for printing ints
 #define INT_SPEC "%" PRId64
+
+///Prerequisite for ITERLIST_BEGIN
+#define ITERLIST_DEF(item) struct val_list_item *item;
+
+///Starts an iteration through a list given a val_list_item and a name for the current item
+#define ITERLIST_BEGIN(list,item)	\
+	item = list;	\
+	while (item != NULL){
+
+///Ends an iteration through a list, must be passed the name of the current item
+#define ITERLIST_END(item)	\
+		item = item->nextItem; \
+	}
+
+
+///Prerequisite for ITERLIST_PARSE_BEGIN
+#define ITERLIST_PARSE_DEF(item,outputlist,outputitem)	\
+	struct val_list_item *item;	\
+	struct val_list_item *outputlist; \
+	struct val_list_item *outputitem; \
+
+///Starts an iteration through a list given a val_list_item and a name for the current item.
+///Also constructs an output list of the same length and iterates trough it with a given name.
+///This is designed to allow you to parse a list and produce an output list of the same length.
+#define ITERLIST_PARSE_BEGIN(list,item,outputlist,outputitem)	\
+	item = list;	\
+	outputlist = copyValList(list); \
+	outputitem = outputlist; \
+	while (item != NULL){
+
+///Ends an iteration through a list, must be passed the name of the current item
+///Also ends the iteration of an output list.
+#define ITERLIST_PARSE_END(item,outputitem)	\
+		item = item->nextItem; \
+		outputitem = outputitem->nextItem;\
+	}
+
 
 ///The int type that the user will be using. 64 bit integer by default.
 typedef int64_t user_int;
 
+///The float type that the user will be using. Double precision floating point by default
+typedef double user_float;
+
 ///Enumerated type for the storage type of a variable
-typedef enum {vtString, vtInt, vtFloat, vtIdentifier} val_type_t;
+typedef enum {vtString, vtInt, vtFloat, vtList} val_type_t;
 
 ///Enumerated type for a binary operator
 typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus} val_operation_2;
@@ -52,19 +94,27 @@ struct stack_state_item_t{
 
 ///A birdie value. This provides an abstract 'value' type. Birdie is duck typed, this struct stores a value of any type.
 struct val_struct_t{
+	///The type of value that is stored
 	val_type_t valueType;
+	///The name of the value (This is not available to the user, this is internal and used for debugging. It is usually the name of the function that returned it.)
 	char *valName;
+	///String value if any
 	char *valS;
+	///Integer value if any
 	user_int valI;
-	double valF;
+	///Float value if any
+	user_float valF;
+	///Identifier. Used for lookups to find a value in the variable list.
 	char *valID;
-
-	int isList;
+	///Pointer to the start of the list if this item is a list.
 	struct val_list_item *list;
 };
 
+///Link list element for one item in a list.
 struct val_list_item{
+	///Points to the next link list item
 	struct val_list_item *nextItem;
+	///Points to the item held in this link list item
 	struct val_struct_t *item;
 };
 
@@ -94,40 +144,58 @@ struct almighty_stack_item_t{
 	//The almighty stack is made up of the stack stack, the stack state stack and the condition stack.
 };
 
+///Frees a val_list_item. This will recursively free any list elements that follow it. This also frees the item it holds.
 void freeListItem(struct val_list_item *victim);
 
+///Frees a val_struct_t. This also recursively frees any strings and lists associated.
 void freeVal(struct val_struct_t*);
 
+///Frees a stack_state_item_t.
 void freeStackStateItem(struct stack_state_item_t*);
 
 //void freeStackStateStackItem(struct stack_state_stack_item_t*);
 
+///Makes an entirely independent copy of a val_struct_t. All data is copied recursively including lists.
 struct val_struct_t* copyVal(struct val_struct_t*);
 
+///Makes an entirely independent copy of a val_list_item. All data is copied recursively including sub-lists.
 struct val_list_item* copyValList(struct val_list_item *data);
 
+///Appends a list to the end of another list. All data is copied recursively. Inputs must both be lists.
 void appendList(struct val_struct_t*, struct val_struct_t*);
 
+///Prepends a list to the start of another list. All data is copied recursively. Inputs must both be lists.
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem);
 
+///Concatenates two lists a list to the end of another list. All data is copied recursively. Items can be lists or single items.
 void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo);
 
+///Sets pointers within a val_struct_t to be null to ensure they can be handle correctly when not initialised.
 void initValStruct(struct val_struct_t* val);
 
+///Allocates space for a val_struct_t and initialises it
 struct val_struct_t* createValStruct();
 
+///Sets pointers within a val_list_item to be null to ensure they can be handle correctly when not initialised.
 void initValListItem(struct val_list_item* val);
 
+///Alocates space for a val_list_item and initialises it.
 struct val_list_item* createValListItem();
 
+///Sets pointers within a stack_state_item_t to be null to ensure they can be handle correctly when not initialised.
 void initStackStateItem(struct stack_state_item_t* val);
 
+///Alocates space for a stack_state_item_t and initialises it.
 struct stack_state_item_t* createStackStateItem();
 
 //void initStackStateStackItem(struct stack_state_stack_item_t*);
 
 //struct stack_state_stack_item_t* createStackStateStackItem();
 
+///Turns a raw list into a val_struct_t with list type
+struct val_struct_t *wrapList(struct val_list_item *input);
+
+///Debug utility for printing info about a value
 void debugVal(struct val_struct_t *val);
 
 ///Utility function for making a copy of string and returning a pointer to it

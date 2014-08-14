@@ -1,7 +1,10 @@
 #include "birdie_types.h"
 //#include "freedom_fighter.h"
 
-//#define DEBUGTYPES
+#ifdef GLOBAL_DEBUG
+#define DEBUGTYPES
+#endif
+
 #ifdef DEBUGTYPES
 	#include <stdarg.h>
 #endif
@@ -40,7 +43,7 @@ void freeListItem(struct val_list_item *victim){
 void freeVal(struct val_struct_t *victim){
 	if (victim != NULL){
 	
-		if (victim->isList){
+		if (victim->valueType==vtList){
 			freeListItem(victim->list);
 		}
 	
@@ -72,7 +75,6 @@ struct val_struct_t* copyVal(struct val_struct_t *data){
 			newString(data->valS);
 	newVal->valI = data->valI;
 	newVal->valF = data->valF;
-	newVal->isList = data->isList;
 	newVal->list = copyValList(data->list);
 	return newVal;
 }
@@ -90,7 +92,6 @@ void initValStruct(struct val_struct_t* val){
     val->valID = NULL;
     val->valName = NULL;
 	val->valS = NULL;
-	val->isList = 0;
 	val->list = NULL;
 }
 
@@ -144,7 +145,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
 
-	if (existing->isList){
+	if (existing->valueType==vtList){
 		struct val_list_item *currentItem = existing->list;
 		//walk the list, look for the end
 		while (currentItem->nextItem != NULL){
@@ -167,7 +168,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	    
 	    existing->valS = NULL; //make sure our original value has forgotten about the string data that moved. This allows data to be moved out of the list without risk of a double free or segfault
 	
-		existing->isList = 1; //set the original existing val_struct_t to be a list
+		existing->valueType = vtList; //set the original existing val_struct_t to be a list
 		existing->list = createValListItem();	//Allocate first item in this list
 		existing->list->item = existingValue;	//Set it to be the value of the original val_struct_t
 		existing->list->nextItem = newListItem;	//New item added to list
@@ -184,7 +185,7 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
 
-	if (existing->isList){
+	if (existing->valueType==vtList){
 		//Currently have a list, great, prepending is easy
 		newListItem->nextItem = existing->list; //This item now points to what will now be the second item
 		existing->list = newListItem; //List now starts with the new item.
@@ -201,7 +202,7 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	    
 	    existing->valS = NULL; //make sure our original value has forgotten about the string data that moved. This allows data to be moved out of the list without risk of a double free or segfault
 	
-		existing->isList = 1; //set the original existing val_struct_t to be a list
+		existing->valueType=vtList; //set the original existing val_struct_t to be a list
 		existing->list = newListItem;
 		existing->list->nextItem = createValListItem();	//Allocate first item in this list 
 		existing->list->nextItem->item = existingValue;//existing item added to end of list
@@ -213,20 +214,23 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 	debugVal(listInOut);
 	debugTypes("Conc Incoming list 2\n");
 	debugVal(listTwo);
-	if (listTwo->isList && listInOut->isList){
+	/*
+	if (listInOut->valueType!=vtList){
+		struct val_struct_t *listStart;
+		listStart = copyVal(listInOut);
+		listInOut->valueType = vtList;
+		listInOut->list = createValListItem();
+		listInOut->list->item = listStart;
+	}
+
+	appendList(listInOut, listTwo);
+
+	*/
+	if (listTwo->valueType==vtList && listInOut->valueType==vtList){
 	
 		//Concat
-		/*
-		struct val_list_item *listTwoItem;
-		listTwoItem = createValListItem();
-		listTwoItem->item = copyVal(&listTwo);
-		listTwoItem->nextItem = listTwo->list;
-		listTwo->list = NULL;
-		listTwo->isList = 0;
-		*/
 		struct val_list_item *listTwoItem;
 		listTwoItem = copyValList(listTwo->list);
-		
 		
 		struct val_list_item *currentItem = listInOut->list;
 		//walk the list, look for the end
@@ -236,28 +240,50 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 		currentItem->nextItem = listTwoItem;
 	}
 	else{
-	
-		if ((!listTwo->isList) && (!listInOut->isList)){
+		//Make sure listinout is a list
+		if(!listInOut->valueType==vtList){
+			struct val_struct_t *listStart;
+			listStart = copyVal(listInOut);
+			listInOut->valueType = vtList;
+			listInOut->list = createValListItem();
+			listInOut->list->item = listStart;
+		}
+		appendList(listInOut, copyVal(listTwo));
+		/*
+		if ((!listTwo->valueType==vtList) && (!listInOut->valueType==vtList)){
 			struct val_list_item *listInOutItem;
 			listInOutItem = createValListItem();
 			listInOutItem->item = copyVal(listInOut);
 			listInOutItem->nextItem = NULL;
-			listInOut->isList = 1;
+			listInOut->valueType=vtList;
 			listInOut->list = listInOutItem;
 			appendList(listInOut, copyVal(listTwo));
 		}
 		else{
-			if (listInOut->isList){
+			if (listInOut->valueType==vtList){
 				appendList(listInOut, copyVal(listTwo));
 			}
 			else{
-				prependList(listInOut, copyVal(listTwo));
+				struct val_struct_t *listStart;
+				listStart = copyVal(listInOut);
+				listInOut->valueType = vtList;
+				listInOut->list = createValListItem();
+				listInOut->list->item = listStart;
+				appendList(listInOut, copyVal(listTwo));
 			}
 		}
+		*/
 	}
 	debugTypes("Output list is:\n");
 	debugVal(listInOut);
 	//debugVal(listInOut->list->item);
+}
+
+struct val_struct_t *wrapList(struct val_list_item *input){
+	struct val_struct_t *output = createValStruct();
+	output->valueType=vtList;
+	output->list = input;
+	return output;
 }
 
 void debugVal(struct val_struct_t *val){
@@ -269,7 +295,7 @@ void debugVal(struct val_struct_t *val){
 	debugTypes("\tvalS address: \t%p\n", val->valS);
 	debugTypes("\tvalI: \t%d\n", val->valI);
 	debugTypes("\tvalF: \t%.3f\n", val->valF);
-	debugTypes("\tis list?: \t%d\n", val->isList);
+	debugTypes("\tis list?: \t%d\n", val->valueType==vtList);
 	debugTypes("\tlist address: \t%p\n", val->list);
 	
 	debugTypes("\tlist pointers...\n");

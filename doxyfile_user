@@ -1,6 +1,6 @@
-PROJECT_NAME           = "Birdie hacker's reference manual"
-INPUT                  = . ./user_dox/share
-OUTPUT_DIRECTORY       = ./hack_doxy
+PROJECT_NAME           = "Birdie user's reference manual"
+INPUT                  = ./user_dox/share ./user_dox/user
+OUTPUT_DIRECTORY       = ./user_doxy
 OUTPUT_LANGUAGE        = English
 ENABLE_PREPROCESSING   = YES 
 MACRO_EXPANSION        = YES 

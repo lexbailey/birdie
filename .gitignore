@@ -7,4 +7,9 @@ birdie
 *.i
 *.s
 *.o
-
+.cproject
+.project
+.settings/
+hack_doxy/
+user_doxy/
+user_dox/

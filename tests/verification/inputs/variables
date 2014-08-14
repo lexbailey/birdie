@@ -1,0 +1,9 @@
+a=1;
+b=2;
+c=3;
+'a b cP #Should print 123
+a="hi there';
+b=" this is Birdie';
+c=", I''m just testing things.
+';
+'a b cP #Should print hi there this is Birdie, I'm just testing things. <newline>

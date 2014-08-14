@@ -1,19 +1,23 @@
 Program = birdie
 
-Objects = birdie_types.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
+Objects = birdie_types.o birdie_funcs_add.o birdie_funcs_sub.o birdie_funcs_mul.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
+
+#GlobalConfig = -ggdb -DGLOBAL_DEBUG
+GlobalConfig = -ggdb
 
 all: ${Program}
 
 ${Program}.tab.c: ${Program}.y
 		bison -d $^
+		
 lex.yy.c: ${Program}.l ${Program}.tab.h
 	flex $<
 
 %.o: %.c %.h
-	gcc -c $< -o $@ -ggdb
+	gcc -c $< -o $@ $(GlobalConfig)
 
 ${Program}: ${Program}.tab.c lex.yy.c ${Objects}
-	gcc -o $@ $^ -lfl -ggdb
+	gcc -o $@ $^ -lfl $(GlobalConfig)
 
 ${Program}.output: ${Program}.y
 	bison -d --report=state $^

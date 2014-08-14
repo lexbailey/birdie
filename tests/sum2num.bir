@@ -5,5 +5,6 @@
 
 a='II;
 b='II;
-'+a b"
-'P
+c=+a b;
+'+a b"erm
+..err'P

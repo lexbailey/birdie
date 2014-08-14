@@ -4,14 +4,26 @@
 	#include "birdie.tab.h"
 	#include <stdarg.h>
 
-    #define INITVAL yylval.anyval=createValStruct()
+	struct val_struct_t *anyval_p;
+
+    #define INITVAL anyval_p=createValStruct()
     
-    
+    #define PARSE(tok,tag,val) do { \
+    	YYSTYPE yylval = {.tag=val};  \
+    	int status = yypush_parse(ps, tok, &yylval); \
+    	if (status != YYPUSH_MORE) return status; \
+  	} while(0)
+  	#define PARSE_TOKEN(tok) do { \
+	    int status = yypush_parse(ps, tok, 0); \
+	    if (status != YYPUSH_MORE) return status; \
+  	} while(0)
     
     //Take input from file argument if specified
 	#define YY_INPUT(b,r,s) flexInput(b,&r,s)
 
+	#ifdef GLOBAL_DEBUG
 	#define DEBUGFLEX
+	#endif
 
 	unsigned long line = 1;
 
@@ -52,6 +64,7 @@
     	return yylexMulti();
     }
     
+    /*
     enum yytokentype logReturn(enum yytokentype returnVal){
     	lastReturnToken = returnVal;
     	debug("\tflex: logReturn!\n");
@@ -75,6 +88,7 @@
     	printVal(lastyylval.anyval);
     	return lastReturnToken;
     }
+    */
 	
 	int64_t parseNum(char *number){
 	    int len = strlen(number);
@@ -115,6 +129,9 @@
 		while (input[++i] != '\0'){
 			if (input[i] != '\''){
 				output[o++] = input[i];
+				if (input[i] == '\n'){
+					line++;
+				}
 			}
 			else{
 				if (lastWasQuot){
@@ -135,84 +152,190 @@
 %}
 
 %%
+						yypstate *ps = yypstate_new ();
 
-[A-Z]+					{debug("\tflex: found FUNC\n"); INITVAL; yylval.anyval->valName = newString(yytext); return logReturn(FUNC);}
-[a-z]+					{debug("\tflex: found IDENT\n"); INITVAL; yylval.anyval->valID = newString(yytext); yylval.anyval->valName = newString("Identifier"); return logReturn(IDENT);}
+[A-Z]+					{
+							debug("\tflex: found FUNC\n");
+ 							INITVAL;
+ 							anyval_p->valName = newString(yytext);
+ 							PARSE(FUNC,anyval,copyVal(anyval_p));
+ 						}
+[a-z]+					{
+							debug("\tflex: found IDENT\n");
+							INITVAL;
+							anyval_p->valID = newString(yytext);
+							anyval_p->valName = newString("Identifier");
+							PARSE(IDENT,anyval,copyVal(anyval_p));
+						}
+[a-z]+-					{
+							debug("\tflex: found IDENT\n");
+							INITVAL;
+							anyval_p->valID = newString(yytext);
+							anyval_p->valName = newString("Identifier");
+							PARSE(NEGIDENT,anyval,copyVal(anyval_p));
+						}
 
-\"(([^']*)'')*([^']*)'	{debug("\tflex: found TEXT\n"); INITVAL; yylval.anyval->valueType = vtString; yylval.anyval->valS = newString(yytext); parseLit(&(yylval.anyval->valS)); return logReturn(TEXT);}
+\"(([^']*)'')*([^']*)'	{
+							debug("\tflex: found TEXT\n");
+							INITVAL;
+							anyval_p->valueType = vtString;
+							anyval_p->valS = newString(yytext);
+							parseLit(&(anyval_p->valS));
+							debug("\tflex: TEXT val is %s\n", anyval_p->valS);
+							PARSE(TEXT,anyval,copyVal(anyval_p));
+						}
 
 [0-9]+[-+]?				{
 							debug("\tflex: found NUMBER\n");
 							INITVAL;
-							yylval.anyval->valueType = vtInt;
-							yylval.anyval->valI = parseNum(yytext);
-							return logReturn(NUMBER);
+							anyval_p->valueType = vtInt;
+							anyval_p->valI = parseNum(yytext);
+							PARSE(NUMBER,anyval,copyVal(anyval_p));
 						}
 
-([0-9]*\.?[0-9]+|[0]9+\.)[-+]?		{debug("\tflex: found FLOAT\n"); INITVAL; yylval.anyval->valueType = vtFloat; yylval.anyval->valF = parseNumf(yytext); return logReturn(FLOAT);}
+([0-9]*\.?[0-9]+|[0]9+\.)[-+]?	{
+							debug("\tflex: found FLOAT\n");
+							INITVAL;
+							anyval_p->valueType = vtFloat;
+							anyval_p->valF = parseNumf(yytext);
+							PARSE(FLOAT,anyval,copyVal(anyval_p));
+						}
 
-"="						{debug("\tflex: found ASSIGN\n"); return logReturn(ASSIGN);}
-"+"						{debug("\tflex: found ADD\n"); yylval.twoOp = voAdd; return logReturn(ADD);}
-"-"						{debug("\tflex: found SUB\n");  yylval.twoOp = voSubtract; return logReturn(SUB);}
-"*"						{debug("\tflex: found MUL\n");  yylval.twoOp = voMultiply; return logReturn(MUL);}
-"/"						{debug("\tflex: found DIV\n");  yylval.twoOp = voDivide; return logReturn(DIV);}
-"%"						{debug("\tflex: found MOD\n");  yylval.twoOp = voModulus; return logReturn(MOD);}
-"!"						{debug("\tflex: found INV\n");  yylval.oneOp = voInvert; return logReturn(INV);}
+"="						{debug("\tflex: found ASSIGN\n"); PARSE_TOKEN(ASSIGN);}
+"+"						{debug("\tflex: found ADD\n"); PARSE(ADD,twoOp,voAdd);}
+"-"						{debug("\tflex: found SUB\n"); PARSE(SUB,twoOp,voSubtract);}
+"*"						{debug("\tflex: found MUL\n"); PARSE(MUL,twoOp,voMultiply);}
+"/"						{debug("\tflex: found DIV\n"); PARSE(DIV,twoOp,voDivide);}
+"%"						{debug("\tflex: found MOD\n"); PARSE(MOD,twoOp,voModulus);}
+"!"						{debug("\tflex: found INV\n"); PARSE(INV,oneOp,voInvert);}
 
-"$"						{debug("\tflex: found ASSCALAR\n"); yylval.oneOp = voAsScalar; return logReturn(ASSCALAR);}
-"~"						{debug("\tflex: found ASSTRING\n"); yylval.oneOp = voAsString;return logReturn(ASSTRING);}
-"@"						{debug("\tflex: found ASLIST\n"); yylval.oneOp = voAsList; return logReturn(ASLIST);}
+"$"						{debug("\tflex: found ASSCALAR\n"); PARSE(ASSCALAR,oneOp,voAsScalar); }
+"~"						{debug("\tflex: found ASSTRING\n"); PARSE(ASSTRING,oneOp,voAsString); }
+"@"						{debug("\tflex: found ASLIST\n"); PARSE(ASLIST,oneOp,voAsList); }
 
-"^"						{debug("\tflex: found CARET\n"); return logReturn(CARET);}
-"_"						{debug("\tflex: found UNDERSCORE\n"); return logReturn(UNDERSCORE);}
+"^"						{debug("\tflex: found CARET\n"); PARSE_TOKEN(CARET);}
+"_"						{debug("\tflex: found UNDERSCORE\n"); PARSE_TOKEN(UNDERSCORE);}
 
-"}"						{debug("\tflex: found PUSHSTACK\n"); return logReturn(PUSHSTACK);}
-"{"						{debug("\tflex: found POPSTACK\n"); return logReturn(POPSTACK);}
-"]"						{debug("\tflex: found PUSH\n"); return logReturn(PUSH);}
-"["						{debug("\tflex: found POP\n"); return logReturn(POP);}
+"}"						{debug("\tflex: found PUSHSTACK\n"); PARSE_TOKEN(PUSHSTACK);}
+"{"						{debug("\tflex: found POPSTACK\n"); PARSE_TOKEN(POPSTACK);}
+"]"						{debug("\tflex: found PUSH\n"); PARSE_TOKEN(PUSH);}
+"["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
-"("						{debug("\tflex: found BLOCKSTART\n"); return logReturn(BLOCKSTART);}
-")"						{debug("\tflex: found BLOCKEND\n"); return logReturn(BLOCKEND);}
+"("						{debug("\tflex: found BLOCKSTART\n"); PARSE_TOKEN(BLOCKSTART);}
+")"						{debug("\tflex: found BLOCKEND\n"); PARSE_TOKEN(BLOCKEND);}
 
-"?"						{debug("\tflex: found PUSH2COND\n"); return logReturn(PUSH2COND);}
-"\\"					{debug("\tflex: found POP2COND\n"); return logReturn(POP2COND);}
-":"						{debug("\tflex: found POPCOND\n"); return logReturn(POPCOND);}
-"??"					{debug("\tflex: found PUSHCOND\n"); return logReturn(PUSHCOND);}
+"?"						{debug("\tflex: found PUSH2COND\n"); PARSE_TOKEN(PUSH2COND);}
+"\\"					{debug("\tflex: found POP2COND\n"); PARSE_TOKEN(POP2COND);}
+":"						{debug("\tflex: found POPCOND\n"); PARSE_TOKEN(POPCOND);}
+"??"					{debug("\tflex: found PUSHCOND\n"); PARSE_TOKEN(PUSHCOND);}
 
 
-[,]						{debug("\tflex: found DELIM\n"); return logReturn(DELIM);}
-[']						{debug("\tflex: found OPDELIM\n"); return logReturn(OPDELIM);}
-";"						{debug("\tflex: found SEMIC\n"); return logReturn(SEMIC);}
+[,]						{debug("\tflex: found DELIM\n"); PARSE_TOKEN(DELIM);}
+[']						{debug("\tflex: found OPDELIM\n"); PARSE_TOKEN(OPDELIM);}
+";"						{debug("\tflex: found SEMIC\n"); PARSE_TOKEN(SEMIC);}
 
-">"						{debug("\tflex: found GREATER\n"); return logReturn(GREATER);}
-"<"						{debug("\tflex: found LESS\n"); return logReturn(LESS);}
+">"						{debug("\tflex: found GREATER\n"); PARSE_TOKEN(GREATER);}
+"<"						{debug("\tflex: found LESS\n"); PARSE_TOKEN(LESS);}
 
-">="					{debug("\tflex: found GREATEREQ\n"); return logReturn(GREATEREQ);}
-"<="					{debug("\tflex: found LESSEQ\n"); return logReturn(LESSEQ);}
+">="					{debug("\tflex: found GREATEREQ\n"); PARSE_TOKEN(GREATEREQ);}
+"<="					{debug("\tflex: found LESSEQ\n"); PARSE_TOKEN(LESSEQ);}
 
-"£"						{debug("\tflex: found EQ\n"); return logReturn(EQ);}
-"`"						{debug("\tflex: found INEQ\n"); return logReturn(INEQ);}
+"£"						{debug("\tflex: found EQ\n"); PARSE_TOKEN(EQ);}
+"`"						{debug("\tflex: found INEQ\n"); PARSE_TOKEN(INEQ);}
 
-"|"						{debug("\tflex: found BOOLOR\n"); return logReturn(BOOLOR);}
-"||"					{debug("\tflex: found BITOR\n"); return logReturn(BITOR);}
+"|"						{debug("\tflex: found BOOLOR\n"); PARSE_TOKEN(BOOLOR);}
+"||"					{debug("\tflex: found BITOR\n"); PARSE_TOKEN(BITOR);}
 
-"&"						{debug("\tflex: found BOOLAND\n"); return logReturn(BOOLAND);}
-"&&"					{debug("\tflex: found BITAND\n"); return logReturn(BITAND);}
+"&"						{debug("\tflex: found BOOLAND\n"); PARSE_TOKEN(BOOLAND);}
+"&&"					{debug("\tflex: found BITAND\n"); PARSE_TOKEN(BITAND);}
 
 `[0-9]+					{debug("\tflex: found repeater. Urgh! Awful hack\n");
-							INITVAL;
-							char *number = malloc(sizeof(char) * (strlen(yytext)));
-	                        strcpy(number, yytext+1);
-	                        returnMulti = atoi(number)-2;
-	                        free(number);
+							//INITVAL;
+							//char *number = malloc(sizeof(char) * (strlen(yytext)));
+	                        //strcpy(number, yytext+1);
+	                        //returnMulti = atoi(number)-2;
+	                        //free(number);
 													
-	                        return lastReturnToken;
+	                        //return lastReturnToken;
                        
 						}
 
 
-#[^\n]*\n				{debug("\tflex: ignore comment\n");line++;}
+#[^\n]*					{debug("\tflex: ignore comment\n");}
 
 [ \t]					{debug("\tflex: eating white space\n");/*eat white space*/}
 [\n]					{debug("\tflex: eating new line\n");line++;/*eat new lines, increment line count*/}
-.						{debug("\tflex: no match\n");synError("Statement expected but '%s' found.", yytext);INITVAL; return logReturn(ERR);}
+.						{
+							debug("\tflex: no match\n");
+							synError("Statement expected but '%s' found.", yytext);
+							INITVAL; 
+							PARSE_TOKEN(ERR);
+						}
+
+
+<<EOF>>                 {int status = yypush_parse(ps, 0, 0);
+                         yypstate_delete(ps);
+                         return status; 
+                        }
+
+%%
+
+FILE *argIn = NULL;
+
+int main(int argc, char ** argv){
+	init();
+	//anyval_p = createValStruct();
+	//Where is my input?
+	if (argc > 1){
+		char * inputFile = argv[1];
+		argIn = fopen(inputFile, "r");
+		if (argIn == NULL){
+			printf("Error opening input file.\n");
+			return -1;
+		}
+	}
+	else{
+		argIn = stdin;
+	}
+	int result = yylex();
+	if (argIn != NULL){
+		fclose(argIn);
+	}
+	return result;
+}
+
+int flexInput( char *buf, int *read, int max) {
+
+	if ( argIn == stdin ) //Interactive mode, read until a newline
+	{ 
+		int c = '*'; 
+		size_t n; 
+		for ( n = 0; n < max && 
+			     (c = getc( argIn )) != EOF && c != '\n'; ++n ) 
+			buf[n] = (char) c; 
+		if ( c == '\n' ) 
+			buf[n++] = (char) c; 
+		if ( c == EOF && ferror( argIn ) ) 
+			fprintf(stdout, "unable to read stdin\n" ); 
+		*read = n; 
+	} 
+	else { 
+		
+		errno=0; 
+		while ( (*read = fread(buf, 1, max, argIn))==0 && ferror(argIn)) 
+			{ 
+			if( errno != EINTR) 
+				{ 
+				YY_FATAL_ERROR( "input in flex scanner failed" ); 
+				break; 
+				} 
+			errno=0; 
+			clearerr(argIn); 
+			} 
+					
+		//*read = fread(buf, sizeof(char), max, argIn);
+	}
+
+    
+    return 0;
+}

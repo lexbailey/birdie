@@ -12,11 +12,11 @@ void initialiseAlmightyStack(){
 		//It is just a birdie list of birdie lists.
 		almightyStackStack->stackStack = createValStruct();
 
-		almightyStackStack->stackStack->isList = 1;
+		almightyStackStack->stackStack->valueType=vtList;
 		//Create the first stack
 		almightyStackStack->stackStack->list = createValListItem();
 			almightyStackStack->stackStack->list->item = createValStruct();
-			almightyStackStack->stackStack->list->item->isList = 1;
+			almightyStackStack->stackStack->list->item->valueType=vtList;
 			almightyStackStack->stackStack->list->item->list = createValListItem();
 			almightyStackStack->stackStack->list->item->list->item = createValStruct();
 			almightyStackStack->stackStack->list->item->list->item->valueType = vtInt;
@@ -28,11 +28,11 @@ void initialiseAlmightyStack(){
 		//Now for the condition stack stack
 		almightyStackStack->conditionStackStack = createValStruct();
 
-		almightyStackStack->conditionStackStack->isList = 1;
+		almightyStackStack->conditionStackStack->valueType=vtList;
 		//Create the first stack
 		almightyStackStack->conditionStackStack->list = createValListItem();
 			almightyStackStack->conditionStackStack->list->item = createValStruct();
-			almightyStackStack->conditionStackStack->list->item->isList = 1;
+			almightyStackStack->conditionStackStack->list->item->valueType=vtList;
 			almightyStackStack->conditionStackStack->list->item->list = createValListItem();
 			almightyStackStack->conditionStackStack->list->item->list->item = createValStruct();
 			almightyStackStack->conditionStackStack->list->item->list->item->valueType = vtInt;

@@ -2,8 +2,10 @@
 #include "birdie_control.h"
 //#include "freedom_fighter.h"
 
-
+#ifdef GLOBAL_DEBUG
 //#define DEBUGCONTROL
+#endif
+
 #ifdef DEBUGCONTROL
 	#include <stdarg.h>
 #endif
@@ -49,7 +51,6 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
 	assignee->valS = data->valS;
 	assignee->valI = data->valI;
 	assignee->valF = data->valF;
-	assignee->isList = data->isList;
 	assignee->list = data->list;
 	assign(assignee);
 }

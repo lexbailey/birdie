@@ -1,7 +1,10 @@
 #include "birdie_funcs.h"
 //#include "freedom_fighter.h"
 
+#ifdef GLOBAL_DEBUG
 #define DEBUGFUNC
+#endif
+
 #ifdef DEBUGFUNC
 	#include <stdarg.h>
 #endif
@@ -15,148 +18,21 @@ debugFuncs(const char* s, ...){
 	#endif
 }
 
-/*
- *	Set of functions that define how operations reduce in an expression.
- *	As a whole, these functions handle all types for all operations
- */
-
-struct val_struct_t *intAddVal(int64_t a, struct val_struct_t *b){
-	struct val_struct_t *out;
-	//Vars for string stuff
-	char buf[20];
-	int numWritten;
-	unsigned totLen;
-	
-	out = createValStruct();
-	out->valName = newString("BinOpResult");
-	out->valID = newString("Unidentified");
-	switch(b->valueType){
-		case vtInt:
-			out->valI = b->valI + a;
-			out->valueType = vtInt;
-		break;
-		case vtString:
-			numWritten = snprintf(buf, 20, INT_SPEC, a);
-			if (numWritten < 0){
-				//bum!
-			}
-			else{
-				totLen = numWritten + strlen(b->valS) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", buf, b->valS);
-			}
-			out->valueType = vtString;
-		break;
-		case vtFloat:
-			out->valF = b->valF + (double)a;
-			out->valueType = vtFloat;
-		break;
-	}
-	return out;
-}
-
-struct val_struct_t *floatAddVal(double a, struct val_struct_t *b){
-	struct val_struct_t *out;
-	//Vars for string stuff
-	char buf[20];
-	int numWritten;
-	unsigned totLen;
-				
-	out = createValStruct();
-	out->valName = newString("BinOpResult");
-	out->valID = newString("Unidentified");
-	switch(b->valueType){
-		case vtInt:
-			out->valF = a + ((double)(b->valI));
-			out->valueType = vtInt;
-		break;
-		case vtString:
-			numWritten = snprintf(buf, 20, FLOAT_SPEC, a);
-			if (numWritten < 0){
-				//bum!
-			}
-			else{
-				totLen = numWritten + strlen(b->valS) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", buf, b->valS);
-			}
-			out->valueType = vtString;
-		break;
-		case vtFloat:
-			out->valF = a + b->valF;
-			out->valueType = vtFloat;
-		break;
-	}
-	return out;
-}
-
-struct val_struct_t *stringAddVal(char *a, struct val_struct_t *b){
-	struct val_struct_t *out;
-	//Vars for string stuff
-	char buf[20];
-	int numWritten;
-	unsigned totLen;
-				
-	out = createValStruct();
-	out->valName = newString("BinOpResult");
-	out->valID = newString("Unidentified");
-	switch(b->valueType){
-		case vtInt:
-			numWritten = snprintf(buf, 20, INT_SPEC, b->valI);
-			if (numWritten < 0){
-				//bum!
-			}
-			else{
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
-			}
-			out->valueType = vtString;
-		break;
-		case vtString:
-			totLen = strlen(a) + strlen(b->valS) + 1;
-			out->valS = (char *)malloc(sizeof(char) * totLen);
-			snprintf(out->valS, totLen, "%s%s", a, b->valS);
-			out->valueType = vtString;
-		break;
-		case vtFloat:
-			numWritten = snprintf(buf, 20, FLOAT_SPEC, b->valF);
-			if (numWritten < 0){
-				//bum!
-			}
-			else{
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
-			}
-			out->valueType = vtString;
-		break;
-	}
-	return out;
-}
-
-struct val_struct_t *valAdd(struct val_struct_t *a, struct val_struct_t *b){
-	switch(a->valueType){
-		case vtInt:
-			return intAddVal(a->valI, b);
-		case vtFloat:
-			return floatAddVal(a->valF, b);
-		case vtString:
-			return stringAddVal(a->valS, b);
-	}
-}
-
-
 struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct_t *b, val_operation_2 op){
 	switch(op){
 		case voAdd:
 			return valAdd(a,b);
+		case voSubtract:
+			return valSub(a,b);
+		case voMultiply:
+			return valMul(a,b);
 	}
+	return NULL;
 }
 
 struct val_struct_t *valInvert(struct val_struct_t *in){
 	struct val_struct_t *a = copyVal(in);
-	if (a->isList){
+	if (a->valueType==vtList){
 		//Oo. List, erm...
 		//Recurse!
 		struct val_list_item *currentItem;
@@ -237,12 +113,56 @@ struct val_struct_t *valInvert(struct val_struct_t *in){
 			if (strcmp(oldstring, "f") == 0){a->valS = newString("t");END_STRING_INV}
 			if (strcmp(oldstring, "F") == 0){a->valS = newString("T");END_STRING_INV}
 			
+
+			//Oo, then the really odd ones
+			if (strcmp(oldstring, "(") == 0){a->valS = newString(")");END_STRING_INV}
+			if (strcmp(oldstring, ")") == 0){a->valS = newString("(");END_STRING_INV}
+			if (strcmp(oldstring, "[") == 0){a->valS = newString("]");END_STRING_INV}
+			if (strcmp(oldstring, "]") == 0){a->valS = newString("[");END_STRING_INV}
+			if (strcmp(oldstring, "<") == 0){a->valS = newString(">");END_STRING_INV}
+			if (strcmp(oldstring, ">") == 0){a->valS = newString("<");END_STRING_INV}
+			if (strcmp(oldstring, "{") == 0){a->valS = newString("}");END_STRING_INV}
+			if (strcmp(oldstring, "}") == 0){a->valS = newString("{");END_STRING_INV}
+
 			//Any other string is a true, if we make it this far, produce a false. Specifically "false'
 			a->valS = newString("false"); END_STRING_INV
 			
 			#undef END_STRING_INV
 	}
 	return a;
+}
+
+
+struct val_struct_t *valNegate(struct val_struct_t *in){
+	//TODO
+
+	struct val_struct_t *a = copyVal(in);
+		if (a->valueType==vtList){
+			//Oo. List, erm...
+			//Recurse!
+			struct val_list_item *currentItem;
+			currentItem = a->list;
+			while (currentItem != NULL){
+				currentItem->item = valNegate(currentItem->item);
+				currentItem = currentItem->nextItem;
+			}
+			return a;
+		}
+
+		char * oldstring = a->valS;
+
+		switch(a->valueType){
+			case vtInt:
+				a->valI = -(a->valI); //ints are easy
+				return a;
+			case vtFloat:
+				a->valF = -(a->valF); //floats are too
+				return a;
+			case vtString:
+				//TODO reverse string
+				a->valS = newString("false");
+		}
+		return a;
 }
 
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op){
@@ -296,6 +216,10 @@ int isTrueVal(struct val_struct_t *input){
 			if (strcmp(input->valS, "~") == 0){return 0;}
 			if (strcmp(input->valS, "f") == 0){return 0;}
 			if (strcmp(input->valS, "F") == 0){return 0;}
+			if (strcmp(input->valS, ")") == 0){return 0;}
+			if (strcmp(input->valS, "]") == 0){return 0;}
+			if (strcmp(input->valS, ">") == 0){return 0;}
+			if (strcmp(input->valS, "}") == 0){return 0;}
 			return 1;
 			break;
 	}
@@ -304,7 +228,7 @@ int isTrueVal(struct val_struct_t *input){
 
 void printVal(struct val_struct_t *a){
 	if (a == NULL){debugFuncs("Null value passsed to printVal.\n"); return;}
-    if (a->isList){
+    if (a->valueType==vtList){
         debugFuncs("'%s' (Identifier '%s') is a list.\n", a->valName, a->valID);
         struct val_list_item *thisItem = a->list;
 		int id = 0;

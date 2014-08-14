@@ -19,21 +19,26 @@ void printRawVal(struct val_struct_t input){
     }
 }
 
+
+
 int recPrint(struct val_struct_t *inputs){
 
 	int count = 0;
-	if (inputs->isList){
-		struct val_list_item *thisItem = inputs->list;	
-		while (thisItem != NULL){
-			if (thisItem->item->isList){
+	if (inputs->valueType==vtList){
+
+		ITERLIST_DEF(thisItem)
+		ITERLIST_BEGIN(inputs->list,thisItem)
+
+			if (thisItem->item->valueType==vtList){
 				count +=recPrint(thisItem->item);
 			}
 			else{
 				printRawVal(*(thisItem->item));
 				count++;
 			}
-			thisItem = thisItem->nextItem;
-		}
+
+		ITERLIST_END(thisItem)
+
 	}
 	else{
 		count=1;
@@ -64,7 +69,7 @@ struct val_struct_t *print(struct val_struct_t *inputs){
 }
 
 void trimRawVal(struct val_struct_t *input){
-	if ((!input->isList)&&(input->valueType == vtString)){
+	if (input->valueType == vtString){
 		int len = strlen(input->valS); //Find the length of the old string
 		char *output = (char *)malloc(sizeof(char) * (len+1));
 		char *s = input->valS;
@@ -95,17 +100,16 @@ void trimRawVal(struct val_struct_t *input){
 
 void recTrim(struct val_struct_t *inputs){
 
-	if (inputs->isList){
-		struct val_list_item *thisItem = inputs->list;	
-		while (thisItem != NULL){
-			if (thisItem->item->isList){
+	if (inputs->valueType==vtList){
+		ITERLIST_DEF(thisItem)
+		ITERLIST_BEGIN(inputs->list,thisItem)
+			if (thisItem->item->valueType==vtList){
 				recTrim(thisItem->item);
 			}
 			else{
 				trimRawVal(thisItem->item);
 			}
-			thisItem = thisItem->nextItem;
-		}
+		ITERLIST_END(thisItem)
 	}
 	else{
 		trimRawVal(inputs);
@@ -138,17 +142,16 @@ int countRawVal(struct val_struct_t *input){
 int recCount(struct val_struct_t *inputs){
 	if (inputs == NULL) return 0;
 	int count = 0;
-	if (inputs->isList){
-		struct val_list_item *thisItem = inputs->list;	
-		while (thisItem != NULL){
-			if (thisItem->item->isList){
+	if (inputs->valueType==vtList){
+		ITERLIST_DEF(thisItem)
+		ITERLIST_BEGIN(inputs->list,thisItem)
+			if (thisItem->item->valueType==vtList){
 				count += recCount(thisItem->item);
 			}
 			else{
 				count += countRawVal(thisItem->item);
 			}
-			thisItem = thisItem->nextItem;
-		}
+		ITERLIST_END(thisItem)
 	}
 	else{
 		count += countRawVal(inputs);
@@ -204,17 +207,16 @@ void magicTypeSortRawVal(struct val_struct_t *inout){
 
 void recMagicTypeSort(struct val_struct_t *inputs){
 	if (inputs == NULL) return;
-	if (inputs->isList){
-		struct val_list_item *thisItem = inputs->list;	
-		while (thisItem != NULL){
-			if (thisItem->item->isList){
+	if (inputs->valueType==vtList){
+		ITERLIST_DEF(thisItem)
+		ITERLIST_BEGIN(inputs->list,thisItem)
+			if (thisItem->item->valueType==vtList){
 				recMagicTypeSort(thisItem->item);
 			}
 			else{
 				magicTypeSortRawVal(thisItem->item);
 			}
-			thisItem = thisItem->nextItem;
-		}
+		ITERLIST_END(thisItem)
 	}
 	else{
 		magicTypeSortRawVal(inputs);
@@ -233,7 +235,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 	
 	struct val_struct_t *result = createValStruct();
 	struct val_struct_t *resultMagic;	
-	result->isList = 1;
+	result->valueType=vtList;
 	result->list = createValListItem();
 	result->list->item = createValStruct();
 	
@@ -242,7 +244,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtString;
-		thisItem->item->valName = newString("IS");
+		thisItem->item->valName = newString("I");
 		char input[1024];
 		scanf("%1023s", input);
 		thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -252,7 +254,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtString;
-	thisItem->item->valName = newString("IS");
+	thisItem->item->valName = newString("I");
 	char input[1024];
 	scanf("%1023s", input);
 	thisItem->item->valS = malloc(sizeof(char) * strlen(input));
@@ -267,7 +269,7 @@ struct val_struct_t *strinput(struct val_struct_t *inputs){
 	int reps = recCount(inputs)+1;
 	
 	struct val_struct_t *result = createValStruct();
-	result->isList = 1;
+	result->valueType=vtList;
 	result->list = createValListItem();
 	result->list->item = createValStruct();
 	
@@ -299,7 +301,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 	int reps = recCount(inputs)+1;
 	
 	struct val_struct_t *result = createValStruct();
-	result->isList = 1;
+	result->valueType=vtList;
 	result->list = createValListItem();
 	result->list->item = createValStruct();
 	
@@ -308,7 +310,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtInt;
-		thisItem->item->valName = newString("IS");
+		thisItem->item->valName = newString("II");
 		int32_t input;
 		scanf("%d", &input);
 		thisItem->item->valI = input;
@@ -317,7 +319,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtInt;
-	thisItem->item->valName = newString("IS");
+	thisItem->item->valName = newString("II");
 	int32_t input;
 	scanf("%d", &input);
 	thisItem->item->valI = input;
@@ -329,7 +331,7 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 	int reps = recCount(inputs)+1;
 	
 	struct val_struct_t *result = createValStruct();
-	result->isList = 1;
+	result->valueType=vtList;
 	result->list = createValListItem();
 	result->list->item = createValStruct();
 	
@@ -338,7 +340,7 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 	
 	while (--reps){
 		thisItem->item->valueType = vtFloat;
-		thisItem->item->valName = newString("IS");
+		thisItem->item->valName = newString("IF");
 		double input;
 		scanf("%lf", &input);
 		thisItem->item->valF = input;
@@ -347,19 +349,12 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 		thisItem = thisItem->nextItem;
 	}
 	thisItem->item->valueType = vtFloat;
-	thisItem->item->valName = newString("IS");
+	thisItem->item->valName = newString("IF");
 	double input;
 	scanf("%lf", &input);
 	thisItem->item->valF = input;
 	return result;
 
-	/*struct val_struct_t *result = createValStruct();
-	result->valName = (char *)newString("IF");
-	result->valueType = vtString;
-	double input;
-	scanf("%lf", &input);
-	result->valF = input;
-	return result;*/
 }
 
 
