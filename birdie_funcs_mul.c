@@ -9,7 +9,8 @@
 	out->valName = newString(result);	\
 	out->valID = newString("Unidentified");	\
 
-struct val_struct_t *intMulVal(int64_t a, struct val_struct_t *b){
+struct val_struct_t *intMulVal(user_int a, struct val_struct_t *b){
+	user_int reps;
 
 	INIT_ATOMIC_OP_FUNC("Int Mul Val")
 	ITERLIST_PARSE_DEF(thisItem,outlist,thisOutItem)
@@ -20,12 +21,11 @@ struct val_struct_t *intMulVal(int64_t a, struct val_struct_t *b){
 		case vtInt: out->valI = b->valI * a;
 		break;
 		case vtString:
-			//TODO
-			numWritten = snprintf(buf, 20, INT_SPEC, a);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(b->valS) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", buf, b->valS);
+			//String times integer, repeat string
+			reps = a;
+			out->valS = newString("");
+			while (reps--){
+				strcat(out->valS, b->valS);
 			}
 		break;
 		case vtFloat: out->valF = b->valF * (double)a;
@@ -42,6 +42,7 @@ struct val_struct_t *intMulVal(int64_t a, struct val_struct_t *b){
 }
 
 struct val_struct_t *floatMulVal(double a, struct val_struct_t *b){
+	int reps;
 	INIT_ATOMIC_OP_FUNC("Float Mul Val")
 
 	ITERLIST_PARSE_DEF(thisItem,outlist,thisOutItem)
@@ -52,14 +53,12 @@ struct val_struct_t *floatMulVal(double a, struct val_struct_t *b){
 		case vtInt: out->valF = a * ((double)(b->valI));
 		break;
 		case vtString:
-			//TODO
-			numWritten = snprintf(buf, 20, FLOAT_SPEC, a);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(b->valS) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", buf, b->valS);
+			//String times integer, repeat string
+			reps = floor(a);
+			out->valS = newString("");
+			while (reps--){
+				strcat(out->valS, b->valS);
 			}
-			out->valueType = vtString;
 		break;
 		case vtFloat: out->valF = a * b->valF;
 		break;
@@ -75,6 +74,7 @@ struct val_struct_t *floatMulVal(double a, struct val_struct_t *b){
 }
 
 struct val_struct_t *stringMulVal(char *a, struct val_struct_t *b){
+	user_int reps;
 	INIT_ATOMIC_OP_FUNC("String Mul Val")
 
 	ITERLIST_PARSE_DEF(thisItem,outlist,thisOutItem)
@@ -83,27 +83,24 @@ struct val_struct_t *stringMulVal(char *a, struct val_struct_t *b){
 
 	switch(b->valueType){
 		case vtInt:
-			//TODO
-			numWritten = snprintf(buf, 20, INT_SPEC, b->valI);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
+			//String times integer, repeat string
+			reps = b->valI;
+			out->valS = newString("");
+			while (reps--){
+				strcat(out->valS, a);
 			}
 		break;
 		case vtString:
-			//TODO
-			totLen = strlen(a) + strlen(b->valS) + 1;
+			totLen = strlen(a) + (strlen(b->valS)*2) + 1;
 			out->valS = (char *)malloc(sizeof(char) * totLen);
-			snprintf(out->valS, totLen, "%s%s", a, b->valS);
+			snprintf(out->valS, totLen, "%s%s%s", b->valS, a, b->valS);
 		break;
 		case vtFloat:
-			//TODO
-			numWritten = snprintf(buf, 20, FLOAT_SPEC, b->valF);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
+			//String times float, repeat string
+			reps = floor(b->valF);
+			out->valS = newString("");
+			while (reps--){
+				strcat(out->valS, a);
 			}
 		break;
 		case vtList:

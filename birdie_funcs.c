@@ -26,6 +26,8 @@ struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct
 			return valSub(a,b);
 		case voMultiply:
 			return valMul(a,b);
+		case voDivide:
+			return valDiv(a,b);
 	}
 	return NULL;
 }
@@ -132,37 +134,67 @@ struct val_struct_t *valInvert(struct val_struct_t *in){
 	return a;
 }
 
+void reverse_string(char *str)
+{
+    /* skip null */
+    if (str == 0)
+    {
+    	return;
+    }
+
+    /* skip empty string */
+    if (*str == 0)
+    {
+    	return;
+    }
+
+    /* get range */
+    char *start = str;
+    char *end = start + strlen(str) - 1; /* -1 for \0 */
+    char temp;
+
+    /* reverse */
+    while (end > start)
+    {
+    	/* swap */
+    	temp = *start;
+    	*start = *end;
+    	*end = temp;
+
+    	/* move */
+    	++start;
+    	--end;
+    }
+}
 
 struct val_struct_t *valNegate(struct val_struct_t *in){
-	//TODO
-
 	struct val_struct_t *a = copyVal(in);
-		if (a->valueType==vtList){
-			//Oo. List, erm...
-			//Recurse!
-			struct val_list_item *currentItem;
-			currentItem = a->list;
-			while (currentItem != NULL){
-				currentItem->item = valNegate(currentItem->item);
-				currentItem = currentItem->nextItem;
-			}
-			return a;
-		}
-
-		char * oldstring = a->valS;
-
-		switch(a->valueType){
-			case vtInt:
-				a->valI = -(a->valI); //ints are easy
-				return a;
-			case vtFloat:
-				a->valF = -(a->valF); //floats are too
-				return a;
-			case vtString:
-				//TODO reverse string
-				a->valS = newString("false");
+	if (a->valueType==vtList){
+		//Oo. List, erm...
+		//Recurse!
+		struct val_list_item *currentItem;
+		currentItem = a->list;
+		while (currentItem != NULL){
+			currentItem->item = valNegate(currentItem->item);
+			currentItem = currentItem->nextItem;
 		}
 		return a;
+	}
+
+
+	switch(a->valueType){
+		case vtInt:
+			a->valI = -(a->valI); //ints are easy
+			return a;
+		case vtFloat:
+			a->valF = -(a->valF); //floats are too
+			return a;
+		case vtString:
+			reverse_string(a->valS);
+			debugFuncs("String was reversed to %s", a->valS);
+			return a;
+	}
+	return a;
 }
 
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op){

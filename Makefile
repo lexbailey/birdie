@@ -1,9 +1,11 @@
 Program = birdie
 
-Objects = birdie_types.o birdie_funcs_add.o birdie_funcs_sub.o birdie_funcs_mul.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
+Objects = birdie_types.o birdie_funcs_add.o birdie_funcs_sub.o birdie_funcs_mul.o birdie_funcs_div.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
 
-#GlobalConfig = -ggdb -DGLOBAL_DEBUG
-GlobalConfig = -ggdb
+GlobalConfig = -ggdb -DGLOBAL_DEBUG
+#GlobalConfig = -ggdb
+
+LinkExtra = -lm
 
 all: ${Program}
 
@@ -17,7 +19,7 @@ lex.yy.c: ${Program}.l ${Program}.tab.h
 	gcc -c $< -o $@ $(GlobalConfig)
 
 ${Program}: ${Program}.tab.c lex.yy.c ${Objects}
-	gcc -o $@ $^ -lfl $(GlobalConfig)
+	gcc -o $@ $^ -lfl $(GlobalConfig) $(LinkExtra)
 
 ${Program}.output: ${Program}.y
 	bison -d --report=state $^

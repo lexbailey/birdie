@@ -219,7 +219,7 @@ procVal: value				        {$$=$1;}
 	;
 
 value: command				        {debugbison("bison: command return as value.\n"); $$ = $1;}
-	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1->valName); readVar($1); $$ = copyVal($1); printVal($1);}
+	| namedIdent			        {debugbison("bison: identifier as value. Name: %s\n", $1->valName); $$ = $1; printVal($1);}
 	| anyNumber				        {debugbison("bison: number as value.\n"); $$ = $1;}
 	| TEXT					        {debugbison("bison: text as value. Text is %s\n", $1->valS); $$ = $1;}
 	;
@@ -255,7 +255,7 @@ valop1: INV
 	;
 
 namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); readVar($1); $$ = $1;}
-	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID); readVar($1); $$ = valNegate($1);}
+	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID); readVar($1); $$ = valNegate($1); freeVal($1);}
 	;
 
 namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1->valName);}

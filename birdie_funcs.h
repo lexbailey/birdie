@@ -19,6 +19,7 @@
 #include "birdie_funcs_add.h"
 #include "birdie_funcs_sub.h"
 #include "birdie_funcs_mul.h"
+#include "birdie_funcs_div.h"
 #include "birdie_types.h"
 
 

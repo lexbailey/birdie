@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 struct val_struct_t *intSubVal(int64_t a, struct val_struct_t *b);
 

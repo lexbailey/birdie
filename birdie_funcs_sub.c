@@ -31,7 +31,6 @@ struct val_struct_t *intSubVal(int64_t a, struct val_struct_t *b){
 		case vtFloat: out->valF = ((double)a) - b->valF;
 		break;
 		case vtList:
-			//TODO
 			freeVal(out);
 			ITERLIST_PARSE_BEGIN(b->list,thisItem,outlist,thisOutItem)
 				thisOutItem->item = intSubVal(a, thisItem->item);
@@ -65,7 +64,6 @@ struct val_struct_t *floatSubVal(double a, struct val_struct_t *b){
 		case vtFloat: out->valF = a - b->valF;
 		break;
 		case vtList:
-			//TODO
 			freeVal(out);
 			ITERLIST_PARSE_BEGIN(b->list,thisItem,outlist,thisOutItem)
 				thisOutItem->item = floatSubVal(a, thisItem->item);
@@ -77,6 +75,8 @@ struct val_struct_t *floatSubVal(double a, struct val_struct_t *b){
 }
 
 struct val_struct_t *stringSubVal(char *a, struct val_struct_t *b){
+	user_int num;
+	unsigned len, lenA;
 	INIT_ATOMIC_OP_FUNC("String Sub Val")
 
 	ITERLIST_PARSE_DEF(thisItem,outlist,thisOutItem)
@@ -85,29 +85,35 @@ struct val_struct_t *stringSubVal(char *a, struct val_struct_t *b){
 
 	switch(b->valueType){
 		case vtInt:
-			numWritten = snprintf(buf, 20, INT_SPEC, b->valI);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
-			}
+			//String minus integer
+			num = b->valI;
+			len = strlen(a);
+			out->valS = (char *)malloc(sizeof(char) * len-num+1);
+			memcpy(out->valS, a, len-num);
+			out->valS[len-num] = '\0';
 		break;
 		case vtString:
-			//TODO
-			totLen = strlen(a) + strlen(b->valS) + 1;
-			out->valS = (char *)malloc(sizeof(char) * totLen);
-			snprintf(out->valS, totLen, "%s%s", a, b->valS);
-		break;
-		case vtFloat:
-			numWritten = snprintf(buf, 20, FLOAT_SPEC, b->valF);
-			if (numWritten >= 0){
-				totLen = numWritten + strlen(a) + 1;
-				out->valS = (char *)malloc(sizeof(char) * totLen);
-				snprintf(out->valS, totLen, "%s%s", a, buf);
+
+			len = strlen(b->valS);
+			lenA = strlen(a);
+			if (strcmp(a+lenA-len, b->valS)==0){
+				out->valS = (char *)malloc(sizeof(char) * lenA - len);
+				memcpy(out->valS, a, lenA - len);
+				out->valS[lenA - len] = '\0';
+			}
+			else{
+				out->valS = newString(a);
 			}
 		break;
+		case vtFloat:
+			//String minus float
+			num = floor(b->valF);
+			len = strlen(a);
+			out->valS = (char *)malloc(sizeof(char) * len-num+1);
+			memcpy(out->valS, a, len-num);
+			out->valS[len-num] = '\0';
+		break;
 		case vtList:
-			//TODO
 			freeVal(out);
 			ITERLIST_PARSE_BEGIN(b->list,thisItem,outlist,thisOutItem)
 				thisOutItem->item = stringSubVal(a, thisItem->item);

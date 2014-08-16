@@ -171,6 +171,7 @@
 							debug("\tflex: found IDENT\n");
 							INITVAL;
 							anyval_p->valID = newString(yytext);
+							anyval_p->valID[strlen(anyval_p->valID)-1] = '\0';
 							anyval_p->valName = newString("Identifier");
 							PARSE(NEGIDENT,anyval,copyVal(anyval_p));
 						}
