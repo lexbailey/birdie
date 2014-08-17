@@ -199,6 +199,6 @@ struct val_struct_t *wrapList(struct val_list_item *input);
 void debugVal(struct val_struct_t *val);
 
 ///Utility function for making a copy of string and returning a pointer to it
-char *newString(char *);
+char *newString(const char *);
 
 #endif //BIRDIE_TYPE_INCLUDE

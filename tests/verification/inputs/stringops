@@ -1,12 +1,12 @@
 #This is a fairly huge test
 
 #define some test strings
-a="';
-b="hello';
-c="world';
-d="foo bar quux';
-e="1 2 2 3 3 3 4 4 4 4 5 5 5 5 5';
-f="bar bar bar foo foo foo';
+'"'=a
+'"hello'=b
+'"world'=c
+'"foo bar quux'=d
+'"1 2 2 3 3 3 4 4 4 4 5 5 5 5 5'=e
+'"bar bar bar foo foo foo'=f
 
 #################################################################################
 #Round one, strings versus integers...

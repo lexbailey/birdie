@@ -55,17 +55,16 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
 	assign(assignee);
 }
 
-void readVar(struct val_struct_t *item){
+struct val_struct_t *readVar(const char *name){
 	//walk the list, look for the assignee
 	struct val_list_item *currentItem;
 	currentItem = variables;
-	debugControl("I have been asked to read the variable called %s\n", item->valID);
+	debugControl("I have been asked to read the variable called %s\n", name);
 	while (currentItem != NULL){
 		//check this item
-		if (strcmp(currentItem->item->valID, item->valID)==0){
-			//Found our variable, assign new value
-			*item = (*(currentItem->item));
-			return;
+		if (strcmp(currentItem->item->valID, name)==0){
+			//Found our variable, return a copy
+			return copyVal(currentItem->item);
 		}
 		//Advance to next item
 		currentItem = currentItem->nextItem;
@@ -76,10 +75,11 @@ void readVar(struct val_struct_t *item){
 	newItem->item = createValStruct();
 	newItem->nextItem = variables;
 	variables = newItem;
-	newItem->item->valID = newString(item->valID);
+	newItem->item->valID = newString(name);
 	newItem->item->valueType = vtInt;
 	newItem->item->valI = 0;
-	*item = (*(newItem->item));
+
+	return copyVal(newItem->item);
 }
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){

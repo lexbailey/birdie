@@ -1,11 +1,7 @@
 Birdie tests that failed or errored...
-Files ./outputs/arithmetic and ./expect/arithmetic differ
 Files ./outputs/condition and ./expect/condition differ
-Files ./outputs/printing and ./expect/printing differ
-Files ./outputs/stringops and ./expect/stringops differ
-Files ./outputs/string_reversal and ./expect/string_reversal differ
-Files ./outputs/variables and ./expect/variables differ
+Files blankfile and ./errors/condition differ
 ----------------------------------------
 Total tests ran: 6
-Total tests that failed: 6
-Total tests that produced errors: 0
+Total tests that failed: 1
+Total tests that produced errors: 1

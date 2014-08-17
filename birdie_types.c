@@ -214,18 +214,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 	debugVal(listInOut);
 	debugTypes("Conc Incoming list 2\n");
 	debugVal(listTwo);
-	/*
-	if (listInOut->valueType!=vtList){
-		struct val_struct_t *listStart;
-		listStart = copyVal(listInOut);
-		listInOut->valueType = vtList;
-		listInOut->list = createValListItem();
-		listInOut->list->item = listStart;
-	}
 
-	appendList(listInOut, listTwo);
-
-	*/
 	if (listTwo->valueType==vtList && listInOut->valueType==vtList){
 	
 		//Concat
@@ -249,30 +238,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 			listInOut->list->item = listStart;
 		}
 		appendList(listInOut, copyVal(listTwo));
-		/*
-		if ((!listTwo->valueType==vtList) && (!listInOut->valueType==vtList)){
-			struct val_list_item *listInOutItem;
-			listInOutItem = createValListItem();
-			listInOutItem->item = copyVal(listInOut);
-			listInOutItem->nextItem = NULL;
-			listInOut->valueType=vtList;
-			listInOut->list = listInOutItem;
-			appendList(listInOut, copyVal(listTwo));
-		}
-		else{
-			if (listInOut->valueType==vtList){
-				appendList(listInOut, copyVal(listTwo));
-			}
-			else{
-				struct val_struct_t *listStart;
-				listStart = copyVal(listInOut);
-				listInOut->valueType = vtList;
-				listInOut->list = createValListItem();
-				listInOut->list->item = listStart;
-				appendList(listInOut, copyVal(listTwo));
-			}
-		}
-		*/
+
 	}
 	debugTypes("Output list is:\n");
 	debugVal(listInOut);
@@ -315,7 +281,7 @@ void debugVal(struct val_struct_t *val){
 	}
 }
 
-char *newString(char *source){
+char *newString(const char *source){
 	if (source == NULL) { return NULL;}
 	char *result;
 	size_t sourceLen = sizeof(char) * (strlen(source)+1);

@@ -64,32 +64,6 @@
     	}
     	return yylexMulti();
     }
-    
-    /*
-    enum yytokentype logReturn(enum yytokentype returnVal){
-    	lastReturnToken = returnVal;
-    	debug("\tflex: logReturn!\n");
-    	if (lastyylval.sval != NULL) {
-   	    	debug("\tflex: freeing sval!\n");
-    		free (lastyylval.sval);
-    		lastyylval.sval = NULL;
-    	}
-    	if (lastyylval.anyval != NULL) {
-   	    	debug("\tflex: freeing anyval!\n");
-    		freeVal (lastyylval.anyval);
-    		lastyylval.anyval = NULL;
-    	}
-    	
-    	lastyylval = yylval;
-		
-    	debug("\tflex: last yylval...\n");
-    	debug("\tflex: sval: %s\n", lastyylval.sval);
-    	debug("\tflex: ival: %d\n", lastyylval.ival);
-    	debug("\tflex: val struct...\n");
-    	printVal(lastyylval.anyval);
-    	return lastReturnToken;
-    }
-    */
 	
 	int64_t parseNum(char *number){
 	    int len = strlen(number);

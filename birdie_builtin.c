@@ -231,7 +231,7 @@ struct val_struct_t *magicTypeSort(struct val_struct_t *inputs){
 }
 
 struct val_struct_t *magicinput(struct val_struct_t *inputs){
-	int reps = recCount(inputs)+1;
+	int reps = recCount(inputs)+2;
 	
 	struct val_struct_t *result = createValStruct();
 	struct val_struct_t *resultMagic;	
@@ -266,7 +266,7 @@ struct val_struct_t *magicinput(struct val_struct_t *inputs){
 }
 
 struct val_struct_t *strinput(struct val_struct_t *inputs){
-	int reps = recCount(inputs)+1;
+	int reps = recCount(inputs)+2;
 	
 	struct val_struct_t *result = createValStruct();
 	result->valueType=vtList;
@@ -298,7 +298,7 @@ struct val_struct_t *strinput(struct val_struct_t *inputs){
 
 struct val_struct_t *intinput(struct val_struct_t *inputs){
 
-	int reps = recCount(inputs)+1;
+	int reps = recCount(inputs)+2;
 	
 	struct val_struct_t *result = createValStruct();
 	result->valueType=vtList;
@@ -328,7 +328,7 @@ struct val_struct_t *intinput(struct val_struct_t *inputs){
 
 struct val_struct_t *floatinput(struct val_struct_t *inputs){
 
-	int reps = recCount(inputs)+1;
+	int reps = recCount(inputs)+2;
 	
 	struct val_struct_t *result = createValStruct();
 	result->valueType=vtList;

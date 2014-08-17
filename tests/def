@@ -5,9 +5,9 @@ Designed to get your script working in as few characters as possible.
 It's all a little bit backwards and contains hints of magic throughout. Enjoy.
 BTW. It turns out that birdie is much like lisp in some aspects but not many. I have never used lisp and so this is an accident.
 
-Comments start with a tilda (~)
+Comments start with a hash (#)
 
-~blah blah comment blah
+#blah blah comment blah
 
 Numerical literals are slightly backwards!
 
@@ -31,13 +31,27 @@ variable names are all lower case.
 functions are upper case.
 
 functions are postfix and require that a single quote ' be put at the start of their list of inputs.
-lists of inputs are simply seperated by white space of any kind.
 
 '2 3 FOO
 
 The above calls FOO with the inputs 2 and 3
 
-Because function names cannot contain digits, the following is equivalent:
+lists of inputs only need to be separated if they would otherwise be misinterpreted.
+For example, to pass in a string and then a number to the FOO function, you can do this:
+
+'  "String'1234  FOO
+
+(More on the odd string syntax later)
+
+If you wanted to pass in a string followed by 12 and then 34, you just do this:
+
+'  "String'12 34  FOO
+
+If you want clarity, you can add space between any arguments
+
+'  "String' 12 34  FOO
+
+Because function names cannot contain digits, the following is acceptable:
 
 '2 3FOO
 
@@ -78,11 +92,15 @@ Again, saves some chars over C syntax;
 QUUX("foo","bar");
 
 Variables
-To set a variable, use the equals operator. Variable assignments must end with a semicolon. No other commands need a semicolon to end them
+Variable assignments are almost like function calls where the function being called starts with the character '='.
+For example, to set 'a' to the string "foo', use to following:
 
-a="foo';
-b=1;
-c=23.4-;
+'"foo'=a
+
+More examples
+
+'1=b
+'23.4-=c
 
 if you count the definitions too then this is much much cheaper then C syntax.
 it is little or no advantage over languages like perl an python. Birdie syntax beats them in other places however.
@@ -94,7 +112,7 @@ While in birdie it is like this:
 
 Most of the advantage is in the shorter name of the print function, even if perl's was shorter, birdie still wins by lack of qualifiers before variable names;
 perl:   p$a,$b;     #7 character command minimum
-birdie: 'a bP       ~5 character command minimum
+birdie: 'a bP       #5 character command minimum
 
 Stack
 Birdie also has a stack. Stack mode is entered whenever a caret (^) is detected. Exiting is done in the same way
@@ -146,13 +164,13 @@ Functions that can take multiple inputs will only take one item off the stack if
 ^
 ]"hi'
 ]"there'
-'P          ~prints "there"
+'P          #prints "there"
 
 
 ^
 ]"hi'
 ]"there'
-'2P          ~prints "hithere"
+'2P          #prints "hithere"
 
 You can call a function multiple times in stack mode using only one line. To do this the function must take a fixed number of instructions.
 To do this, in stack mode, call a function and ask for a multiple of the fixed number of arguments.
@@ -180,7 +198,7 @@ Autopush mode (on by default) is where all function returns are pushed on to the
 When your program starts, stack mode is off and autopush mode is on, you can change this and then call a function, when that function runs, it may be assuming that the default is still present and that stack mode is off. For this reason, there is a stack mode stack. When you call a function, the stack mode is automatically pushed onto the stack mode stack. The function then runs and then the stack mode is popped. It is not possible to manually push or pop the stack mode stack.
 In autopush mode, when a function returns, its result is pushed to the stack. It is possible however that the functino you called needed to make use of the stack. For this reason there is a stack stack. When a function is called, a blank stack is pushed on to the stack stack regardless of any current stack modes. When the function returns this new stack is then automatically popped from the stack stack.
 It is possible to manually push and pop this stack. The stack stack push operator is a close curly brace (}) and the stack stack pop operator is an open curly brace({)
-A function may intend to work on the copy of the stack that was there before it was called (this is not common behaviour but is possible) in this case the function starts with a stack stack pop ({) so remove its own fresh stack and ends with a push (}) so that the automatic pop behaves as expected and there is no stack stack underflow. If you want to ensure that your own stack is preserved during such a funciton call then you should push the stack stack before you do the call (and pop after if/when needed).
+A function may intend to work on the copy of the stack that was there before it was called (this is not common behaviour but is possible) in this case the function starts with a stack stack pop ({) to remove its own fresh stack and ends with a push (}) so that the automatic pop behaves as expected and there is no stack stack underflow. If you want to ensure that your own stack is preserved during such a funciton call then you should push the stack stack before you do the call (and pop after if/when needed).
 
 }
 'STACKFUNCTION
@@ -209,7 +227,7 @@ This can be passed to a function like the print function, with or without spaces
 
 It can also be assigned to a variable
 
-a="earth'"gravity'9.8-;
+'"earth'"gravity'9.8-=a
 
 That variable can then be used in the print function:
 
@@ -226,14 +244,14 @@ If what you wanted was a list with two items in it, the first of which is a list
 
 You can turn a string into a list of individual characters (stored as strings of length one) by using the dollar operator ($).
 
-a=$"Blah';
+'$"Blah'=a
 
 In this example 'a' is now a list of length 4: "B", "l", "a", "h".
 
-To access an elemnt of a list by its position in the list, use the dot operator. As allways, this is prefix.
+To access an element of a list by its position in the list, use the dot operator. As always, this is prefix.
 
-a=2 3 4 5;
-b=.a3;
+'2 3 4 5=a
+'.a3=b
 'bP         ~prints '4'
 
 BLOCKS!

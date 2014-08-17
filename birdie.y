@@ -116,9 +116,14 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											debugbison("bison: condition is false, ignore command.\n");
 										}
 									}
-	| IDENT ASSIGN valueList SEMIC	{debugbison("bison: Assigning value to variable: %s\n", $1->valID); 
+	| OPDELIM valueList ASSIGN IDENT	{debugbison("bison: Assigning value to variable: %s\n", $4->valID);
 										if (isTrueVal(topOfConditionStack())){
-											$$=createValStruct(); mergeAssign($1, $3); readVar($1); $$ = $1; printVal($$);
+											$$=createValStruct();
+											mergeAssign($4, $2);
+											$$ = readVar($4->valID);
+											freeVal($4);
+											free($2);
+											printVal($$);
 										}
 										else{
 											debugbison("bison: condition is false, ignore command.\n");
@@ -193,6 +198,7 @@ valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
 										concatLists(inter, $2);
 										//$2 has been consumed!
 										freeVal($2);
+										freeVal($1);
 										$$ = inter;
 										printVal($$);
 									}
@@ -254,8 +260,14 @@ valop1: INV
 	| ASLIST
 	;
 
-namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); readVar($1); $$ = $1;}
-	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID); readVar($1); $$ = valNegate($1); freeVal($1);}
+namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); $$ = readVar($1->valID);}
+	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID);
+										struct val_struct_t *temp;
+										temp = readVar($1->valID);
+										$$ = valNegate(temp);
+										freeVal($1);
+										freeVal(temp);
+									}
 	;
 
 namedFunc: FUNC			            {debugbison("bison: Function. Name: %s\n", $1->valName);}
@@ -269,29 +281,8 @@ rawNumber: NUMBER
 	;
 
 %%
-/*
-FILE *argIn = NULL;
 
-main(int argc, char ** argv){
-	init();
-	//Where is my input?
-	if (argc > 1){
-		char * inputFile = argv[1];
-		argIn = fopen(inputFile, "r");
-		if (argIn == NULL){
-			printf("Error opening input file.\n");
-			return -1;
-		}
-	}
-	else{
-		argIn = stdin;
-	}
-	yyparse();
-	if (argIn != NULL){
-		fclose(argIn);
-	}
-}
-*/
+
 void yyerror(char* s){
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
