@@ -1,0 +1,90 @@
+#Condition stack test
+
+false="False';
+true=!false;
+
+'"True is: 'true"
+'P
+'"False is: 'false"
+'P
+
+#Always foo
+'"foo1
+'P
+
+#Only foo if true
+?true;
+'"foo2
+'P
+\
+
+#Only foo if false
+?false;
+'"foo3
+'P
+\
+
+
+#foo if true, otherwise, bar
+?true;
+'"foo4
+'P
+:
+'"bar4
+'P
+:
+
+#foo if false, otherwise, bar
+?false;
+'"foo5
+'P
+:
+'"bar5
+'P
+:
+
+#bar if true
+??true;
+'"bar6
+'P
+:
+
+#bar if false
+??false;
+'"bar7
+'P
+:
+
+
+#Nasty nests
+
+#False?
+??false;
+	#Well then, true?
+	??true;
+		'"bar8
+'P
+	:
+:
+
+#true?
+??true;
+	#Well then, true?
+	??true;
+		'"bar9
+'P
+	:
+:
+
+#true?
+??true;
+	#Well then, true?
+	??true;
+		'"bar10
+'P
+	\
+	
+	
+
+	
+#TODO test more!

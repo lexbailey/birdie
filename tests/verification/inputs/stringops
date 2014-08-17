@@ -1,0 +1,121 @@
+#This is a fairly huge test
+
+#define some test strings
+a="';
+b="hello';
+c="world';
+d="foo bar quux';
+e="1 2 2 3 3 3 4 4 4 4 5 5 5 5 5';
+f="bar bar bar foo foo foo';
+
+#################################################################################
+#Round one, strings versus integers...
+#FIGHT!
+#################################################################################
+
+#Adding integers results in appending the string representation of the integer
+'+a3"
+'P #Prints '3'
+
+'+b34"
+'P #Prints 'hello34'
+
+#Multiplying by integers results in a repeated string
+'*a3"
+'P #Prints ''
+
+'*b4"
+'P #Prints 'hellohellohellohello'
+
+#Dividing by integers results in getting the first N chars in a string
+'/a3"
+'P #Prints ''
+
+'/d4"
+'P #Prints 'foo '
+
+#Subtracting integers should result in a string becoming shorter by N characters
+
+'-e3"
+'P #Prints '1 2 2 3 3 3 4 4 4 4 5 5 5 '
+
+'-f4"
+'P #Prints 'bar bar bar foo foo'
+
+#################################################################################
+#Round two strings versus strings...
+#FIGHT!
+#################################################################################
+
+#Divides are fun...
+#if z = x * y then x = z / y. 
+#Apply this to strings and 'foofoofoo' / 'foo' should equal 3
+#This is because 'foo' * 3 = 'foofoofoo'
+#This is handy as it returns non zero only if a string contains a sub string.
+
+'/f"foo'"
+'P #Prints '3'
+
+'/f"foo '"
+'P #Prints '2'
+
+'/f"blah'"
+'P #Prints '0'
+
+'/e"4'"
+'P #Prints '4'
+
+#String + string is fairly usual
+'+b+" 'c"
+'P #Prints 'hello world'
+
+
+#String minus string is neat. It removes a substring from the end of a string.
+'-f"foo'"
+'P #Prints 'bar bar bar foo foo '
+
+#String times string is cool. It 'wraps a string with another
+'*f"foo'"
+'P #Prints 'foobar bar bar foo foo foofoo'
+
+'*f""'"
+'P #Prints '"bar bar bar foo foo foo"'
+
+'*f"quux'"
+'P #Prints 'quuxbar bar bar foo foo fooquux'
+
+#################################################################################
+#Round three strings versus floats...
+#FIGHT!
+#################################################################################
+
+
+
+#Adding floats results in appending the string representation of the integer
+'+a3.5"
+'P #Prints '3.500'
+
+'+b34.1"
+'P #Prints 'hello34.100'
+
+#Multiplying by floats results in a repeated string, the float is rounded down
+'*a3.333"
+'P #Prints ''
+
+'*b4.33"
+'P #Prints 'hellohellohello'
+
+#Dividing by floats results in getting the first N chars in a string, the float is rounded down
+'/a3.45"
+'P #Prints ''
+
+'/d4.5"
+'P #Prints 'foo '
+
+#Subtracting floats should result in a string becoming shorter by N characters, the float is rounded down
+
+'-e3.7"
+'P #Prints '1 2 2 3 3 3 4 4 4 4 5 5 5 '
+
+'-f4.45"
+'P #Prints 'bar bar bar foo foo'

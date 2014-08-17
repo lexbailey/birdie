@@ -1,4 +1,5 @@
 %{
+
 	#include "birdie_types.h"
 	#include "birdie_funcs.h"
 	#include "birdie.tab.h"
@@ -148,7 +149,6 @@
 		*source = realloc(output, sizeof(char) * (o)); //Realloc, only changes things if we removed some quotes
 	}
 	
-	
 %}
 
 %%
@@ -280,7 +280,6 @@
                         }
 
 %%
-
 FILE *argIn = NULL;
 
 int main(int argc, char ** argv){

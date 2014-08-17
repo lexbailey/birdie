@@ -2,8 +2,10 @@ Program = birdie
 
 Objects = birdie_types.o birdie_funcs_add.o birdie_funcs_sub.o birdie_funcs_mul.o birdie_funcs_div.o birdie_funcs.o birdie_control.o birdie_builtin.o birdie_stackman.o
 
-GlobalConfig = -ggdb -DGLOBAL_DEBUG
-#GlobalConfig = -ggdb
+#GlobalConfig = -ggdb -DGLOBAL_DEBUG
+GlobalConfig = -ggdb
+
+FixedConfig = 
 
 LinkExtra = -lm
 
@@ -16,7 +18,7 @@ lex.yy.c: ${Program}.l ${Program}.tab.h
 	flex $<
 
 %.o: %.c %.h
-	gcc -c $< -o $@ $(GlobalConfig)
+	gcc -c $< -o $@ $(GlobalConfig) $(FixedConfig)
 
 ${Program}: ${Program}.tab.c lex.yy.c ${Objects}
 	gcc -o $@ $^ -lfl $(GlobalConfig) $(LinkExtra)
