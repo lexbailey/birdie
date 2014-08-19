@@ -69,7 +69,8 @@ typedef double user_float;
 typedef enum {vtString, vtInt, vtFloat, vtList} val_type_t;
 
 ///Enumerated type for a binary operator
-typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus} val_operation_2;
+typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus,
+				voBoolAnd, voBoolOr, voBoolXor, voBitAnd, voBitOr, voBitXor} val_operation_2;
 
 ///Enumerated type for a unary operator
 typedef enum {voInvert, voAsScalar, voAsString, voAsList} val_operation_1;

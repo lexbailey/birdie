@@ -28,6 +28,21 @@ struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct
 			return valMul(a,b);
 		case voDivide:
 			return valDiv(a,b);
+
+		case voModulus:
+			return valMod(a,b);
+		case voBoolAnd:
+			return valBoolAnd(a,b);
+		case voBoolOr:
+			return valBoolOr(a,b);
+		case voBoolXor:
+			return valBoolXor(a,b);
+		case voBitAnd:
+			return valBitAnd(a,b);
+		case voBitOr:
+			return valBitOr(a,b);
+		case voBitXor:
+			return valBitXor(a,b);
 	}
 	return NULL;
 }

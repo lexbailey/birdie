@@ -1,7 +1,7 @@
 #Condition stack test
 
-false="False';
-true=!false;
+'"False'=false
+'!false=true
 
 '"True is: 'true"
 'P

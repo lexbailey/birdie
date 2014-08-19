@@ -7,14 +7,20 @@
 
 	struct val_struct_t *anyval_p;
 
+	enum yytokentype lastToken = 0;
+
+	int capturemode = 0;
+
     #define INITVAL anyval_p=createValStruct()
     
     #define PARSE(tok,tag,val) do { \
+		lastToken = tok;\
     	YYSTYPE yylval = {.tag=val};  \
     	int status = yypush_parse(ps, tok, &yylval); \
     	if (status != YYPUSH_MORE) return status; \
   	} while(0)
   	#define PARSE_TOKEN(tok) do { \
+  		lastToken = tok;\
 	    int status = yypush_parse(ps, tok, 0); \
 	    if (status != YYPUSH_MORE) return status; \
   	} while(0)
@@ -196,8 +202,8 @@
 "]"						{debug("\tflex: found PUSH\n"); PARSE_TOKEN(PUSH);}
 "["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
-"("						{debug("\tflex: found BLOCKSTART\n"); PARSE_TOKEN(BLOCKSTART);}
-")"						{debug("\tflex: found BLOCKEND\n"); PARSE_TOKEN(BLOCKEND);}
+"("						{debug("\tflex: found BLOCKSTART\n"); capturemode++;}
+")"						{debug("\tflex: found BLOCKEND\n"); capturemode--;}
 
 "?"						{debug("\tflex: found PUSH2COND\n"); PARSE_TOKEN(PUSH2COND);}
 "\\"					{debug("\tflex: found POP2COND\n"); PARSE_TOKEN(POP2COND);}
@@ -221,6 +227,9 @@
 "|"						{debug("\tflex: found BOOLOR\n"); PARSE_TOKEN(BOOLOR);}
 "||"					{debug("\tflex: found BITOR\n"); PARSE_TOKEN(BITOR);}
 
+"|^"						{debug("\tflex: found BOOLXOR\n"); PARSE_TOKEN(BOOLXOR);}
+"||^"						{debug("\tflex: found BITXOR\n"); PARSE_TOKEN(BITXOR);}
+
 "&"						{debug("\tflex: found BOOLAND\n"); PARSE_TOKEN(BOOLAND);}
 "&&"					{debug("\tflex: found BITAND\n"); PARSE_TOKEN(BITAND);}
 
@@ -228,10 +237,12 @@
 							//INITVAL;
 							//char *number = malloc(sizeof(char) * (strlen(yytext)));
 	                        //strcpy(number, yytext+1);
-	                        //returnMulti = atoi(number)-2;
+	                        returnMulti = atoi(yytext+1)+3;
 	                        //free(number);
-													
-	                        //return lastReturnToken;
+
+	                        while(returnMulti--){
+	                        	PARSE_TOKEN(lastToken);
+	                        }
                        
 						}
 

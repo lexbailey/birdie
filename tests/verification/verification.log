@@ -1,7 +1,8 @@
 Birdie tests that failed or errored...
+Files ./outputs/boolops and ./expect/boolops differ
+Files blankfile and ./errors/boolops differ
 Files ./outputs/condition and ./expect/condition differ
-Files blankfile and ./errors/condition differ
 ----------------------------------------
-Total tests ran: 6
-Total tests that failed: 1
+Total tests ran: 7
+Total tests that failed: 2
 Total tests that produced errors: 1

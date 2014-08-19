@@ -74,7 +74,7 @@ void init(){
 %token <noval> POPCOND PUSHCOND
 
 %token <twoOp> GREATER LESS GREATEREQ LESSEQ EQ INEQ
-%token <twoOp> BOOLOR BITOR BOOLAND BITAND
+%token <twoOp> BOOLOR BITOR BOOLAND BITAND BOOLXOR BITXOR
 
 %token <noval> ERR
 
