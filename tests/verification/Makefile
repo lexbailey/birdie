@@ -4,7 +4,7 @@ AllTests = $(patsubst inputs/%,outputs/%,$(AllInputs))
 all: verification.log
 	
 #Run the test, capture the output and any errors
-outputs/%: inputs/% ./../../birdie
+outputs/%: inputs/%
 	-./../../birdie $< 2>$(patsubst outputs/%,errors/%,$@) > $@
 	
 #The verification log file lists all tests that failed.
