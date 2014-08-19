@@ -224,14 +224,14 @@
 "£"						{debug("\tflex: found EQ\n"); PARSE_TOKEN(EQ);}
 "`"						{debug("\tflex: found INEQ\n"); PARSE_TOKEN(INEQ);}
 
-"|"						{debug("\tflex: found BOOLOR\n"); PARSE_TOKEN(BOOLOR);}
-"||"					{debug("\tflex: found BITOR\n"); PARSE_TOKEN(BITOR);}
+"|"						{debug("\tflex: found BOOLOR\n"); PARSE(BOOLOR,twoOp,voBoolOr);}
+"||"					{debug("\tflex: found BITOR\n"); PARSE(BITOR,twoOp,voBitOr);}
 
-"|^"						{debug("\tflex: found BOOLXOR\n"); PARSE_TOKEN(BOOLXOR);}
-"||^"						{debug("\tflex: found BITXOR\n"); PARSE_TOKEN(BITXOR);}
+"|^"					{debug("\tflex: found BOOLXOR\n");PARSE(BOOLXOR,twoOp,voBoolXor);}
+"||^"					{debug("\tflex: found BITXOR\n"); PARSE(BITXOR,twoOp,voBitXor);}
 
-"&"						{debug("\tflex: found BOOLAND\n"); PARSE_TOKEN(BOOLAND);}
-"&&"					{debug("\tflex: found BITAND\n"); PARSE_TOKEN(BITAND);}
+"&"						{debug("\tflex: found BOOLAND\n"); PARSE(BOOLAND,twoOp,voBoolAnd);}
+"&&"					{debug("\tflex: found BITAND\n"); PARSE(BITAND,twoOp,voBitAnd);}
 
 `[0-9]+					{debug("\tflex: found repeater. Urgh! Awful hack\n");
 							//INITVAL;

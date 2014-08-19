@@ -1,8 +1,3 @@
-#ifndef BIRDIE_STACKMAN_INCLUDE
-#define BIRDIE_STACKMAN_INCLUDE
-
-#include "birdie_types.h"
-
 /*!
 
 	\file birdie_stackman.h
@@ -14,6 +9,12 @@
 	The stack manager contains functions for pushing and popping all of the stacks and for reading values from them when needed.
  
 */
+
+#ifndef BIRDIE_STACKMAN_INCLUDE
+#define BIRDIE_STACKMAN_INCLUDE
+
+#include "birdie_types.h"
+
  
 ///The almighty stack stack, a stack for all other stacks. The be all and end all of the stack world.
 struct almighty_stack_item_t *almightyStackStack;

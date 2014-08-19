@@ -1,7 +1,7 @@
 #Boolean operations
 
-'"true'=true
-'"false'=false
+'1=true
+'0=false
 
 '&false falseP
 '&false trueP

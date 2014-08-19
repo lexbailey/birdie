@@ -159,7 +159,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											/*TODO pop stack*/
 										}
 									}
-	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition($2); $$ = $2;}
+	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(valBoolAnd($2,topOfConditionStack())); $$ = $2;}
 	| POPCOND						{
 										debugbison("bison: Pop one condition from the condition stack\n");
 										struct val_struct_t *popped = popCondition();
@@ -171,8 +171,9 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 									}
 	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");
 										struct val_struct_t *inv = valInvert($2);
-										pushCondition(inv);
-										pushCondition($2);
+										struct val_struct_t *tocs = topOfConditionStack();
+										pushCondition(valBoolAnd(inv,tocs));
+										pushCondition(valBoolAnd($2,tocs));
 										$$ = $2;
 									}
 	| POP2COND						
@@ -242,8 +243,10 @@ valop2: ADD
 	
 	| BOOLAND
 	| BOOLOR
+	| BOOLXOR
 	| BITAND
 	| BITOR
+	| BITXOR
 	;
 	
 comparisonOp:	EQ
