@@ -1,0 +1,27 @@
+#The token repeater is an odd thing.
+#Birdie has been designed in a way that puts puts most tokens in groups of token type
+#Consider adding lots of numbers together and then prining them:
+#  '+++++1 2 3 4 5 6P
+# You get lots of pluses together
+#How about passing a variable through lots of functions?
+#  '''''''varFUNCA FUNCB FUNCC FUNCD FUNCE FUNCF FUNCG
+# You get lots of single quotes (list start delimiters) together.
+#So birdie provides a way of collapsing them down.
+#Simply use a backtick followed by the number of extra repetitions, minus 3
+#These are all valid ways of printing "1111111" (each separated by a new line)
+
+'''''''1P P P P P P P
+'"
+'P
+
+   '`3 1P P P P P P P
+'"
+'P
+
+   '`3 1P`3
+'"
+'P
+
+    '1`3P
+'"
+'P
