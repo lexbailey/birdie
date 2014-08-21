@@ -1,10 +1,10 @@
-#Printing test. Tests if various input values are printed correctly
-'P #Should print nothing
-'2P #Should print 2
-'3.14P #Should print 3.140 (default of 3 dp)
-'1 2 3P #Should print 123
-'"hello'P #Should print hello
-'"It''s none of ''em'P #Should print It's none of 'em
+#//Printing test. Tests if various input values are printed correctly
+'P #//Should print nothing
+'2P #//Should print 2
+'3.14P #//Should print 3.140 (default of 3 dp)
+'1 2 3P #//Should print 123
+'"hello'P #//Should print hello
+'"It''s none of ''em'P #//Should print It's none of 'em
 '"
 'P
- #Should print a new line
+ #//Should print a new line

@@ -1,4 +1,4 @@
-#Condition stack test
+#//Condition stack test
 
 '"False'=false
 '!false=true
@@ -8,25 +8,25 @@
 '"False is: 'false"
 'P
 
-#Always foo
+#//Always foo
 '"foo1
 'P
 
-#Only foo if true
-?true;
+#//Only foo if true
+'true?
 '"foo2
 'P
 \
 
-#Only foo if false
-?false;
+#//Only foo if false
+'false?
 '"foo3
 'P
 \
 
 
-#foo if true, otherwise, bar
-?true;
+#//foo if true, otherwise, bar
+'true?
 '"foo4
 'P
 :
@@ -34,8 +34,8 @@
 'P
 :
 
-#foo if false, otherwise, bar
-?false;
+#//foo if false, otherwise, bar
+'false?
 '"foo5
 'P
 :
@@ -43,43 +43,43 @@
 'P
 :
 
-#bar if true
-??true;
+#//bar if true
+'true??
 '"bar6
 'P
 :
 
-#bar if false
-??false;
+#//bar if false
+'false??
 '"bar7
 'P
 :
 
 
-#Nasty nests
+#//Nasty nests
 
-#False?
-??false;
-	#Well then, true?
-	??true;
+#//False?
+'false??
+	#//Well then, true?
+	'true??
 		'"bar8
 'P
 	:
 :
 
-#true?
-??true;
-	#Well then, true?
-	??true;
+#//true?
+'true??
+	#//Well then, true?
+	'true??
 		'"bar9
 'P
 	:
 :
 
-#true?
-??true;
-	#Well then, true?
-	??true;
+#//true?
+'true??
+	#//Well then, true?
+	'true??
 		'"bar10
 'P
 	\
@@ -87,4 +87,4 @@
 	
 
 	
-#TODO test more!
+#//TODO test more!

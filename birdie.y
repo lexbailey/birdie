@@ -93,7 +93,8 @@ start:	  block 		{}
 	;
 	
 block:	command						{$$ = $1;debugbison("bison: single command as block\n");}
-	| BLOCKSTART commands BLOCKEND	{$$ = $2;debugbison("bison: multi command block\n");}
+	| BLOCKSTART commands BLOCKEND namedFunc	{$$ = $2;debugbison("bison: multi command block as function\n");}
+	| BLOCKSTART commands SEMIC namedIdent BLOCKEND	{$$ = $2;debugbison("bison: multi command block as loop\n");}
 	;
 	
 commands: command
@@ -108,6 +109,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											debugbison("bison: condition is false, ignore command.\n");
 										}
 									}
+
 	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName);
 										if (isTrueVal(topOfConditionStack())){
 											$$=createValStruct(); $$=functionCallArgs($3->valName, $2);
@@ -116,6 +118,10 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											debugbison("bison: condition is false, ignore command.\n");
 										}
 									}
+
+	| SEMIC valueList namedFunc		{debugbison("bison: User function call with params.\n");}
+	| SEMIC namedFunc				{debugbison("bison: User function call.\n");}
+
 	| OPDELIM valueList ASSIGN IDENT	{debugbison("bison: Assigning value to variable: %s\n", $4->valID);
 										if (isTrueVal(topOfConditionStack())){
 											$$=createValStruct();
@@ -139,7 +145,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											autoPush = ! autoPush; debugbison(autoPush?"on\n":"off\n");
 										}
 									}
-	| PUSH valueList SEMIC			{debugbison("bison: Push value to stack\n"); 
+	| OPDELIM valueList PUSH			{debugbison("bison: Push value to stack\n");
 										if (isTrueVal(topOfConditionStack())){
 											$$ = $2;
 										}
@@ -159,7 +165,8 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											/*TODO pop stack*/
 										}
 									}
-	| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(valBoolAnd($2,topOfConditionStack())); $$ = $2;}
+	//| PUSHCOND valueList SEMIC		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(valBoolAnd($2,topOfConditionStack())); $$ = $2;}
+	| OPDELIM valueList PUSHCOND		{debugbison("bison: Push one condition to the condition stack\n"); pushCondition(valBoolAnd($2,topOfConditionStack())); $$ = $2;}
 	| POPCOND						{
 										debugbison("bison: Pop one condition from the condition stack\n");
 										struct val_struct_t *popped = popCondition();
@@ -169,7 +176,8 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 										$$ = popped;
 										freeVal(popped);
 									}
-	| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");
+	//| PUSH2COND valueList SEMIC		{debugbison("bison: Push two conditions to the condition stack\n");
+	| OPDELIM valueList PUSH2COND		{debugbison("bison: Push two conditions to the condition stack\n");
 										struct val_struct_t *inv = valInvert($2);
 										struct val_struct_t *tocs = topOfConditionStack();
 										pushCondition(valBoolAnd(inv,tocs));

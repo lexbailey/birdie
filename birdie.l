@@ -11,7 +11,12 @@
 
 	int capturemode = 0;
 
-    #define INITVAL anyval_p=createValStruct()
+    #define INITVAL do{ \
+    	if (anyval_p != NULL){ \
+    		freeVal(anyval_p); \
+		} \
+		anyval_p=createValStruct(); \
+    }while(0)
     
     #define PARSE(tok,tag,val) do { \
 		lastToken = tok;\
@@ -52,9 +57,9 @@
 		#endif
 	}
 	
-	typedef enum {udtData, udtPointVal, udtPointString} unionDataType;
+	//typedef enum {udtData, udtPointVal, udtPointString} unionDataType;
 	
-	unionDataType dataType = udtData;//TODO fix all this crap
+	//unionDataType dataType = udtData;//TODO fix all this crap
 	
 	#define YY_DECL int yylexMulti()
     
@@ -202,8 +207,23 @@
 "]"						{debug("\tflex: found PUSH\n"); PARSE_TOKEN(PUSH);}
 "["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
-"("						{debug("\tflex: found BLOCKSTART\n"); capturemode++;}
-")"						{debug("\tflex: found BLOCKEND\n"); capturemode--;}
+"("						{debug("\tflex: found BLOCKSTART\n");
+							capturemode++;
+							//Ugly hack, push a false to the stack
+							PARSE_TOKEN(PUSHCOND);
+							INITVAL;
+							anyval_p->valueType = vtInt;
+							anyval_p->valI = 0;
+							PARSE(NUMBER,anyval,copyVal(anyval_p));
+							//Then parse the block
+							PARSE_TOKEN(BLOCKSTART);
+							//This results in blocks being parsed before they are executed. This is good.
+						}
+")"						{debug("\tflex: found BLOCKEND\n");
+							capturemode--;
+							PARSE_TOKEN(BLOCKEND);
+							PARSE_TOKEN(POPCOND);
+						}
 
 "?"						{debug("\tflex: found PUSH2COND\n"); PARSE_TOKEN(PUSH2COND);}
 "\\"					{debug("\tflex: found POP2COND\n"); PARSE_TOKEN(POP2COND);}
@@ -234,11 +254,7 @@
 "&&"					{debug("\tflex: found BITAND\n"); PARSE(BITAND,twoOp,voBitAnd);}
 
 `[0-9]+					{debug("\tflex: found repeater. Urgh! Awful hack\n");
-							//INITVAL;
-							//char *number = malloc(sizeof(char) * (strlen(yytext)));
-	                        //strcpy(number, yytext+1);
-	                        returnMulti = atoi(yytext+1)+3;
-	                        //free(number);
+							returnMulti = atoi(yytext+1)+3;
 
 	                        while(returnMulti--){
 	                        	PARSE_TOKEN(lastToken);
@@ -247,7 +263,7 @@
 						}
 
 
-#[^\n]*					{debug("\tflex: ignore comment\n");}
+#[!\/][\/][^\n]*					{debug("\tflex: ignore comment\n");}
 
 [ \t]					{debug("\tflex: eating white space\n");/*eat white space*/}
 [\n]					{debug("\tflex: eating new line\n");line++;/*eat new lines, increment line count*/}

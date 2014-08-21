@@ -1,4 +1,4 @@
-#Boolean operations
+#//Boolean operations
 
 '1=true
 '0=false
@@ -9,7 +9,7 @@
 '&true true"
 'P
 
-#Should print 0001
+#//Should print 0001
 
 '|false falseP
 '|false trueP
@@ -17,7 +17,7 @@
 '|true true"
 'P
 
-#Should print 0111
+#//Should print 0111
 
 '|^false falseP
 '|^false trueP
@@ -25,6 +25,6 @@
 '|^true true"
 'P
 
-#Should print 0110
+#//Should print 0110
 
-#TODO magic
+#//TODO magic

@@ -1,16 +1,16 @@
 '1=a
 '2=b
 '3=c
-'a b cP #Should print 123
+'a b cP #//Should print 123
 '"hi there'=a
 '" this is Birdie'=b
 '", I''m just testing things.
 '=c
-'a b cP #Should print hi there this is Birdie, I'm just testing things. <newline>
+'a b cP #//Should print hi there this is Birdie, I'm just testing things. <newline>
 
 '2=b
 '"3'=c
 
 'b c"
 '=a
-'aP #should print 23 <newline>
+'aP #//should print 23 <newline>

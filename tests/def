@@ -5,9 +5,12 @@ Designed to get your script working in as few characters as possible.
 It's all a little bit backwards and contains hints of magic throughout. Enjoy.
 BTW. It turns out that birdie is much like lisp in some aspects but not many. I have never used lisp and so this is an accident.
 
-Comments start with a hash (#)
+Comments start with a hash slash slash (#//) or a shebang-slash (#!/)
+The theory is that comments are not things you need when golfing so it makes sense to use a long-ish pattern in order to allow the reuse of the hash symbol as an operator.
+When writing a birdie script, you will no doubt want a shebang followed by a slash and so this is ignored. To ensure you aren't required to do this for every comment and cause confusion, another slash is allowed to replace the bang.
 
-#blah blah comment blah
+#!/usr/bin/env birdie
+#//blah blah comment blah
 
 Numerical literals are slightly backwards!
 
@@ -112,7 +115,7 @@ While in birdie it is like this:
 
 Most of the advantage is in the shorter name of the print function, even if perl's was shorter, birdie still wins by lack of qualifiers before variable names;
 perl:   p$a,$b;     #7 character command minimum
-birdie: 'a bP       #5 character command minimum
+birdie: 'a bP       #//5 character command minimum
 
 Stack
 Birdie also has a stack. Stack mode is entered whenever a caret (^) is detected. Exiting is done in the same way
@@ -164,13 +167,13 @@ Functions that can take multiple inputs will only take one item off the stack if
 ^
 ]"hi'
 ]"there'
-'P          #prints "there"
+'P          #//prints "there"
 
 
 ^
 ]"hi'
 ]"there'
-'2P          #prints "hithere"
+'2P          #//prints "hithere"
 
 You can call a function multiple times in stack mode using only one line. To do this the function must take a fixed number of instructions.
 To do this, in stack mode, call a function and ask for a multiple of the fixed number of arguments.
@@ -441,13 +444,11 @@ For integers, this is also well defined, any non-zero value becomes zero, zero b
 
 So, if you want to clear (set to zero) an integer (let's call it 'a') if another integer (let's say 'b') is a true value (not zero) you can do this...
 
-a=*a!!b;
+'*a!b=a
 
-This is no more compact than using the condition stack for such an operation:
+This one char more compact than using the condition stack for such an operation:
 
-?b;a=0;\
-
-But it can find uses in other places where it is more compact.
+?b;'0=a\
 
 Note that inverting floats is the same as subtracting them from 0 (remember that birdie signs are backwards)
 
