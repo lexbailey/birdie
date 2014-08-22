@@ -66,7 +66,7 @@ typedef int64_t user_int;
 typedef double user_float;
 
 ///Enumerated type for the storage type of a variable
-typedef enum {vtString, vtInt, vtFloat, vtList} val_type_t;
+typedef enum {vtString=0, vtInt=1, vtFloat=2, vtList=3} val_type_t;
 
 ///Enumerated type for a binary operator
 typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus,
@@ -144,6 +144,15 @@ struct almighty_stack_item_t{
 	
 	//The almighty stack is made up of the stack stack, the stack state stack and the condition stack.
 };
+
+///Caculates the length that a serial copy of a struct would take up
+uint64_t calculateSerialSizeBytes(struct val_struct_t *in);
+
+///Turns a val_struct_t into a string of chars that can be read with deserializeValStruct
+char *serializeValStruct(struct val_struct_t *);
+
+///Deserializes the output of serializeValStruct. Returns val struct.
+struct val_struct_t *deserializeValStruct(char *);
 
 ///Frees a val_list_item. This will recursively free any list elements that follow it. This also frees the item it holds.
 void freeListItem(struct val_list_item *victim);

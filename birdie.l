@@ -154,6 +154,10 @@
 						}
 [a-z]+-					{
 							debug("\tflex: found IDENT\n");
+							size_t len = strlen(yytext);
+							if (len>16535){
+								yywarn("Unserializable identfier! Name too long. (>16535 chars)");
+							}
 							INITVAL;
 							anyval_p->valID = newString(yytext);
 							anyval_p->valID[strlen(anyval_p->valID)-1] = '\0';

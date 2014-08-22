@@ -289,3 +289,143 @@ char *newString(const char *source){
 	strcpy(result, source);
 	return result;
 }
+
+
+
+
+/**
+ * Serialization standard...
+ *
+ * bytes 0-1: Value type according to val_type_t. Little endian bits, Big endian bytes. Most significant BYTE LAST. most significant BIT FIRST
+ *   eg: 0x00,0x02 = float.
+ * bytes 2-3: Length of ID value (0 if no ID present) (Little endian, unsigned)
+ * bytes 4-7: Length of the data that represents the value of this val struct. This must not be 0. (Little endian, unsigned)
+ *
+ * following n bytes where n is the length of the ID as per bytes 2 and 3: Identifier string (not null terminated)
+ *
+ * following n bytes where n is the length as per bytes 4-7: the data!
+ * The data can vary dependng on the type, see below
+ *
+ * vtString=0x0000
+ *     Raw strng value is stored as ascii.
+ * vtInt=0x0001
+ *     (fixed to length of user_int type) stores the raw bytes as defined by the host systems's user_int type
+ * vtFloat=0x0002
+ *     (fixed to length of user_float type) stores the raw bytes as defined by the host systems's user_float type
+ * vtList=0x0003
+ *     Oo. Now, this is dificult. When a list is serialized, it is flatened and recursively serialized, what follows
+ *     will be more of these structures represnting subsequent elements in the list. Where a list contains a list,
+ *     that list's elements follow it directly in the data stream.
+ *
+ * Note that name is not stored as this inforation is only for debugging.
+ *
+ */
+
+#define CHARLEN (sizeof(char))
+
+uint64_t calculateSerialSizeBytes(struct val_struct_t *in){
+	uint64_t result = 8; //Each item is at least six bytes
+	if (in->valID != NULL){
+		result += strlen(in->valID);
+	}
+
+	ITERLIST_DEF(thisItem);
+
+	switch(in->valueType){
+		case vtString:
+			result += strlen(in->valS);
+		break;
+		case vtInt:
+			result += sizeof(user_int);
+		break;
+		case vtFloat:
+			result += sizeof(user_float);
+		break;
+		case vtList:
+
+			ITERLIST_BEGIN(in->list,thisItem)
+				result += calculateSerialSizeBytes(thisItem->item);
+			ITERLIST_END(thisItem)
+
+		break;
+	}
+	return result;
+}
+
+char *serializeValStruct(struct val_struct_t *in){
+
+	//Get the total size including header
+	uint64_t size = calculateSerialSizeBytes(in);
+
+	//Get the valu type into the correct format
+	uint16_t DataType = (uint16_t)in->valueType;
+
+	//For reading lengths in correct format
+	uint16_t IDLen = 0;
+	uint32_t DataLen = 0;
+
+	//Get an ouput buffer
+	char *outputData;
+	outputData = malloc(sizeof(char) * size);
+
+	//If we have an ID, measure its length
+	if (in->valID != NULL){
+		IDLen = strlen(in->valID);
+	}
+
+	//The size of the data is then the total size minus the header size, minus the identifier length
+	DataLen = size - IDLen - 8;
+
+	//Put the header information in place
+	memcpy(outputData,             &DataType, CHARLEN *2);//Data type
+	memcpy(outputData+(CHARLEN*2), &IDLen,    CHARLEN *2);//Length of identifier
+	memcpy(outputData+(CHARLEN*4), &DataLen,  CHARLEN *4);//Length of data
+
+	//Calculat data start
+	char *data = outputData + (CHARLEN*8);
+	//Source for copy of data
+	char *source = NULL;
+
+	//If we have an identifier string, copy it in and advance the data pointer
+	if (in->valID != NULL){
+		memcpy(data, in->valID, IDLen);
+		data += IDLen;
+	}
+
+	//Prepare to iterate list if needed
+	ITERLIST_DEF(thisItem);
+
+	//Get a pointer to the interesting data...
+	switch(in->valueType){
+		case vtString:
+			source = (char *) &(in->valS);
+		break;
+		case vtInt:
+			source = (char *) &(in->valI);
+		break;
+		case vtFloat:
+			source = (char *) &(in->valF);
+		break;
+		case vtList:
+
+			ITERLIST_BEGIN(in->list,thisItem)
+				//Get the lenth of this sub item
+				uint64_t subsize = calculateSerialSizeBytes(thisItem->item);
+				//Serialize the sub-item
+				char *subdata = serializeValStruct(thisItem->item);
+				//Copy it to the parent's serial data section
+				memcpy(data, subdata, subsize);
+				//Advnce the data pointer for more things
+				data += subsize;
+				//free the sub item
+				free(subdata);
+			ITERLIST_END(thisItem)
+
+		break;
+	}
+	//If we didn't do a sub-list, copy the data
+	if (source != NULL){
+		memcpy(data, source, DataLen);
+	}
+	return outputData;
+}

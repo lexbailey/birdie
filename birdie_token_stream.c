@@ -1,6 +1,9 @@
 #include "birdie_token_stream.h"
 
-void streamAppendToken(struct token_stream_token *, enum yytokentype, YYSTYPE){
+//TODO fix this
+#define TOKEN_TO_CHARS(tok) ((char)tok)
+
+void streamAppendToken(struct token_stream_token *stream_end, enum yytokentype token_type, void *data){
 
 }
 

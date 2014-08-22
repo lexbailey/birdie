@@ -271,7 +271,17 @@ valop1: INV
 	| ASLIST
 	;
 
-namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID); $$ = readVar($1->valID);}
+namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID);
+										$$ = readVar($1->valID);
+										uint64_t len = calculateSerialSizeBytes($$);
+										fprintf(stderr, "Size of this identifer: " "%" PRId64 "\n", len);
+										char *data = serializeValStruct($$);
+										uint64_t i;
+										for (i = 0; i<len; i++){
+											fprintf(stderr, "0x%X, ", data[i]);
+										}
+										fprintf(stderr, "\n");
+									}
 	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID);
 										struct val_struct_t *temp;
 										temp = readVar($1->valID);
@@ -298,4 +308,7 @@ void yyerror(char* s){
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
 
+void yywarn(char* s){
+	fprintf(stderr, "Warning for line %lu: %s\n", line, s);
+}
 
