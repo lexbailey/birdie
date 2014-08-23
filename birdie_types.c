@@ -357,7 +357,7 @@ char *serializeValStruct(struct val_struct_t *in){
 	//Get the total size including header
 	uint64_t size = calculateSerialSizeBytes(in);
 
-	//Get the valu type into the correct format
+	//Get the value type into the correct format
 	uint16_t DataType = (uint16_t)in->valueType;
 
 	//For reading lengths in correct format
@@ -428,4 +428,86 @@ char *serializeValStruct(struct val_struct_t *in){
 		memcpy(data, source, DataLen);
 	}
 	return outputData;
+}
+
+struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
+
+	//output structure
+	struct val_struct_t *output = createValStruct();
+
+	//Read value type
+	output->valueType = (val_type_t)(*((uint16_t*)(in)));
+
+	//Reading lengths
+	uint16_t IDLen = *((uint16_t*)(in+2));
+	uint32_t DataLen = *((uint16_t*)(in+4));
+
+
+	output->valID = NULL;
+
+	//Read ID if available
+	if (IDLen > 0){
+		output->valID = malloc(IDLen+1);	//Allocate
+		memcpy(output->valID,in+8,IDLen);	//Copy
+		output->valID[IDLen] = '\0';		//Don't forget null terminator
+	}
+
+	//Total bytes read so far
+	*readLength = 8+IDLen;
+
+	//Start of actual data
+	char *dataStart = in+(*readLength);
+
+	//Prepare to iterate list if needed
+	//ITERLIST_DEF(thisItem);
+	uint64_t listReadLength;
+
+	//Get a pointer to the interesting data...
+	switch(output->valueType){
+		case vtString:
+			output->valS = malloc(DataLen+1);		//Allocate
+			memcpy(output->valS,dataStart,DataLen);	//Copy
+			output->valS[DataLen] = '\0';			//Don't forget null terminator
+		break;
+		case vtInt:
+			memcpy(&output->valI,dataStart,DataLen);	//Copy
+		break;
+		case vtFloat:
+			memcpy(&output->valF,dataStart,DataLen);	//Copy
+		break;
+		case vtList:
+			//Create the first list item and then get another pointer to it
+			output->list = createValListItem();
+			struct val_list_item *listItem = output->list;
+			struct val_list_item **lastListItemP = NULL;
+			//Keep reading more stuff unil there is no data left
+			do{
+
+				//Read the next item, accumulate length
+				listItem->item = deserializeValStructLEN(dataStart, &listReadLength);
+				*readLength += listReadLength;
+				dataStart += listReadLength;
+				//Create another list item and move to it
+				listItem->nextItem = createValListItem();
+				lastListItemP = &listItem->nextItem;
+				listItem = listItem->nextItem;
+			}
+			while (*readLength < DataLen);
+			//When we hit the end of the list, remove the last item as it is blank
+
+			freeListItem(listItem);
+			*lastListItemP = NULL;
+
+		break;
+	}
+
+	//We have now read some more
+	*readLength += DataLen;
+
+	return output;
+}
+
+struct val_struct_t *deserializeValStruct(char *in){
+	uint64_t ignore;
+	return deserializeValStructLEN(in, &ignore);
 }

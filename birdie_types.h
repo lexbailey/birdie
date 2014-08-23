@@ -151,8 +151,11 @@ uint64_t calculateSerialSizeBytes(struct val_struct_t *in);
 ///Turns a val_struct_t into a string of chars that can be read with deserializeValStruct
 char *serializeValStruct(struct val_struct_t *);
 
+///Deserializes the output of serializeValStruct. Returns val struct. Also stores the length of th read data in readLength
+struct val_struct_t *deserializeValStructLEN(char *, uint64_t *readLength);
+
 ///Deserializes the output of serializeValStruct. Returns val struct.
-struct val_struct_t *deserializeValStruct(char *);
+struct val_struct_t *deserializeValStruct(char *in);
 
 ///Frees a val_list_item. This will recursively free any list elements that follow it. This also frees the item it holds.
 void freeListItem(struct val_list_item *victim);

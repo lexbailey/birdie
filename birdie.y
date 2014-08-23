@@ -46,9 +46,6 @@ void init(){
 %define api.push-pull push
 
 %union {
-	int ival;
-	float fval;
-	char *sval;
 	struct val_struct_t *anyval;
 	void *noval;
 	val_operation_1 oneOp;
@@ -80,7 +77,7 @@ void init(){
 
 
 %type <anyval> anyNumber rawNumber command commands block
-%type <sval> start  
+%type <noval> start
 %type <anyval> value procVal anyVal namedIdent namedFunc valueList
 %type <twoOp> valop2 comparisonOp binOp
 %type <oneOp> valop1
@@ -280,6 +277,8 @@ namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->
 										for (i = 0; i<len; i++){
 											fprintf(stderr, "0x%X, ", data[i]);
 										}
+										fprintf(stderr, "After deserial:\n");
+										printVal(deserializeValStruct(data));
 										fprintf(stderr, "\n");
 									}
 	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID);
