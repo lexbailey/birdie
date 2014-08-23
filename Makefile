@@ -7,8 +7,8 @@ Objects += birdie_funcs.o
 Objects += birdie_funcs_bool_util.o 
 Objects += birdie_control.o birdie_builtin.o birdie_stackman.o
 
-GlobalConfig = -ggdb -DGLOBAL_DEBUG
-#GlobalConfig = -ggdb
+#GlobalConfig = -ggdb -DGLOBAL_DEBUG
+GlobalConfig = -ggdb
 
 FixedConfig = 
 

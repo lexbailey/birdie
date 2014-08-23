@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include "birdie_tokens.h"
 
 ///Format specifier to use for printing floats
 #define FLOAT_SPEC "%.3f"
@@ -70,7 +71,8 @@ typedef enum {vtString=0, vtInt=1, vtFloat=2, vtList=3} val_type_t;
 
 ///Enumerated type for a binary operator
 typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus,
-				voBoolAnd, voBoolOr, voBoolXor, voBitAnd, voBitOr, voBitXor} val_operation_2;
+				voBoolAnd, voBoolOr, voBoolXor, voBitAnd, voBitOr, voBitXor,
+				voEqual, voInequal, voGreater, voLess, voGreaterEqual, voLessEqual} val_operation_2;
 
 ///Enumerated type for a unary operator
 typedef enum {voInvert, voAsScalar, voAsString, voAsList} val_operation_1;
@@ -145,17 +147,39 @@ struct almighty_stack_item_t{
 	//The almighty stack is made up of the stack stack, the stack state stack and the condition stack.
 };
 
-///Caculates the length that a serial copy of a struct would take up
-uint64_t calculateSerialSizeBytes(struct val_struct_t *in);
+
+struct post_lex_token_t{
+	uint16_t token;
+	struct val_struct_t *value;
+};
+
+///Caculates the length that a serial copy of a val struct would take up
+uint64_t calculateValStructSerialSizeBytes(struct val_struct_t *in);
+
+///Initialises an output buffer for a serial val struct
+char *initialiseValStructOutputBuffer(struct val_struct_t *in);
 
 ///Turns a val_struct_t into a string of chars that can be read with deserializeValStruct
-char *serializeValStruct(struct val_struct_t *);
+char *serializeValStruct(struct val_struct_t *, char *);
 
 ///Deserializes the output of serializeValStruct. Returns val struct. Also stores the length of th read data in readLength
 struct val_struct_t *deserializeValStructLEN(char *, uint64_t *readLength);
 
 ///Deserializes the output of serializeValStruct. Returns val struct.
 struct val_struct_t *deserializeValStruct(char *in);
+
+
+
+///Caculates the length that a serial copy of a post parse token would take up
+uint64_t calculatePostLexTokenSerialSizeBytes(struct post_lex_token_t *in);
+
+///Turns a post_parse_token_t into a string of chars that can be read with deserializeValStruct
+char *serializePostLexToken(struct post_lex_token_t *, char *outputBuffer);
+
+///Deserializes the output of serializePostParseToken. Returns a post parse token.
+struct post_lex_token_t *deserializePostLexToken(char *in);
+
+
 
 ///Frees a val_list_item. This will recursively free any list elements that follow it. This also frees the item it holds.
 void freeListItem(struct val_list_item *victim);

@@ -7,9 +7,9 @@
 
 	struct val_struct_t *anyval_p;
 
-	enum yytokentype lastToken = 0;
-
 	int capturemode = 0;
+
+	struct post_lex_token_t nextToken;
 
     #define INITVAL do{ \
     	if (anyval_p != NULL){ \
@@ -18,16 +18,29 @@
 		anyval_p=createValStruct(); \
     }while(0)
     
-    #define PARSE(tok,tag,val) do { \
-		lastToken = tok;\
-    	YYSTYPE yylval = {.tag=val};  \
+
+
+    #define PARSE(tok,val) do { \
+		nextToken.token=tok; \
+		if(nextToken.value !=NULL){ \
+			freeVal(nextToken.value); \
+		} \
+		nextToken.value=val; \
+    	YYSTYPE yylval = {.anyval=copyVal(val)};  \
     	int status = yypush_parse(ps, tok, &yylval); \
     	if (status != YYPUSH_MORE) return status; \
   	} while(0)
+
   	#define PARSE_TOKEN(tok) do { \
-  		lastToken = tok;\
+		nextToken.token=tok; \
 	    int status = yypush_parse(ps, tok, 0); \
 	    if (status != YYPUSH_MORE) return status; \
+  	} while(0)
+
+	#define PARSE_AGAIN do { \
+		YYSTYPE yylval = {.anyval=copyVal(nextToken.value)}; \
+    	int status = yypush_parse(ps, nextToken.token, &yylval); \
+    	if (status != YYPUSH_MORE) return status; \
   	} while(0)
     
     //Take input from file argument if specified
@@ -56,10 +69,6 @@
 		va_end( arglist );
 		#endif
 	}
-	
-	//typedef enum {udtData, udtPointVal, udtPointString} unionDataType;
-	
-	//unionDataType dataType = udtData;//TODO fix all this crap
 	
 	#define YY_DECL int yylexMulti()
     
@@ -143,14 +152,14 @@
 							debug("\tflex: found FUNC\n");
  							INITVAL;
  							anyval_p->valName = newString(yytext);
- 							PARSE(FUNC,anyval,copyVal(anyval_p));
+ 							PARSE(FUNC,copyVal(anyval_p));
  						}
 [a-z]+					{
 							debug("\tflex: found IDENT\n");
 							INITVAL;
 							anyval_p->valID = newString(yytext);
 							anyval_p->valName = newString("Identifier");
-							PARSE(IDENT,anyval,copyVal(anyval_p));
+							PARSE(IDENT,copyVal(anyval_p));
 						}
 [a-z]+-					{
 							debug("\tflex: found IDENT\n");
@@ -162,7 +171,7 @@
 							anyval_p->valID = newString(yytext);
 							anyval_p->valID[strlen(anyval_p->valID)-1] = '\0';
 							anyval_p->valName = newString("Identifier");
-							PARSE(NEGIDENT,anyval,copyVal(anyval_p));
+							PARSE(NEGIDENT,copyVal(anyval_p));
 						}
 
 \"(([^']*)'')*([^']*)'	{
@@ -172,7 +181,7 @@
 							anyval_p->valS = newString(yytext);
 							parseLit(&(anyval_p->valS));
 							debug("\tflex: TEXT val is %s\n", anyval_p->valS);
-							PARSE(TEXT,anyval,copyVal(anyval_p));
+							PARSE(TEXT,copyVal(anyval_p));
 						}
 
 [0-9]+[-+]?				{
@@ -180,7 +189,7 @@
 							INITVAL;
 							anyval_p->valueType = vtInt;
 							anyval_p->valI = parseNum(yytext);
-							PARSE(NUMBER,anyval,copyVal(anyval_p));
+							PARSE(NUMBER,copyVal(anyval_p));
 						}
 
 ([0-9]*\.?[0-9]+|[0]9+\.)[-+]?	{
@@ -188,20 +197,20 @@
 							INITVAL;
 							anyval_p->valueType = vtFloat;
 							anyval_p->valF = parseNumf(yytext);
-							PARSE(FLOAT,anyval,copyVal(anyval_p));
+							PARSE(FLOAT,copyVal(anyval_p));
 						}
 
 "="						{debug("\tflex: found ASSIGN\n"); PARSE_TOKEN(ASSIGN);}
-"+"						{debug("\tflex: found ADD\n"); PARSE(ADD,twoOp,voAdd);}
-"-"						{debug("\tflex: found SUB\n"); PARSE(SUB,twoOp,voSubtract);}
-"*"						{debug("\tflex: found MUL\n"); PARSE(MUL,twoOp,voMultiply);}
-"/"						{debug("\tflex: found DIV\n"); PARSE(DIV,twoOp,voDivide);}
-"%"						{debug("\tflex: found MOD\n"); PARSE(MOD,twoOp,voModulus);}
-"!"						{debug("\tflex: found INV\n"); PARSE(INV,oneOp,voInvert);}
+"+"						{debug("\tflex: found ADD\n"); PARSE_TOKEN(ADD);}
+"-"						{debug("\tflex: found SUB\n"); PARSE_TOKEN(SUB);}
+"*"						{debug("\tflex: found MUL\n"); PARSE_TOKEN(MUL);}
+"/"						{debug("\tflex: found DIV\n"); PARSE_TOKEN(DIV);}
+"%"						{debug("\tflex: found MOD\n"); PARSE_TOKEN(MOD);}
+"!"						{debug("\tflex: found INV\n"); PARSE_TOKEN(INV);}
 
-"$"						{debug("\tflex: found ASSCALAR\n"); PARSE(ASSCALAR,oneOp,voAsScalar); }
-"~"						{debug("\tflex: found ASSTRING\n"); PARSE(ASSTRING,oneOp,voAsString); }
-"@"						{debug("\tflex: found ASLIST\n"); PARSE(ASLIST,oneOp,voAsList); }
+"$"						{debug("\tflex: found ASSCALAR\n"); PARSE_TOKEN(ASSCALAR); }
+"~"						{debug("\tflex: found ASSTRING\n"); PARSE_TOKEN(ASSTRING); }
+"@"						{debug("\tflex: found ASLIST\n"); PARSE_TOKEN(ASLIST); }
 
 "^"						{debug("\tflex: found CARET\n"); PARSE_TOKEN(CARET);}
 "_"						{debug("\tflex: found UNDERSCORE\n"); PARSE_TOKEN(UNDERSCORE);}
@@ -218,7 +227,7 @@
 							INITVAL;
 							anyval_p->valueType = vtInt;
 							anyval_p->valI = 0;
-							PARSE(NUMBER,anyval,copyVal(anyval_p));
+							PARSE(NUMBER,copyVal(anyval_p));
 							//Then parse the block
 							PARSE_TOKEN(BLOCKSTART);
 							//This results in blocks being parsed before they are executed. This is good.
@@ -248,20 +257,20 @@
 "£"						{debug("\tflex: found EQ\n"); PARSE_TOKEN(EQ);}
 "`"						{debug("\tflex: found INEQ\n"); PARSE_TOKEN(INEQ);}
 
-"|"						{debug("\tflex: found BOOLOR\n"); PARSE(BOOLOR,twoOp,voBoolOr);}
-"||"					{debug("\tflex: found BITOR\n"); PARSE(BITOR,twoOp,voBitOr);}
+"|"						{debug("\tflex: found BOOLOR\n"); PARSE_TOKEN(BOOLOR);}
+"||"					{debug("\tflex: found BITOR\n"); PARSE_TOKEN(BITOR);}
 
-"|^"					{debug("\tflex: found BOOLXOR\n");PARSE(BOOLXOR,twoOp,voBoolXor);}
-"||^"					{debug("\tflex: found BITXOR\n"); PARSE(BITXOR,twoOp,voBitXor);}
+"|^"					{debug("\tflex: found BOOLXOR\n");PARSE_TOKEN(BOOLXOR);}
+"||^"					{debug("\tflex: found BITXOR\n"); PARSE_TOKEN(BITXOR);}
 
-"&"						{debug("\tflex: found BOOLAND\n"); PARSE(BOOLAND,twoOp,voBoolAnd);}
-"&&"					{debug("\tflex: found BITAND\n"); PARSE(BITAND,twoOp,voBitAnd);}
+"&"						{debug("\tflex: found BOOLAND\n"); PARSE_TOKEN(BOOLAND);}
+"&&"					{debug("\tflex: found BITAND\n"); PARSE_TOKEN(BITAND);}
 
 `[0-9]+					{debug("\tflex: found repeater. Urgh! Awful hack\n");
 							returnMulti = atoi(yytext+1)+3;
 
 	                        while(returnMulti--){
-	                        	PARSE_TOKEN(lastToken);
+	                        	PARSE_AGAIN;
 	                        }
                        
 						}
@@ -274,7 +283,6 @@
 .						{
 							debug("\tflex: no match\n");
 							synError("Statement expected but '%s' found.", yytext);
-							INITVAL; 
 							PARSE_TOKEN(ERR);
 						}
 
@@ -288,8 +296,9 @@
 FILE *argIn = NULL;
 
 int main(int argc, char ** argv){
+	nextToken.value=NULL;
 	init();
-	//anyval_p = createValStruct();
+	anyval_p = createValStruct();
 	//Where is my input?
 	if (argc > 1){
 		char * inputFile = argv[1];
@@ -306,6 +315,11 @@ int main(int argc, char ** argv){
 	if (argIn != NULL){
 		fclose(argIn);
 	}
+
+	if (nextToken.value!=NULL){
+		freeVal(nextToken.value);
+	}
+
 	return result;
 }
 
@@ -327,16 +341,14 @@ int flexInput( char *buf, int *read, int max) {
 	else { 
 		
 		errno=0; 
-		while ( (*read = fread(buf, 1, max, argIn))==0 && ferror(argIn)) 
-			{ 
-			if( errno != EINTR) 
-				{ 
+		while ( (*read = fread(buf, 1, max, argIn))==0 && ferror(argIn)){
+			if( errno != EINTR){
 				YY_FATAL_ERROR( "input in flex scanner failed" ); 
 				break; 
-				} 
+			}
 			errno=0; 
 			clearerr(argIn); 
-			} 
+		}
 					
 		//*read = fread(buf, sizeof(char), max, argIn);
 	}

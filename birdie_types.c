@@ -9,10 +9,6 @@
 	#include <stdarg.h>
 #endif
 
-//TODO write a debugging function that dereferences EVERYTHING in a list so
-//that it can be called after each operation to make the segfaults happen 
-//closer to the things that caused them.
-
 debugTypes(const char* s, ...){
 	#ifdef DEBUGTYPES
 	va_list arglist;
@@ -317,14 +313,16 @@ char *newString(const char *source){
  *     will be more of these structures represnting subsequent elements in the list. Where a list contains a list,
  *     that list's elements follow it directly in the data stream.
  *
- * Note that name is not stored as this inforation is only for debugging.
+ * Note that the name is not stored as this inforation is only for debugging.
  *
  */
 
-#define CHARLEN (sizeof(char))
+#define VAL_STRUCT_SERIAL_HEADER_SIZE ((sizeof(uint16_t)*2) + sizeof(uint32_t))
 
-uint64_t calculateSerialSizeBytes(struct val_struct_t *in){
-	uint64_t result = 8; //Each item is at least six bytes
+#define CHARLEN (sizeof(char)) //Most likely just a 1
+
+uint64_t calculateValStructSerialSizeBytes(struct val_struct_t *in){
+	uint64_t result = VAL_STRUCT_SERIAL_HEADER_SIZE; //Each item is at least six bytes
 	if (in->valID != NULL){
 		result += strlen(in->valID);
 	}
@@ -333,7 +331,7 @@ uint64_t calculateSerialSizeBytes(struct val_struct_t *in){
 
 	switch(in->valueType){
 		case vtString:
-			result += strlen(in->valS);
+			result += strlen(in->valS) * CHARLEN;
 		break;
 		case vtInt:
 			result += sizeof(user_int);
@@ -344,7 +342,7 @@ uint64_t calculateSerialSizeBytes(struct val_struct_t *in){
 		case vtList:
 
 			ITERLIST_BEGIN(in->list,thisItem)
-				result += calculateSerialSizeBytes(thisItem->item);
+				result += calculateValStructSerialSizeBytes(thisItem->item);
 			ITERLIST_END(thisItem)
 
 		break;
@@ -352,10 +350,14 @@ uint64_t calculateSerialSizeBytes(struct val_struct_t *in){
 	return result;
 }
 
-char *serializeValStruct(struct val_struct_t *in){
+char *initialiseValStructOutputBuffer(struct val_struct_t *in){
+	return malloc(calculateValStructSerialSizeBytes(in));
+}
+
+char *serializeValStruct(struct val_struct_t *in, char *outputBuffer){
 
 	//Get the total size including header
-	uint64_t size = calculateSerialSizeBytes(in);
+	uint64_t size = calculateValStructSerialSizeBytes(in);
 
 	//Get the value type into the correct format
 	uint16_t DataType = (uint16_t)in->valueType;
@@ -366,7 +368,12 @@ char *serializeValStruct(struct val_struct_t *in){
 
 	//Get an ouput buffer
 	char *outputData;
-	outputData = malloc(sizeof(char) * size);
+	if (outputBuffer != NULL){
+		outputData = outputBuffer;
+	}
+	else{
+		outputData = malloc(sizeof(char) * size);
+	}
 
 	//If we have an ID, measure its length
 	if (in->valID != NULL){
@@ -374,15 +381,15 @@ char *serializeValStruct(struct val_struct_t *in){
 	}
 
 	//The size of the data is then the total size minus the header size, minus the identifier length
-	DataLen = size - IDLen - 8;
+	DataLen = size - IDLen - VAL_STRUCT_SERIAL_HEADER_SIZE;
 
 	//Put the header information in place
-	memcpy(outputData,             &DataType, CHARLEN *2);//Data type
-	memcpy(outputData+(CHARLEN*2), &IDLen,    CHARLEN *2);//Length of identifier
-	memcpy(outputData+(CHARLEN*4), &DataLen,  CHARLEN *4);//Length of data
+	memcpy(outputData,             &DataType, sizeof(uint16_t));//Data type
+	memcpy(outputData+(sizeof(uint16_t)), &IDLen,    sizeof(uint16_t));//Length of identifier
+	memcpy(outputData+(sizeof(uint16_t)*2), &DataLen,  sizeof(uint32_t));//Length of data
 
 	//Calculat data start
-	char *data = outputData + (CHARLEN*8);
+	char *data = outputData + (VAL_STRUCT_SERIAL_HEADER_SIZE);
 	//Source for copy of data
 	char *source = NULL;
 
@@ -410,15 +417,14 @@ char *serializeValStruct(struct val_struct_t *in){
 
 			ITERLIST_BEGIN(in->list,thisItem)
 				//Get the lenth of this sub item
-				uint64_t subsize = calculateSerialSizeBytes(thisItem->item);
+				uint64_t subsize = calculateValStructSerialSizeBytes(thisItem->item);
+
 				//Serialize the sub-item
-				char *subdata = serializeValStruct(thisItem->item);
-				//Copy it to the parent's serial data section
-				memcpy(data, subdata, subsize);
+				serializeValStruct(thisItem->item, data);
+
 				//Advnce the data pointer for more things
 				data += subsize;
-				//free the sub item
-				free(subdata);
+
 			ITERLIST_END(thisItem)
 
 		break;
@@ -448,12 +454,12 @@ struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
 	//Read ID if available
 	if (IDLen > 0){
 		output->valID = malloc(IDLen+1);	//Allocate
-		memcpy(output->valID,in+8,IDLen);	//Copy
+		memcpy(output->valID,in+VAL_STRUCT_SERIAL_HEADER_SIZE,IDLen);	//Copy
 		output->valID[IDLen] = '\0';		//Don't forget null terminator
 	}
 
 	//Total bytes read so far
-	*readLength = 8+IDLen;
+	*readLength = VAL_STRUCT_SERIAL_HEADER_SIZE+IDLen;
 
 	//Start of actual data
 	char *dataStart = in+(*readLength);
@@ -476,27 +482,36 @@ struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
 			memcpy(&output->valF,dataStart,DataLen);	//Copy
 		break;
 		case vtList:
-			//Create the first list item and then get another pointer to it
+			//Create the first list item
 			output->list = createValListItem();
+			//Get the 'iteration pointer' to this item
 			struct val_list_item *listItem = output->list;
+			//Initialise a pointer to the previous item (no previous item when at start)
 			struct val_list_item **lastListItemP = NULL;
+
 			//Keep reading more stuff unil there is no data left
 			do{
-
 				//Read the next item, accumulate length
 				listItem->item = deserializeValStructLEN(dataStart, &listReadLength);
 				*readLength += listReadLength;
+
+				//Move to next section of data.
 				dataStart += listReadLength;
+
 				//Create another list item and move to it
 				listItem->nextItem = createValListItem();
+
+				//Get a pointer to the pointer to this item as seen by the previous item (we might need to free it later)
 				lastListItemP = &listItem->nextItem;
+
+				//Advance to next item
 				listItem = listItem->nextItem;
 			}
 			while (*readLength < DataLen);
-			//When we hit the end of the list, remove the last item as it is blank
 
+			//When we hit the end of the list, remove the last item as it is blank
 			freeListItem(listItem);
-			*lastListItemP = NULL;
+			*lastListItemP = NULL; //Set the pointer of the previous to null to mark end of list.
 
 		break;
 	}
@@ -508,6 +523,64 @@ struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
 }
 
 struct val_struct_t *deserializeValStruct(char *in){
+	//Slightly more convenient version that ignores the output length
 	uint64_t ignore;
 	return deserializeValStructLEN(in, &ignore);
+}
+
+/**
+ * Post Lex token serial standard
+ *
+ * bytes 0-1: token type
+ * bytes 2-5: data length
+ * ... data.
+ */
+
+int tokenNeedsAnyval(uint16_t tokenID){
+	return 0;
+}
+
+#define POST_LEX_TOKEN_SERIAL_HEADER_SIZE (sizeof(uint16_t) + sizeof(uint32_t))
+
+uint64_t calculatePostLexTokenSerialSizeBytes(struct post_lex_token_t *in){
+	uint64_t len = POST_LEX_TOKEN_SERIAL_HEADER_SIZE;
+
+	if (tokenNeedsAnyval(in->token)){
+		len += calculateValStructSerialSizeBytes(in->value);
+	}
+
+	return len;
+
+}
+
+char *serializePostLexToken(struct post_lex_token_t * in, char *outputBuffer){
+
+	char *output;
+	uint64_t len = calculatePostLexTokenSerialSizeBytes(in);
+
+	if (outputBuffer != NULL){
+		output = outputBuffer;
+	}
+	else{
+		char *output = malloc(len);
+	}
+
+
+	uint16_t tokenID = (uint16_t)in->token;
+	uint32_t dataLen = len - POST_LEX_TOKEN_SERIAL_HEADER_SIZE;
+
+	memcpy(output,                  &tokenID, sizeof(uint16_t));
+	memcpy(output+sizeof(uint16_t), &dataLen, sizeof(uint32_t));
+
+	if (tokenNeedsAnyval(in->token)){
+		char *dataStart = output+POST_LEX_TOKEN_SERIAL_HEADER_SIZE;
+		serializeValStruct(in->value, dataStart);
+	}
+
+	return output;
+
+}
+
+struct post_lex_token_t *deserializePostLexToken(char *in){
+
 }

@@ -5,6 +5,8 @@
 #include <time.h>
 #include <stdlib.h>
 
+#include "birdie_tokens.h"
+
 #ifdef GLOBAL_DEBUG
 #define DEBUGBISON
 #endif
@@ -48,6 +50,7 @@ void init(){
 %union {
 	struct val_struct_t *anyval;
 	void *noval;
+	//Not to be used by flex
 	val_operation_1 oneOp;
 	val_operation_2 twoOp;
 }
@@ -57,8 +60,8 @@ void init(){
 %token <anyval> NUMBER FLOAT TEXT
 
 %token <noval> ASSIGN
-%token <twoOp> ADD SUB MUL DIV MOD 
-%token <oneOp> INV ASSCALAR ASSTRING ASLIST
+%token <noval> ADD SUB MUL DIV MOD
+%token <noval> INV ASSCALAR ASSTRING ASLIST
 
 %token <noval> SEMIC
 %token <noval> DELIM OPDELIM
@@ -70,8 +73,8 @@ void init(){
 %token <noval> PUSH2COND POP2COND
 %token <noval> POPCOND PUSHCOND
 
-%token <twoOp> GREATER LESS GREATEREQ LESSEQ EQ INEQ
-%token <twoOp> BOOLOR BITOR BOOLAND BITAND BOOLXOR BITXOR
+%token <noval> GREATER LESS GREATEREQ LESSEQ EQ INEQ
+%token <noval> BOOLOR BITOR BOOLAND BITAND BOOLXOR BITXOR
 
 %token <noval> ERR
 
@@ -240,46 +243,36 @@ binOp: valop2						{debugbison("bison: Binary op\n");}
 	|	comparisonOp				{debugbison("bison: Comparison op\n");}
 	;
 
-valop2: ADD
-	| SUB
-	| MUL
-	| DIV
-	| MOD
+valop2: ADD			{$$ = voAdd;}
+	| SUB			{$$ = voSubtract;}
+	| MUL			{$$ = voMultiply;}
+	| DIV			{$$ = voDivide;}
+	| MOD			{$$ = voModulus;}
 	
-	| BOOLAND
-	| BOOLOR
-	| BOOLXOR
-	| BITAND
-	| BITOR
-	| BITXOR
+	| BOOLAND		{$$ = voBoolAnd;}
+	| BOOLOR		{$$ = voBoolOr;}
+	| BOOLXOR		{$$ = voBoolXor;}
+	| BITAND		{$$ = voBitAnd;}
+	| BITOR			{$$ = voBitOr;}
+	| BITXOR		{$$ = voBitXor;}
 	;
 	
-comparisonOp:	EQ
-	|	INEQ
-	|	GREATER
-	|	LESS
-	|	GREATEREQ
-	|	LESSEQ
+comparisonOp:	EQ	{$$ = voEqual;}
+	|	INEQ		{$$ = voInequal;}
+	|	GREATER		{$$ = voGreater;}
+	|	LESS		{$$ = voLess;}
+	|	GREATEREQ	{$$ = voGreaterEqual;}
+	|	LESSEQ		{$$ = voLessEqual;}
 	;
 
-valop1: INV
-	| ASSCALAR 
-	| ASSTRING 
-	| ASLIST
+valop1: INV			{$$ = voInvert;}
+	| ASSCALAR		{$$ = voAsScalar;}
+	| ASSTRING		{$$ = voAsString;}
+	| ASLIST		{$$ = voAsList;}
 	;
 
 namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID);
 										$$ = readVar($1->valID);
-										uint64_t len = calculateSerialSizeBytes($$);
-										fprintf(stderr, "Size of this identifer: " "%" PRId64 "\n", len);
-										char *data = serializeValStruct($$);
-										uint64_t i;
-										for (i = 0; i<len; i++){
-											fprintf(stderr, "0x%X, ", data[i]);
-										}
-										fprintf(stderr, "After deserial:\n");
-										printVal(deserializeValStruct(data));
-										fprintf(stderr, "\n");
 									}
 	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID);
 										struct val_struct_t *temp;
