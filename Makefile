@@ -1,14 +1,14 @@
 Program = birdie
 
-Objects  = birdie_types.o 
+Objects  = birdie_types.o birdie_token_stream.o
 Objects += birdie_funcs_add.o birdie_funcs_sub.o birdie_funcs_mul.o birdie_funcs_div.o 
 Objects += birdie_funcs_booland.o birdie_funcs_boolor.o birdie_funcs_boolxor.o 
 Objects += birdie_funcs.o
 Objects += birdie_funcs_bool_util.o 
 Objects += birdie_control.o birdie_builtin.o birdie_stackman.o
 
-#GlobalConfig = -ggdb -DGLOBAL_DEBUG
-GlobalConfig = -ggdb
+#GlobalConfig = -ggdb -DGLOBAL_DEBUG -Wreturn-type
+GlobalConfig = -ggdb -Wreturn-type
 
 FixedConfig = 
 

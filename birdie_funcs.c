@@ -1,5 +1,4 @@
 #include "birdie_funcs.h"
-//#include "freedom_fighter.h"
 
 #ifdef GLOBAL_DEBUG
 #define DEBUGFUNC
@@ -9,7 +8,7 @@
 	#include <stdarg.h>
 #endif
 
-debugFuncs(const char* s, ...){
+void debugFuncs(const char* s, ...){
 	#ifdef DEBUGFUNC
 	va_list arglist;
 	va_start( arglist, s );

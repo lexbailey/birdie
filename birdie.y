@@ -5,9 +5,10 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include "birdie_tokens.h"
+#define YYERROR_VERBOSE
 
 #ifdef GLOBAL_DEBUG
+
 #define DEBUGBISON
 #endif
 #ifdef DEBUGBISON
@@ -18,12 +19,13 @@
 #include "birdie_funcs.h"
 #include "birdie_control.h"
 #include "birdie_stackman.h"
+#include "birdie_token_stream.h"
 
 extern unsigned long line;
 
-void yyerror(char* msg);
+void yyerror(const char* msg);
 
-debugbison(const char* s, ...){
+void debugbison(const char* s, ...){
 	#ifdef DEBUGBISON
 	va_list arglist;
 	va_start( arglist, s );
@@ -41,6 +43,16 @@ void init(){
 	variables = NULL;
 	initialiseAlmightyStack(); //F*%K Yeah!
 }
+
+struct token_stream_token *loop;
+
+extern struct token_stream_token *funcStream;
+
+struct token_stream_token *streamWaiting;
+
+extern char *conditionIdentifier;
+
+//void parseStream(struct token_stream_token *stream);
 
 %}
 
@@ -92,9 +104,16 @@ start:	  block 		{}
 	| start block 		{}
 	;
 	
-block:	command						{$$ = $1;debugbison("bison: single command as block\n");}
-	| BLOCKSTART commands BLOCKEND namedFunc	{$$ = $2;debugbison("bison: multi command block as function\n");}
-	| BLOCKSTART commands SEMIC namedIdent BLOCKEND	{$$ = $2;debugbison("bison: multi command block as loop\n");}
+block:	command										{$$ = $1;debugbison("bison: single command as block\n");}
+	| BLOCKSTART commands BLOCKEND namedFunc SEMIC	{$$ = $2;debugbison("bison: multi command block as function\n");}
+	| BLOCKSTART commands BLOCKEND namedIdent SEMIC	{
+											$$ = $2;
+											debugbison("bison: multi command block as loop\n");
+											streamWaiting = copyTokenStream(funcStream);
+											funcStream = NULL;
+											conditionIdentifier = newString($4->valID);
+
+										}
 	;
 	
 commands: command
@@ -103,7 +122,15 @@ commands: command
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
 										if (isTrueVal(topOfConditionStack())){
-											$$=createValStruct(); $$=functionCall($2->valName);
+											//$$=createValStruct();
+											//if (isUserFunc()) {
+												//while(){
+													//yypush_parse(ps, tok, &yylval);
+												//}
+											//}
+											//else{
+												$$=functionCall($2->valName);
+											//}
 										}
 										else{
 											debugbison("bison: condition is false, ignore command.\n");
@@ -112,7 +139,8 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 
 	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName);
 										if (isTrueVal(topOfConditionStack())){
-											$$=createValStruct(); $$=functionCallArgs($3->valName, $2);
+											//$$=createValStruct();
+											$$=functionCallArgs($3->valName, $2);
 										}
 										else{
 											debugbison("bison: condition is false, ignore command.\n");
@@ -296,11 +324,45 @@ rawNumber: NUMBER
 %%
 
 
-void yyerror(char* s){
+
+int tokenNeedsAnyval(uint16_t in){
+	enum yytokentype tok = in;
+	return (
+			(tok==FUNC)||
+			(tok==IDENT)||
+			(tok==NEGIDENT)||
+			(tok==NUMBER)||
+			(tok==FLOAT)||
+			(tok==FUNC)
+	);
+}
+/*
+extern yypstate *ps;
+
+void parseStream(struct token_stream_token *stream){
+	struct token_stream_token *thisToken = stream;
+	while (thisToken != NULL){
+		enum yytokentype tok = (enum yytokentype)thisToken->token->token;
+		if (tokenNeedsAnyval((uint16_t)tok)){
+			YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
+			yypush_parse(ps, tok, &yylval);
+		}
+		else{
+			yypush_parse(ps, tok, NULL);
+		}
+		thisToken = thisToken->nextItem;
+	}
+}
+
+
+*/
+
+void yyerror(const char* s){
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
 
 void yywarn(char* s){
 	fprintf(stderr, "Warning for line %lu: %s\n", line, s);
 }
+
 

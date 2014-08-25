@@ -1,5 +1,4 @@
 #include "birdie_types.h"
-//#include "freedom_fighter.h"
 
 #ifdef GLOBAL_DEBUG
 #define DEBUGTYPES
@@ -9,7 +8,7 @@
 	#include <stdarg.h>
 #endif
 
-debugTypes(const char* s, ...){
+void debugTypes(const char* s, ...){
 	#ifdef DEBUGTYPES
 	va_list arglist;
 	va_start( arglist, s );
@@ -25,7 +24,6 @@ void freeStackStateItem(struct stack_state_item_t* victim){
 	    if (victim->nextStackState != NULL){freeStackStateItem(victim->nextStackState);}
 	    free(victim);
 	}
-
 }
 
 void freeListItem(struct val_list_item *victim){
@@ -278,11 +276,11 @@ void debugVal(struct val_struct_t *val){
 }
 
 char *newString(const char *source){
-	if (source == NULL) { return NULL;}
+	if (source == NULL) { return NULL; }
 	char *result;
 	size_t sourceLen = sizeof(char) * (strlen(source)+1);
 	result = (char *)malloc(sourceLen);
-	strcpy(result, source);
+	memcpy(result, source, sourceLen);
 	return result;
 }
 
@@ -536,9 +534,7 @@ struct val_struct_t *deserializeValStruct(char *in){
  * ... data.
  */
 
-int tokenNeedsAnyval(uint16_t tokenID){
-	return 0;
-}
+int tokenNeedsAnyval(uint16_t tokenID);
 
 #define POST_LEX_TOKEN_SERIAL_HEADER_SIZE (sizeof(uint16_t) + sizeof(uint32_t))
 
@@ -582,5 +578,28 @@ char *serializePostLexToken(struct post_lex_token_t * in, char *outputBuffer){
 }
 
 struct post_lex_token_t *deserializePostLexToken(char *in){
+	return NULL;//TODO
+}
 
+void initPostLexToken(struct post_lex_token_t *in){
+	in->value = NULL;
+}
+
+struct post_lex_token_t *createPostLexToken(){
+	struct post_lex_token_t *output = malloc(sizeof(struct post_lex_token_t));
+	initPostLexToken(output);
+	return output;
+}
+
+struct post_lex_token_t *copyPostLexToken(struct post_lex_token_t *in){
+	if (in==NULL) return NULL;
+	struct post_lex_token_t *output = createPostLexToken();
+	output->token = in->token;
+	output->value = copyVal(in->value);
+	return output;
+}
+
+void freePostLexToken(struct post_lex_token_t *victim){
+	freeVal(victim->value);
+	free(victim);
 }

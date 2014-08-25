@@ -1,6 +1,5 @@
 
 #include "birdie_control.h"
-//#include "freedom_fighter.h"
 
 #ifdef GLOBAL_DEBUG
 //#define DEBUGCONTROL
@@ -12,7 +11,7 @@
 
 
 
-debugControl(const char* s, ...){
+void debugControl(const char* s, ...){
 	#ifdef DEBUGCONTROL
 	va_list arglist;
 	va_start( arglist, s );

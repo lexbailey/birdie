@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include "birdie_tokens.h"
 
 ///Format specifier to use for printing floats
 #define FLOAT_SPEC "%.3f"
@@ -197,6 +196,18 @@ struct val_struct_t* copyVal(struct val_struct_t*);
 
 ///Makes an entirely independent copy of a val_list_item. All data is copied recursively including sub-lists.
 struct val_list_item* copyValList(struct val_list_item *data);
+
+///Makes an entirely independent copy of a post_lex_token_t. All data is copied recursively including lists.
+struct post_lex_token_t* copyPostLexToken(struct post_lex_token_t *);
+
+///Initialises a post lex token by setting all pointers to null
+void initPostLexToken(struct post_lex_token_t *);
+
+///Allocates space for a post lex token and initialises pointers
+struct post_lex_token_t *createPostLexToken();
+
+//Free all memry associated with a post lex token
+void freePostLexToken(struct post_lex_token_t *);
 
 ///Appends a list to the end of another list. All data is copied recursively. Inputs must both be lists.
 void appendList(struct val_struct_t*, struct val_struct_t*);

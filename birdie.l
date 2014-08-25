@@ -3,7 +3,23 @@
 	#include "birdie_types.h"
 	#include "birdie_funcs.h"
 	#include "birdie.tab.h"
+	#include "birdie_token_stream.h"
+	#include "birdie_control.h"
 	#include <stdarg.h>
+
+	#ifdef GLOBAL_DEBUG
+	#define DEBUGFLEX
+	#endif
+	void debug(const char* s, ...){
+		#ifdef DEBUGFLEX
+		va_list arglist;
+		va_start( arglist, s );
+		vprintf( s, arglist );
+		va_end( arglist );
+		#endif
+	}
+
+	yypstate *ps;
 
 	struct val_struct_t *anyval_p;
 
@@ -18,41 +34,57 @@
 		anyval_p=createValStruct(); \
     }while(0)
     
+	//Token streams for capturing functions
+	struct token_stream_token *funcStream;
+	struct token_stream_token *funcStreamEnd;
+	struct token_stream_token **funcStreamEndPointer;
 
+	int parse(enum yytokentype tok, struct val_struct_t *val, yypstate *ps){
+		nextToken.token=tok;
+		if(nextToken.value !=NULL){
+			freeVal(nextToken.value);
+		}
+		nextToken.value=copyVal(val);
+		YYSTYPE yylval = {.anyval=copyVal(val)};
+		if (capturemode){
+			debug("Capturing this token.\n");
+			funcStreamEnd->token = copyPostLexToken(&nextToken);
+			funcStreamEnd->nextItem = createTokenStreamToken();
+			funcStreamEndPointer = &(funcStreamEnd->nextItem);
+			funcStreamEnd = funcStreamEnd->nextItem;
 
-    #define PARSE(tok,val) do { \
-		nextToken.token=tok; \
-		if(nextToken.value !=NULL){ \
-			freeVal(nextToken.value); \
-		} \
-		nextToken.value=val; \
-    	YYSTYPE yylval = {.anyval=copyVal(val)};  \
-    	int status = yypush_parse(ps, tok, &yylval); \
-    	if (status != YYPUSH_MORE) return status; \
-  	} while(0)
+			//For debugging, copy and then free to dereference everything.
+			//this causes a segfault on any token with an anyval
+			//freeTokenStream(copyTokenStream(funcStream)); //TODO fix problem and remove this
+		}
+		debug("Parse %d\n", nextToken.token);
+		return yypush_parse(ps, nextToken.token, &yylval);
+	}
+
+    #define PARSE(tok,val) do{int status=parse(tok,val,ps);if(status!=YYPUSH_MORE){return status;}executePendingStreams();}while(0)
 
   	#define PARSE_TOKEN(tok) do { \
 		nextToken.token=tok; \
-	    int status = yypush_parse(ps, tok, 0); \
+		int status = parse(tok,NULL,ps); \
 	    if (status != YYPUSH_MORE) return status; \
+	    executePendingStreams(); \
   	} while(0)
 
 	#define PARSE_AGAIN do { \
 		YYSTYPE yylval = {.anyval=copyVal(nextToken.value)}; \
     	int status = yypush_parse(ps, nextToken.token, &yylval); \
     	if (status != YYPUSH_MORE) return status; \
+    	executePendingStreams(); \
   	} while(0)
     
     //Take input from file argument if specified
 	#define YY_INPUT(b,r,s) flexInput(b,&r,s)
 
-	#ifdef GLOBAL_DEBUG
-	#define DEBUGFLEX
-	#endif
+
 
 	unsigned long line = 1;
 
-	synError(const char* s, ...){
+	void synError(const char* s, ...){
 		printf("Syntax error on line %lu: ", line);
 		va_list arglist;
 		va_start( arglist, s );
@@ -61,27 +93,16 @@
 		printf("\n");
 	}	
 
-	debug(const char* s, ...){
-		#ifdef DEBUGFLEX
-		va_list arglist;
-		va_start( arglist, s );
-		vprintf( s, arglist );
-		va_end( arglist );
-		#endif
-	}
 	
+
 	#define YY_DECL int yylexMulti()
     
     int returnMulti = 0;
     enum yytokentype lastReturnToken;
     YYSTYPE lastyylval;
     
-    yylex(){
-    	if (returnMulti > 0){
-    		debug("\tflex: Repeating\n");
-    		returnMulti --;
-    		return lastReturnToken;
-    	}
+
+    int yylex(){
     	return yylexMulti();
     }
 	
@@ -143,35 +164,82 @@
 		*source = realloc(output, sizeof(char) * (o)); //Realloc, only changes things if we removed some quotes
 	}
 	
+	extern struct token_stream_token *streamWaiting;
+
+	//struct token_stream_token *streamWaiting = NULL;
+	char *conditionIdentifier = NULL;
+
+
+	void parseStream(struct token_stream_token *stream){
+
+		struct token_stream_token *thisToken = stream;
+		while (thisToken != NULL){
+			debug("Parse %d\n", thisToken->token->token);
+			if (tokenNeedsAnyval(thisToken->token->token)){
+				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
+				yypush_parse(ps, thisToken->token->token, &yylval);
+			}
+			else{
+				yypush_parse(ps, thisToken->token->token, NULL);
+			}
+			thisToken = thisToken->nextItem;
+		}
+	}
+
+	void executePendingStreams(){
+		debug("Token replay?????? %p\n", streamWaiting);
+		if (streamWaiting!=NULL){
+			debug("YAY!\n");
+			struct val_struct_t *cond = readVar(conditionIdentifier);
+			int count=0;
+			int limit = 7;
+			while(isTrueVal(cond) && (count++<limit)){
+				parseStream(streamWaiting);
+				freeVal(cond);
+				cond = readVar(conditionIdentifier);
+			}
+			freeVal(cond);
+			free(conditionIdentifier);
+			conditionIdentifier=NULL;
+			freeTokenStream(streamWaiting);
+			streamWaiting=NULL;
+		}
+		else{
+			debug("nope\n");
+		}
+	}
+
 %}
 
 %%
-						yypstate *ps = yypstate_new ();
+						ps = yypstate_new ();
+
+
 
 [A-Z]+					{
 							debug("\tflex: found FUNC\n");
  							INITVAL;
  							anyval_p->valName = newString(yytext);
- 							PARSE(FUNC,copyVal(anyval_p));
+ 							PARSE(FUNC,(anyval_p));
  						}
 [a-z]+					{
 							debug("\tflex: found IDENT\n");
 							INITVAL;
 							anyval_p->valID = newString(yytext);
 							anyval_p->valName = newString("Identifier");
-							PARSE(IDENT,copyVal(anyval_p));
+							PARSE(IDENT,(anyval_p));
 						}
 [a-z]+-					{
 							debug("\tflex: found IDENT\n");
 							size_t len = strlen(yytext);
 							if (len>16535){
-								yywarn("Unserializable identfier! Name too long. (>16535 chars)");
+								yywarn("Unserializable identifier! Name too long. (>16535 chars)");
 							}
 							INITVAL;
 							anyval_p->valID = newString(yytext);
 							anyval_p->valID[strlen(anyval_p->valID)-1] = '\0';
 							anyval_p->valName = newString("Identifier");
-							PARSE(NEGIDENT,copyVal(anyval_p));
+							PARSE(NEGIDENT,(anyval_p));
 						}
 
 \"(([^']*)'')*([^']*)'	{
@@ -181,15 +249,15 @@
 							anyval_p->valS = newString(yytext);
 							parseLit(&(anyval_p->valS));
 							debug("\tflex: TEXT val is %s\n", anyval_p->valS);
-							PARSE(TEXT,copyVal(anyval_p));
+							PARSE(TEXT,(anyval_p));
 						}
 
-[0-9]+[-+]?				{
+[0-9]+[-]?				{
 							debug("\tflex: found NUMBER\n");
 							INITVAL;
 							anyval_p->valueType = vtInt;
 							anyval_p->valI = parseNum(yytext);
-							PARSE(NUMBER,copyVal(anyval_p));
+							PARSE(NUMBER,(anyval_p));
 						}
 
 ([0-9]*\.?[0-9]+|[0]9+\.)[-+]?	{
@@ -197,7 +265,7 @@
 							INITVAL;
 							anyval_p->valueType = vtFloat;
 							anyval_p->valF = parseNumf(yytext);
-							PARSE(FLOAT,copyVal(anyval_p));
+							PARSE(FLOAT,(anyval_p));
 						}
 
 "="						{debug("\tflex: found ASSIGN\n"); PARSE_TOKEN(ASSIGN);}
@@ -221,21 +289,37 @@
 "["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
 "("						{debug("\tflex: found BLOCKSTART\n");
-							capturemode++;
-							//Ugly hack, push a false to the stack
-							PARSE_TOKEN(PUSHCOND);
+							//Parse the block start
+							PARSE_TOKEN(BLOCKSTART);
+							//Ugly hack, push a false to the condition stack
 							INITVAL;
 							anyval_p->valueType = vtInt;
 							anyval_p->valI = 0;
-							PARSE(NUMBER,copyVal(anyval_p));
-							//Then parse the block
-							PARSE_TOKEN(BLOCKSTART);
+							PARSE_TOKEN(OPDELIM);
+							PARSE(NUMBER,(anyval_p));
+							PARSE_TOKEN(PUSHCOND);
+
+
 							//This results in blocks being parsed before they are executed. This is good.
+
+							//Prepare to capture stuff...
+							funcStream = createTokenStreamToken();
+							funcStreamEnd = funcStream;
+							funcStreamEndPointer = NULL;
+
+							//Now start capturing tokens
+							capturemode++;
 						}
 ")"						{debug("\tflex: found BLOCKEND\n");
+
+							freeTokenStream(funcStreamEnd);
+							*funcStreamEndPointer = NULL;
+
 							capturemode--;
-							PARSE_TOKEN(BLOCKEND);
+
+
 							PARSE_TOKEN(POPCOND);
+							PARSE_TOKEN(BLOCKEND);
 						}
 
 "?"						{debug("\tflex: found PUSH2COND\n"); PARSE_TOKEN(PUSH2COND);}
@@ -268,11 +352,9 @@
 
 `[0-9]+					{debug("\tflex: found repeater. Urgh! Awful hack\n");
 							returnMulti = atoi(yytext+1)+3;
-
 	                        while(returnMulti--){
 	                        	PARSE_AGAIN;
 	                        }
-                       
 						}
 
 
