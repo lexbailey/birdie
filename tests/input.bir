@@ -1,9 +1,9 @@
 #!/usr/bin/env birdie
 '"Please enter a number
 'P
-input='IS;
+''IS=input
 'input": 'P
-?input;
+'input?
 '"This evaluates to true
 'P:'"This evaluates to false
 'P:

@@ -52,10 +52,6 @@
 			funcStreamEnd->nextItem = createTokenStreamToken();
 			funcStreamEndPointer = &(funcStreamEnd->nextItem);
 			funcStreamEnd = funcStreamEnd->nextItem;
-
-			//For debugging, copy and then free to dereference everything.
-			//this causes a segfault on any token with an anyval
-			//freeTokenStream(copyTokenStream(funcStream)); //TODO fix problem and remove this
 		}
 		debug("Parse %d\n", nextToken.token);
 		return yypush_parse(ps, nextToken.token, &yylval);
@@ -175,13 +171,8 @@
 		struct token_stream_token *thisToken = stream;
 		while (thisToken != NULL){
 			debug("Parse %d\n", thisToken->token->token);
-			if (tokenNeedsAnyval(thisToken->token->token)){
-				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
-				yypush_parse(ps, thisToken->token->token, &yylval);
-			}
-			else{
-				yypush_parse(ps, thisToken->token->token, NULL);
-			}
+			YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
+			yypush_parse(ps, thisToken->token->token, &yylval);
 			thisToken = thisToken->nextItem;
 		}
 	}
