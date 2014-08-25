@@ -84,8 +84,8 @@ input from stdin can be taken using the `I` functions:
 Conditional code is fun...
 
 There is a condition stack, code is only executed if the top of this stack is a true value..
-Push one item with 'foo?? where foo is the condition, pop one with : (colon)
-Push two items with 'foo? where foo is the condition, pop two with / (forwardslash)
+Push one item with `'foo??` where `foo` is the condition, pop one with `:` (colon)
+Push two items with `'foo?` where `foo` is the condition, pop two with `/` (forwardslash)
 
 Pushing two will push the inverse and then push the value, for example:
 
