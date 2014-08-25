@@ -96,8 +96,10 @@ Pushing two will push the inverse and then push the value, for example:
 	    '"Input was 0'P        #//Print a message if input is considered false
 	:                          #//Pop the other value from the condition stack
 	
-Pushes and pops happen regardless of the condition stack top value
-Pushes are anded with the top of the stack so that things work as you expect when nesting pushes and pops inside code that will not execute.
+Pushes and pops happen regardless of the condition stack top value.
+
+Pushes are 'anded' with the top of the stack so that things work as you expect when nesting pushes and pops inside code that will not execute.
+
 (For pushes of two items, both are anded with the top and then pushed instead of anding the second with the first because this would be useless.)
 
 For more details of other things, see the functional test inputs in tests/verification/inputs folder.
