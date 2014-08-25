@@ -20,6 +20,9 @@ void debugControl(const char* s, ...){
 	#endif
 }
 
+void freeAllVariables(){
+	freeListItem(variables);
+}
 
 void assign(struct val_struct_t *assignee){
 	//walk the list, look for the assignee
@@ -45,12 +48,12 @@ void assign(struct val_struct_t *assignee){
 }
 
 void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
-	assignee->valName = data->valName;
+	if(assignee->valName != NULL){free(assignee->valName);}assignee->valName = data->valName;
 	assignee->valueType = data->valueType;
-	assignee->valS = data->valS;
+	if(assignee->valS != NULL){free(assignee->valS);}assignee->valS = data->valS;
 	assignee->valI = data->valI;
 	assignee->valF = data->valF;
-	assignee->list = data->list;
+	if(assignee->list != NULL){freeListItem(assignee->list);}assignee->list = data->list;
 	assign(assignee);
 }
 

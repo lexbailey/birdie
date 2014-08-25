@@ -33,6 +33,13 @@
 		} \
 		anyval_p=createValStruct(); \
     }while(0)
+
+	#define FREEVAL do{ \
+    	if (anyval_p != NULL){ \
+    		freeVal(anyval_p); \
+    		anyval_p=NULL; \
+		} \
+    }while(0)
     
 	//Token streams for capturing functions
 	struct token_stream_token *funcStream;
@@ -210,6 +217,7 @@
  							INITVAL;
  							anyval_p->valName = newString(yytext);
  							PARSE(FUNC,(anyval_p));
+ 							FREEVAL;
  						}
 [a-z]+					{
 							debug("\tflex: found IDENT\n");
@@ -217,6 +225,7 @@
 							anyval_p->valID = newString(yytext);
 							anyval_p->valName = newString("Identifier");
 							PARSE(IDENT,(anyval_p));
+							FREEVAL;
 						}
 [a-z]+-					{
 							debug("\tflex: found IDENT\n");
@@ -229,6 +238,7 @@
 							anyval_p->valID[strlen(anyval_p->valID)-1] = '\0';
 							anyval_p->valName = newString("Identifier");
 							PARSE(NEGIDENT,(anyval_p));
+							FREEVAL;
 						}
 
 \"(([^']*)'')*([^']*)'	{
@@ -239,6 +249,7 @@
 							parseLit(&(anyval_p->valS));
 							debug("\tflex: TEXT val is %s\n", anyval_p->valS);
 							PARSE(TEXT,(anyval_p));
+							FREEVAL;
 						}
 
 [0-9]+[-]?				{
@@ -247,6 +258,7 @@
 							anyval_p->valueType = vtInt;
 							anyval_p->valI = parseNum(yytext);
 							PARSE(NUMBER,(anyval_p));
+							FREEVAL;
 						}
 
 ([0-9]*\.?[0-9]+|[0]9+\.)[-+]?	{
@@ -255,6 +267,7 @@
 							anyval_p->valueType = vtFloat;
 							anyval_p->valF = parseNumf(yytext);
 							PARSE(FLOAT,(anyval_p));
+							FREEVAL;
 						}
 
 "="						{debug("\tflex: found ASSIGN\n"); PARSE_TOKEN(ASSIGN);}
@@ -287,7 +300,7 @@
 							PARSE_TOKEN(OPDELIM);
 							PARSE(NUMBER,(anyval_p));
 							PARSE_TOKEN(PUSHCOND);
-
+							FREEVAL;
 
 							//This results in blocks being parsed before they are executed. This is good.
 
@@ -383,13 +396,18 @@ int main(int argc, char ** argv){
 		argIn = stdin;
 	}
 	int result = yylex();
+
+	//....Cleanup....
+	//release file
 	if (argIn != NULL){
 		fclose(argIn);
 	}
-
+	//Free next token
 	if (nextToken.value!=NULL){
 		freeVal(nextToken.value);
 	}
+	//Free variables
+	freeAllVariables();
 
 	return result;
 }

@@ -100,8 +100,8 @@ extern char *conditionIdentifier;
 
 %%
 
-start:	  block 		{}
-	| start block 		{}
+start:	  block 		{freeVal($1);}
+	| start block 		{/*freeVal($2);*/}
 	;
 	
 block:	command										{$$ = $1;debugbison("bison: single command as block\n");}
@@ -152,7 +152,6 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 
 	| OPDELIM valueList ASSIGN IDENT	{debugbison("bison: Assigning value to variable: %s\n", $4->valID);
 										if (isTrueVal(topOfConditionStack())){
-											$$=createValStruct();
 											mergeAssign($4, $2);
 											$$ = readVar($4->valID);
 											freeVal($4);

@@ -48,4 +48,6 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 
 struct val_struct_t *functionCall(const char *funcName);
 
+void freeAllVariables();
+
 #endif //BIRDIE_CONTROL_INCLUDE

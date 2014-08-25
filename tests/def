@@ -257,34 +257,22 @@ To access an element of a list by its position in the list, use the dot operator
 '.a3=b
 'bP         ~prints '4'
 
-BLOCKS!
+Other stuff...
 
-wow, this far and we haven't talked about blocks yet?
+Do FOO if a...
 
-A code block starts with an open bracket (() ... this is where things fall down with the whole idea of showing you the operator in brackets :-)
-A code block ends with a close bracket ())
-
-(
-'FOO
-'BAR
-)
-
-In simple terms, to make a block conditional, use a questionmark and backslash like so:
-
-?a;'FOO\
+'a?'FOO\
 
 this will execute FOO if a is true (trueness is defined later). else blocks are done differently:
 
-?a;('FOO):('BAR):
+'a?'FOO:'BAR:
 
-a single command can be a block.
 
-?a;'FOO:'BAR:	~same as above
 
-?a;?b;'FOO:'BAR\'QUUX:		~ugly but it works, see below
+'a?'b?'FOO:'BAR\'QUUX:		~ugly but it works, see below
 
-?a;				~is a true?
-	?b;			~is b true?
+'a?				~is a true?
+	'b?			~is b true?
 		'FOO	~then do FOO (if a is true and b is true)
 	:			~else
 		'BAR	~do BAR	(if a is true and b is false)
@@ -295,15 +283,15 @@ a single command can be a block.
 This is a compact example. This uses the backslash in the place of two colons in the interest of using fewer characters.
 perhaps a more readable version is this:
 
-?a; ?b; 'FOO : 'BAR : : 'QUUX :
+'a? 'b? 'FOO : 'BAR : : 'QUUX :
 
-The ?b can be seen as a seperate conditional block.
+The b? can be seen as a seperate conditional block.
 
-?b; 'FOO : 'BAR :
+'b? 'FOO : 'BAR :
 
 If we reduce this to <b_cond> then we see that the 'a' conditional is similar
 
-?a; <b_cond> : 'QUUX :
+'a? <b_cond> : 'QUUX :
 
 This is all slight magic however, this is implemented in a way that lets you do some crazy things if you want to (and know what you are doing)
 So.. Is your mind suitably flexible? I'm about to bend it around a tight corner. :-)
@@ -327,8 +315,8 @@ The colon will pop one item from this stack and the backslash will pop two items
 
 Lets use the last example to explain this stack...
 
-?a;				~push '!a' to the condition stack, then push the 'a' condition on to the condition stack (condition stack top is now: 'a', '!a')
-	?b;			~and '!b' with the top of the condition stack and push to the condition stack. Then and 'b' with the top of the condition stack and push to the condition stack (stack top is now '& a b', '& a !b', 'a', '!a')
+'a?				~push '!a' to the condition stack, then push the 'a' condition on to the condition stack (condition stack top is now: 'a', '!a')
+	'b?			~and '!b' with the top of the condition stack and push to the condition stack. Then and 'b' with the top of the condition stack and push to the condition stack (stack top is now '& a b', '& a !b', 'a', '!a')
 		'FOO	~do foo if the top of the condition stack is true (& a b is true)
 	:			~pop the condition stack (stack top is now: '& a !b', 'a', '!a')
 		'BAR	~do BAR	if the top of the condition stack is true (& a !b is true)
@@ -448,7 +436,7 @@ So, if you want to clear (set to zero) an integer (let's call it 'a') if another
 
 This one char more compact than using the condition stack for such an operation:
 
-?b;'0=a\
+'b?'0=a\
 
 Note that inverting floats is the same as subtracting them from 0 (remember that birdie signs are backwards)
 

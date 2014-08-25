@@ -87,6 +87,11 @@ void initValStruct(struct val_struct_t* val){
     val->valName = NULL;
 	val->valS = NULL;
 	val->list = NULL;
+	/*
+	val->valueType = 0;
+	val->valI = 0;
+	val->valF = 0.0;
+	*/
 }
 
 struct val_struct_t* createValStruct(){
