@@ -191,9 +191,7 @@
 		if (streamWaiting!=NULL){
 			debug("YAY!\n");
 			struct val_struct_t *cond = readVar(conditionIdentifier);
-			int count=0;
-			int limit = 7;
-			while(isTrueVal(cond) && (count++<limit)){
+			while(isTrueVal(cond)){
 				parseStream(streamWaiting);
 				freeVal(cond);
 				cond = readVar(conditionIdentifier);
