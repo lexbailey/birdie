@@ -9,9 +9,9 @@ It's all slightly backwards.
 To get going quickly:
  - you will need flex and bison (and gcc and make)
  - simply clone and `make`
- - if you want to test if that worked, run ./tests/verification/test.sh most tests should pass (At least eight)
- - run ./birdie to get an interactive birdie shell or...
- - run ./birdie path/to/script/file.bir to run a script from file.
+ - if you want to test if that worked, run `./tests/verification/test.sh` most tests should pass (At least eight)
+ - run `./birdie` to get an interactive birdie shell or...
+ - run `./birdie path/to/script/file.bir` to run a script from file.
  
 A quick intro to the language:
 
