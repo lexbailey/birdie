@@ -166,13 +166,20 @@ struct val_struct_t *valNegate(struct val_struct_t *in){
 }
 
 int isTrueVal(struct val_struct_t *input){
+	ITERLIST_DEF(thisItem)
 	switch (input->valueType){
 		case vtInt:
 			return (input->valI !=0);
-			break;
 		case vtFloat:
 			return (input->valF > 0);
-			break;
+		case vtList:
+			//Walk the entire list, each item must be true...
+			ITERLIST_BEGIN(input->list,thisItem)
+				if (!isTrueVal(thisItem->item)){
+					return 0;
+				}
+			ITERLIST_END(thisItem)
+			return 1;
 		case vtString:
 			if (strcmp(input->valS, "") == 0){return 0;}
 			if (strcmp(input->valS, "no") == 0){return 0;}
