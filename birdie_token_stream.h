@@ -9,6 +9,13 @@ struct token_stream_token{
 	struct token_stream_token *nextItem;
 };
 
+///Link list element for a list of token streams
+struct token_stream_list_item{
+	char *ID;
+	struct token_stream_token *stream;
+	struct token_stream_list_item *nextItem;
+};
+
 ///Initialises token stream token struct.
 void initialiseTokenStreamToken(struct token_stream_token *);
 
@@ -29,5 +36,26 @@ void freeTokenStream(struct token_stream_token *);
 
 ///Make a duplicate of a token stream
 struct token_stream_token *copyTokenStream(struct token_stream_token *);
+
+
+
+
+
+
+///Initialises token stream list.
+void initialiseTokenStreamList(struct token_stream_list_item *);
+
+///Allocate space for a new token stream list item
+struct token_stream_list_item *createTokenStreamListItem();
+
+///Appends a token stream to a given stream list.
+void streamListAppendStream(struct token_stream_list_item *, struct token_stream_token *);
+
+///Free a token stream list an all associated data.
+void freeTokenStreamList(struct token_stream_list_item *);
+
+///Make a duplicate of a token stream
+struct token_stream_list_item *copyTokenStreamList(struct token_stream_list_item *);
+
 
 #endif //BIRDIE_TOKEN_STREAM_INCLUDE

@@ -1,8 +1,5 @@
 #include "birdie_token_stream.h"
 
-//TODO fix this
-#define TOKEN_TO_CHARS(tok) ((char)tok)
-
 void initialiseTokenStreamToken(struct token_stream_token *in){
 	in->token = NULL;
 	in->nextItem = NULL;
@@ -39,3 +36,54 @@ struct token_stream_token *copyTokenStream(struct token_stream_token *in){
 	output->nextItem = copyTokenStream(in->nextItem);
 	return output;
 }
+
+
+
+
+
+
+
+
+void initialiseTokenStreamList(struct token_stream_list_item *in){
+	in->ID = NULL;
+	in->stream = NULL;
+	in->nextItem = NULL;
+}
+
+
+struct token_stream_list_item *createTokenStreamListItem(){
+	struct token_stream_list_item *output;
+	output = malloc(sizeof(struct token_stream_list_item));
+	initialiseTokenStreamList(output);
+	return output;
+}
+
+
+void streamListAppendStream(struct token_stream_list_item *list, struct token_stream_token *token){
+	struct token_stream_list_item *thisItem = list;
+	while (thisItem->nextItem != NULL){
+		thisItem = thisItem->nextItem;
+	}
+	thisItem->nextItem = createTokenStreamListItem();
+	thisItem->nextItem->stream = copyTokenStream(token);
+}
+
+
+void freeTokenStreamList(struct token_stream_list_item *victim){
+	if (victim->ID != NULL){
+		free(victim->ID);
+	}
+	if (victim->stream != NULL){
+		freeTokenStream(victim->stream);
+	}
+	if (victim->nextItem != NULL){
+		freeTokenStreamList(victim->nextItem);
+	}
+}
+
+
+struct token_stream_list_item *copyTokenStreamList(struct token_stream_list_item *in){
+	//TODO
+	return NULL;
+}
+

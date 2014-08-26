@@ -58,7 +58,7 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
 }
 
 struct val_struct_t *readVar(const char *name){
-	//walk the list, look for the assignee
+	//walk the list, look for the target
 	struct val_list_item *currentItem;
 	currentItem = variables;
 	debugControl("I have been asked to read the variable called %s\n", name);

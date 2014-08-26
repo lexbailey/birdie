@@ -105,7 +105,10 @@ start:	  block 		{freeVal($1);}
 	;
 	
 block:	command										{$$ = $1;debugbison("bison: single command as block\n");}
-	| BLOCKSTART commands BLOCKEND namedFunc SEMIC	{$$ = $2;debugbison("bison: multi command block as function\n");}
+	| BLOCKSTART commands BLOCKEND namedFunc SEMIC	{
+											$$ = $2;
+											debugbison("bison: multi command block as function\n");
+										}
 	| BLOCKSTART commands BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as loop\n");
@@ -117,20 +120,13 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 	;
 	
 commands: command
-	|commands command
+	|commands command				{$$=$1; /*freeVal($1);*/}
 	;
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
 										if (isTrueVal(topOfConditionStack())){
-											//$$=createValStruct();
-											//if (isUserFunc()) {
-												//while(){
-													//yypush_parse(ps, tok, &yylval);
-												//}
-											//}
-											//else{
-												$$=functionCall($2->valName);
-											//}
+											$$=functionCall($2->valName);
+											//TODO free $2 here?
 										}
 										else{
 											debugbison("bison: condition is false, ignore command.\n");
@@ -155,7 +151,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 											mergeAssign($4, $2);
 											$$ = readVar($4->valID);
 											freeVal($4);
-											free($2);
+											free($2);//I know this looks wrong but trust me it's fine, we don't want freeVal()
 											printVal($$);
 										}
 										else{

@@ -406,6 +406,10 @@ int main(int argc, char ** argv){
 	if (nextToken.value!=NULL){
 		freeVal(nextToken.value);
 	}
+
+	//Free current value if needed
+	FREEVAL;
+
 	//Free variables
 	freeAllVariables();
 
