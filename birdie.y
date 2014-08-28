@@ -21,6 +21,7 @@
 #include "birdie_stackman.h"
 #include "birdie_token_stream.h"
 
+
 extern unsigned long line;
 
 void yyerror(const char* msg);
@@ -108,6 +109,7 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 	| BLOCKSTART commands BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as function\n");
+											defineFunction($4->valName, funcStream);
 										}
 	| BLOCKSTART commands BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
@@ -125,7 +127,13 @@ commands: command
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
 										if (isTrueVal(topOfConditionStack())){
-											$$=functionCall($2->valName);
+											struct token_stream_token *userFunc = getUserFunc($2->valName);
+											if (userFunc != NULL){
+												streamWaiting = copyTokenStream(userFunc);
+											}
+											else{
+												$$=functionCallArgs($2->valName,NULL);
+											}
 											//TODO free $2 here?
 										}
 										else{
@@ -136,7 +144,15 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName);
 										if (isTrueVal(topOfConditionStack())){
 											//$$=createValStruct();
-											$$=functionCallArgs($3->valName, $2);
+
+											struct token_stream_token *userFunc = getUserFunc($3->valName);
+											if (userFunc != NULL){
+												streamWaiting = copyTokenStream(userFunc);
+											}
+											else{
+												$$=functionCallArgs($3->valName, $2);
+											}
+
 										}
 										else{
 											debugbison("bison: condition is false, ignore command.\n");
@@ -149,7 +165,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 	| OPDELIM valueList ASSIGN IDENT	{debugbison("bison: Assigning value to variable: %s\n", $4->valID);
 										if (isTrueVal(topOfConditionStack())){
 											mergeAssign($4, $2);
-											$$ = readVar($4->valID);
+											$$ = readVar($4->valID, vrmInternal);
 											freeVal($4);
 											free($2);//I know this looks wrong but trust me it's fine, we don't want freeVal()
 											printVal($$);
@@ -295,11 +311,11 @@ valop1: INV			{$$ = voInvert;}
 	;
 
 namedIdent: IDENT		            {debugbison("bison: Identifier. Name: %s\n", $1->valID);
-										$$ = readVar($1->valID);
+										$$ = readVar($1->valID, vrmUser);
 									}
 	| NEGIDENT		          		{debugbison("bison: Negative Identifier. Name: %s\n", $1->valID);
 										struct val_struct_t *temp;
-										temp = readVar($1->valID);
+										temp = readVar($1->valID, vrmUser);
 										$$ = valNegate(temp);
 										freeVal($1);
 										freeVal(temp);

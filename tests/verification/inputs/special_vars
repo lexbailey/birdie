@@ -7,6 +7,22 @@
 #//`s` is the sticky variable. Once set to a value, it cannot take any other until 
 #//    there is a call to `'US` AKA un-stick.
 
+
+#//Control...
+
+'c" 'P
+
+'1=c
+
+'c" 'P
+
+'c" 'P
+
+'2=c
+
+'c" 'c"
+'P
+
 #//First lets test the lazy variable
 
 'l" 'P
@@ -19,7 +35,7 @@
 
 '2=l
 
-'l l"
+'l" 'l"
 'P
 
 #//Should print 0 1 0 2 0<newline>

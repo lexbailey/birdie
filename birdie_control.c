@@ -57,7 +57,7 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
 	assign(assignee);
 }
 
-struct val_struct_t *readVar(const char *name){
+struct val_struct_t *readVar(const char *name, var_read_mode mode){
 	//walk the list, look for the target
 	struct val_list_item *currentItem;
 	currentItem = variables;
@@ -65,8 +65,19 @@ struct val_struct_t *readVar(const char *name){
 	while (currentItem != NULL){
 		//check this item
 		if (strcmp(currentItem->item->valID, name)==0){
-			//Found our variable, return a copy
-			return copyVal(currentItem->item);
+			//Variable found, get a copy
+			struct val_struct_t *output = copyVal(currentItem->item);
+			printVal(output);
+			//Check if we need to do any magic here (only do magic fo user reads)
+			if (mode == vrmUser){
+				if (strcmp(currentItem->item->valID, "l")==0){
+					//The lazy variable must reset when read.
+					currentItem->item->valueType=vtInt;
+					currentItem->item->valI=0;
+				}
+			}
+			printVal(output);
+			return output;
 		}
 		//Advance to next item
 		currentItem = currentItem->nextItem;
@@ -82,6 +93,22 @@ struct val_struct_t *readVar(const char *name){
 	newItem->item->valI = 0;
 
 	return copyVal(newItem->item);
+}
+
+
+struct token_stream_token *getUserFunc(char* name){
+	struct token_stream_list_item *thisFunc = functions;
+	while (thisFunc !=NULL){
+		if (strcmp(thisFunc->ID, name) == 0){
+			return thisFunc->stream;
+		}
+	}
+	return NULL;
+}
+
+birdieFuncPtr_t getFunction(char* name){
+	//MmmmHmmm
+	return NULL;
 }
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
@@ -122,6 +149,7 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 	return NULL;
 }
 
+/*
 struct val_struct_t *functionCall(const char *funcName){
 	if (strcmp(funcName, "I") == 0){
 		return magicinput(NULL);
@@ -139,4 +167,45 @@ struct val_struct_t *functionCall(const char *funcName){
 		return floatinput(NULL);
 	}
 	return NULL;
+}
+*/
+
+void defineFunction(char *name, struct token_stream_token *newFunc){
+	//Step 1, is this an override?
+	//Walk list and find out...
+	struct token_stream_list_item *thisItem = functions;
+	while (thisItem != NULL){
+		if (strcmp(name, thisItem->ID)==0){
+			//AHA! override
+			break; //Break while thisItem points to the function to override
+		}
+	}
+	//Step 2, remember the new function
+	if (thisItem != NULL){
+		//Override existing function
+		//Free existing
+		freeTokenStream(thisItem->stream);
+		//Create new
+		thisItem->stream = copyTokenStream(newFunc);
+	}
+	else{
+		//Not an override, add new function
+		//Prepend is now cheaper...
+		//Get a new list item
+		struct token_stream_list_item *newListItem = createTokenStreamListItem();
+		//Give it a name
+		newListItem->ID = newString(name);
+		//Set the item after the new item to be [what is currently] the start of the list
+		newListItem->nextItem = functions;
+		//Move the start-of-list pointer to this item
+		functions = newListItem;
+		//Record new function
+		newListItem->stream = copyTokenStream(newFunc);
+	}
+
+}
+
+void freeAllFunctions(){
+	freeTokenStreamList(functions);
+	functions = NULL;
 }

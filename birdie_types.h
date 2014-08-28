@@ -76,6 +76,10 @@ typedef enum {voAdd, voSubtract, voMultiply, voDivide, voModulus,
 ///Enumerated type for a unary operator
 typedef enum {voInvert, voAsScalar, voAsString, voAsList} val_operation_1;
 
+///Enumerated type for specifying a read mode for a variable
+typedef enum {vrmInternal, vrmUser} var_read_mode;
+
+
 //isList is true when this item is a list
 //the list pointer points to a link list made up of val_list_items. Items in this list can be items
 //The end of a list is only noted by the lack of a pointer to the next item in the list. (NULL pointer)

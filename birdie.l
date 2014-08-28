@@ -188,11 +188,11 @@
 		debug("Token replay?????? %p\n", streamWaiting);
 		if (streamWaiting!=NULL){
 			debug("YAY!\n");
-			struct val_struct_t *cond = readVar(conditionIdentifier);
+			struct val_struct_t *cond = readVar(conditionIdentifier, vrmUser);
 			while(isTrueVal(cond)){
 				parseStream(streamWaiting);
 				freeVal(cond);
-				cond = readVar(conditionIdentifier);
+				cond = readVar(conditionIdentifier, vrmUser);
 			}
 			freeVal(cond);
 			free(conditionIdentifier);
