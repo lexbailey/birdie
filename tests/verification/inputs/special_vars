@@ -1,0 +1,27 @@
+#//There are some special variables...
+#//`l` is the lazy variable. You can assign anything to it but as soon as you read it, 
+#//    it returns to the integer 0 as if it was undefined.
+#//`m` is the magic variable, this behaves mostly like any other variable except when 
+#//    used in boolean expressions such that the result doesn't always match what you 
+#//    would expect for the boolean value of the variable.
+#//`s` is the sticky variable. Once set to a value, it cannot take any other until 
+#//    there is a call to `'US` AKA un-stick.
+
+#//First lets test the lazy variable
+
+'l" 'P
+
+'1=l
+
+'l" 'P
+
+'l" 'P
+
+'2=l
+
+'l l"
+'P
+
+#//Should print 0 1 0 2 0<newline>
+
+#//TODO test magic and sticky
