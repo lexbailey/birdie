@@ -192,6 +192,7 @@
 			while(isTrueVal(cond)){
 				parseStream(streamWaiting);
 				freeVal(cond);
+
 				cond = readVar(conditionIdentifier, vrmUser);
 			}
 			freeVal(cond);

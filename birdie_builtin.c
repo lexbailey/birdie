@@ -382,3 +382,67 @@ struct val_struct_t *floatinput(struct val_struct_t *inputs){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void recHuman(struct val_struct_t *inputs, char* indent){
+	int indentLen = strlen(indent);
+
+	if (inputs == NULL){
+		return;
+	}
+
+	if (inputs->valueType==vtList){
+
+		ITERLIST_DEF(thisItem)
+		ITERLIST_BEGIN(inputs->list,thisItem)
+			char *longerIndent = malloc(indentLen +4);
+			strcpy(longerIndent, "    ");
+			recHuman(thisItem->item, longerIndent);
+		ITERLIST_END(thisItem)
+
+	}
+	else{
+		switch(inputs->valueType){
+		case vtInt:
+		    printf("Integer: ");
+	    break;
+	    case vtFloat:
+		    printf("Float: ");
+	    break;
+	    case vtString:
+		    printf("String: ");
+	    break;
+		default:
+			printf("ERRVAL!");
+		break;
+		}
+		printRawVal(*inputs);
+		printf("\n");
+	}
+}
+
+
+struct val_struct_t *humanReadable(struct val_struct_t *inputs){
+
+	struct val_struct_t *returnVal = createValStruct();
+	returnVal->valName = newString("HUMAN");
+	returnVal->valueType = vtInt;
+	returnVal->valI = 0;
+	recHuman(inputs, "");
+	return returnVal;
+
+}
+
+

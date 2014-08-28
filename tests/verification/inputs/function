@@ -1,6 +1,6 @@
 #//functions can be assigned to varibles. Functions are between brackets
 ('"Hello functional world
-'P)HELLO
-;HELLO ;HELLO ;HELLO #//What's all this then?
+'P)HELLO;
+'HELLO 'HELLO 'HELLO #//What's all this then?
 
 #//Should print three times

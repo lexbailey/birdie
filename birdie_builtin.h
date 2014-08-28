@@ -21,4 +21,7 @@ struct val_struct_t *count(struct val_struct_t *inputs);
 //Odd stuff...
 struct val_struct_t *magicTypeSort(struct val_struct_t *inputs);
 
+//Debug stuff
+struct val_struct_t *humanReadable(struct val_struct_t *inputs);
+
 #endif //BIDIE_BUILTIN_INCLUDE

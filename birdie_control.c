@@ -102,6 +102,7 @@ struct token_stream_token *getUserFunc(char* name){
 		if (strcmp(thisFunc->ID, name) == 0){
 			return thisFunc->stream;
 		}
+		thisFunc = thisFunc->nextItem;
 	}
 	return NULL;
 }
@@ -146,6 +147,10 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 		return magicTypeSort(inputs);
 	}
 	
+	if (strcmp(funcName, "HUMAN") == 0){
+		return humanReadable(inputs);
+	}
+
 	return NULL;
 }
 

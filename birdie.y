@@ -129,6 +129,13 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 										if (isTrueVal(topOfConditionStack())){
 											struct token_stream_token *userFunc = getUserFunc($2->valName);
 											if (userFunc != NULL){
+
+												struct val_struct_t *l=createValStruct();
+												l->valID = newString("l");
+												l->valueType = vtInt;
+												l->valI = 1;
+												assign(l);
+												conditionIdentifier = newString("l");
 												streamWaiting = copyTokenStream(userFunc);
 											}
 											else{
@@ -147,6 +154,13 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 
 											struct token_stream_token *userFunc = getUserFunc($3->valName);
 											if (userFunc != NULL){
+												struct val_struct_t *l=createValStruct();
+												l->valID = newString("l");
+												l->valueType = vtInt;
+												l->valI = 1;
+												assign(l);
+												conditionIdentifier = newString("l");
+												conditionIdentifier = newString("l");
 												streamWaiting = copyTokenStream(userFunc);
 											}
 											else{
