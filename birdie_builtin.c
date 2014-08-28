@@ -22,8 +22,12 @@ void printRawVal(struct val_struct_t input){
 
 
 int recPrint(struct val_struct_t *inputs){
-
 	int count = 0;
+
+	if (inputs == NULL){
+		return count;
+	}
+
 	if (inputs->valueType==vtList){
 
 		ITERLIST_DEF(thisItem)
