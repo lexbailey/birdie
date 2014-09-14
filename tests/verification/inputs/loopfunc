@@ -1,0 +1,9 @@
+#//Call a user function from a loop.
+
+'10=foo
+('fooP)BAR;
+('-foo1=foo'BAR)foo;
+'"
+'P
+
+#//Should print 109876543210 <newline>
