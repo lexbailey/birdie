@@ -150,11 +150,39 @@ struct almighty_stack_item_t{
 	//The almighty stack is made up of the stack stack, the stack state stack and the condition stack.
 };
 
-
+///A token that has been lexed
 struct post_lex_token_t{
 	uint16_t token;
 	struct val_struct_t *value;
 };
+
+///Generic string stack item
+struct string_stack_item_t{
+	char *stringVal;
+	struct string_stack_item_t *nextItem;
+};
+
+///Initialises a string stack item
+void stringStackItemInit(struct string_stack_item_t *);
+
+///Creates a new, initialised string stack item
+struct string_stack_item_t *createNewStringStackItem();
+
+///Fetches the top of a string stack (end)
+struct string_stack_item_t *stringStackTop(struct string_stack_item_t *);
+
+///Pushes a string stack item to a stack
+void stringStackPush(struct string_stack_item_t **, char *);
+
+///Pops the top value from a string stack
+void stringStackPop(struct string_stack_item_t **);
+
+///Free a string stack
+void freeStringStack(struct string_stack_item_t *);
+
+
+
+
 
 ///Caculates the length that a serial copy of a val struct would take up
 uint64_t calculateValStructSerialSizeBytes(struct val_struct_t *in);

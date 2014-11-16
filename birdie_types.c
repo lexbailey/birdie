@@ -19,6 +19,72 @@ void debugTypes(const char* s, ...){
 
 //#define debugTypes(x,...) (debugTypes("%s:%d - ", __FILE__, __LINE__),debugTypes(x,##__VA_ARGS__))
 
+
+
+
+
+
+
+
+void stringStackItemInit(struct string_stack_item_t *in){
+	in->stringVal = NULL;
+	in->nextItem = NULL;
+}
+
+struct string_stack_item_t *createNewStringStackItem(){
+	struct string_stack_item_t *output;
+	output = (struct string_stack_item_t *)malloc(sizeof(struct string_stack_item_t));
+	stringStackItemInit(output);
+	return output;
+}
+
+struct string_stack_item_t *stringStackTop(struct string_stack_item_t *stack){
+	struct string_stack_item_t *item = stack;
+	if (item == NULL){return NULL;}
+	while (item->nextItem != NULL){
+		item = item->nextItem;
+	}
+	return item;
+}
+
+void stringStackPush(struct string_stack_item_t **stack, char *newString){
+	struct string_stack_item_t *item = *stack;
+	if (item == NULL){
+		*stack = createNewStringStackItem();
+		(*stack)->stringVal = newString;
+		return;
+	}
+	while (item->nextItem != NULL){
+		item = item->nextItem;
+	}
+	item->nextItem = createNewStringStackItem();
+	item->nextItem->stringVal = newString;
+}
+
+void stringStackPop(struct string_stack_item_t **stack){
+	if (stack == NULL){fprintf(stderr, "String stack pop with null stack pointer pointer.\n");return;} //Already empty
+	struct string_stack_item_t *item = *stack;
+	if (item == NULL){return;}
+
+	if (item->nextItem == NULL){ freeStringStack(item); *stack = NULL; return;} //Single item
+
+	while (item->nextItem->nextItem != NULL){
+		item = item->nextItem;
+	}
+
+	freeStringStack(item->nextItem);
+	item->nextItem = NULL;
+}
+
+
+void freeStringStack(struct string_stack_item_t *victim){
+	if (victim->stringVal != NULL){free(victim->stringVal);}
+	if (victim->nextItem != NULL){freeStringStack(victim->nextItem);}
+	free(victim);
+}
+
+
+
 void freeStackStateItem(struct stack_state_item_t* victim){
 	if (victim != NULL){
 	    if (victim->nextStackState != NULL){freeStackStateItem(victim->nextStackState);}

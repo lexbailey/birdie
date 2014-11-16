@@ -53,7 +53,9 @@ struct token_stream_list_item *streamsWaiting;
 
 //struct token_stream_token *streamWaiting;
 
-extern char *conditionIdentifier;
+//extern char *conditionIdentifier;
+
+extern struct string_stack_item_t *conditionIdentifiers;
 
 void pushTokenStream(struct token_stream_token *stream){
 	if (streamsWaiting == NULL){
@@ -129,10 +131,12 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 											$$ = $2;
 											debugbison("bison: multi command block as loop\n");
 											//TODO push waiting stream to stack
+											debugbison("Push replay stream");
 											pushTokenStream(copyTokenStream(funcStream));
 											//streamWaiting = copyTokenStream(funcStream);
 											funcStream = NULL;
-											conditionIdentifier = newString($4->valID);
+											//conditionIdentifier = newString($4->valID);
+											stringStackPush(&conditionIdentifiers, newString($4->valID));
 
 										}
 	;
@@ -151,7 +155,9 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valueType = vtInt;
 												l->valI = 1;
 												assign(l);
-												conditionIdentifier = newString("l");
+												//conditionIdentifier = newString("l");
+												debugbison("Push replay stream");
+												stringStackPush(&conditionIdentifiers, newString("l"));
 												//TODO Push waiting stream to stack
 												pushTokenStream(copyTokenStream(userFunc));
 												//streamWaiting = copyTokenStream(userFunc);
@@ -177,7 +183,9 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valueType = vtInt;
 												l->valI = 1;
 												assign(l);
-												conditionIdentifier = newString("l");
+												//conditionIdentifier = newString("l");
+												debugbison("Push replay stream");
+												stringStackPush(&conditionIdentifiers, newString("l"));
 												//streamWaiting = copyTokenStream(userFunc);
 												pushTokenStream(copyTokenStream(userFunc));
 											}
