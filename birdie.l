@@ -167,12 +167,43 @@
 		*source = realloc(output, sizeof(char) * (o)); //Realloc, only changes things if we removed some quotes
 	}
 	
-	extern struct token_stream_token *streamWaiting;
+	//extern struct token_stream_token *streamWaiting;
+	extern struct token_stream_list_item *streamsWaiting;	
 
 	//struct token_stream_token *streamWaiting = NULL;
 	char *conditionIdentifier = NULL;
-
-
+	
+	struct token_stream_token *getLastStream(){
+		struct token_stream_list_item *output = streamsWaiting;
+		if (output == NULL){
+			return NULL;
+		}
+		while (output->nextItem != NULL){
+			output = output->nextItem;
+		}
+		return output->stream;
+	}
+	
+	void popStream(){
+		struct token_stream_list_item *item = streamsWaiting;
+		if (item == NULL){
+			return;
+		}
+		
+		if (item->nextItem == NULL){
+			freeTokenStreamList(item);
+			streamsWaiting = NULL;
+			return;
+		}
+		
+		while (item->nextItem->nextItem != NULL){
+			item = item->nextItem;
+		}
+		
+		freeTokenStreamList(item->nextItem);
+		item->nextItem = NULL;
+	}
+	
 	void parseStream(struct token_stream_token *stream){
 
 		struct token_stream_token *thisToken = stream;
@@ -185,12 +216,12 @@
 	}
 
 	void executePendingStreams(){
-		debug("Token replay?????? %p\n", streamWaiting);
-		if (streamWaiting!=NULL){
+		//debug("Token replay?????? %p\n", streamWaiting);
+		if (streamsWaiting!=NULL){
 			debug("YAY!\n");
 			struct val_struct_t *cond = readVar(conditionIdentifier, vrmUser);
 			while(isTrueVal(cond)){
-				parseStream(streamWaiting);
+				parseStream(getLastStream());
 				freeVal(cond);
 
 				cond = readVar(conditionIdentifier, vrmUser);
@@ -198,8 +229,10 @@
 			freeVal(cond);
 			free(conditionIdentifier);
 			conditionIdentifier=NULL;
-			freeTokenStream(streamWaiting);
-			streamWaiting=NULL;
+			//freeTokenStream(streamWaiting);
+			//TODO pop waiting stream
+			popStream();
+			//streamWaiting=NULL;
 		}
 		else{
 			debug("nope\n");

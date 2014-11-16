@@ -58,7 +58,6 @@ struct token_stream_list_item *createTokenStreamListItem(){
 	return output;
 }
 
-
 void streamListAppendStream(struct token_stream_list_item *list, struct token_stream_token *token){
 	struct token_stream_list_item *thisItem = list;
 	while (thisItem->nextItem != NULL){

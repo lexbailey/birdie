@@ -49,15 +49,29 @@ struct token_stream_token *loop;
 
 extern struct token_stream_token *funcStream;
 
-struct token_stream_token *streamWaiting;
+struct token_stream_list_item *streamsWaiting;
+
+//struct token_stream_token *streamWaiting;
 
 extern char *conditionIdentifier;
+
+void pushTokenStream(struct token_stream_token *stream){
+	if (streamsWaiting == NULL){
+		streamsWaiting = createTokenStreamListItem();
+		streamsWaiting->stream = stream;
+	}
+	else{
+		streamListAppendStream(streamsWaiting, stream);
+	}
+}
 
 //void parseStream(struct token_stream_token *stream);
 
 %}
 
-%define api.pure full
+//Some versions of bison want the word full at the end of the following line, others don't like it.
+%define api.pure
+//%define api.pure full
 %define api.push-pull push
 
 %union {
@@ -114,7 +128,9 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 	| BLOCKSTART commands BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as loop\n");
-											streamWaiting = copyTokenStream(funcStream);
+											//TODO push waiting stream to stack
+											pushTokenStream(copyTokenStream(funcStream));
+											//streamWaiting = copyTokenStream(funcStream);
 											funcStream = NULL;
 											conditionIdentifier = newString($4->valID);
 
@@ -122,7 +138,7 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 	;
 	
 commands: command
-	|commands command				{$$=$1; /*freeVal($1);*/}
+	|commands command				{$$=$1;}
 	;
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
@@ -136,7 +152,9 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valI = 1;
 												assign(l);
 												conditionIdentifier = newString("l");
-												streamWaiting = copyTokenStream(userFunc);
+												//TODO Push waiting stream to stack
+												pushTokenStream(copyTokenStream(userFunc));
+												//streamWaiting = copyTokenStream(userFunc);
 											}
 											else{
 												$$=functionCallArgs($2->valName,NULL);
@@ -160,8 +178,8 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valI = 1;
 												assign(l);
 												conditionIdentifier = newString("l");
-												conditionIdentifier = newString("l");
-												streamWaiting = copyTokenStream(userFunc);
+												//streamWaiting = copyTokenStream(userFunc);
+												pushTokenStream(copyTokenStream(userFunc));
 											}
 											else{
 												$$=functionCallArgs($3->valName, $2);
