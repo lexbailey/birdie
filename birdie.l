@@ -110,29 +110,17 @@
     }
 	
 	int64_t parseNum(char *number){
-	    int len = strlen(number);
-	    char endChar = number[len-1];
-	    if ((endChar=='-')||(endChar=='+')){ //if last item is a plus or minus
-	        int i;
-	        for (i=len-1; i>0; i--){ //Backwards loop! YAY!
-	            number[i] = number[i-1];
-	        }
-			number[0] = endChar;
+	    if (number[0]==' '){ //first char is a space, this is a negative number
+	    	number[0]='-';
 	    }
 	    return atoi(number);
 	}
 	
 	double parseNumf(char *number){
-	    int len = strlen(number);
-	    char endChar = number[len-1];
-	    if ((endChar=='-')||(endChar=='+')){ //if last item is a plus or minus
-	        int i;
-	        for (i=len-1; i>0; i--){ //Backwards loop! YAY!
-	            number[i] = number[i-1];
-	        }
-			number[0] = endChar;
-	    }
-	    return atof(number);
+		if (number[0]==' '){ //first char is a space, this is a negative number
+			number[0]='-';
+		}
+		return atof(number);
 	}
 
 	// Parse literal string (remove end double quotes, turn pairs of double quotes into single quotes)
@@ -287,7 +275,7 @@
 							FREEVAL;
 						}
 
-[0-9]+[-]?				{
+[ ]?[0-9]				{
 							debug("\tflex: found NUMBER\n");
 							INITVAL;
 							anyval_p->valueType = vtInt;

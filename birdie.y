@@ -131,7 +131,7 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 											$$ = $2;
 											debugbison("bison: multi command block as loop\n");
 											//TODO push waiting stream to stack
-											debugbison("Push replay stream");
+											debugbison("Push replay stream\n");
 											pushTokenStream(copyTokenStream(funcStream));
 											//streamWaiting = copyTokenStream(funcStream);
 											funcStream = NULL;
@@ -156,7 +156,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valI = 1;
 												assign(l);
 												//conditionIdentifier = newString("l");
-												debugbison("Push replay stream");
+												debugbison("Push replay stream\n");
 												stringStackPush(&conditionIdentifiers, newString("l"));
 												//TODO Push waiting stream to stack
 												pushTokenStream(copyTokenStream(userFunc));
@@ -184,7 +184,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 												l->valI = 1;
 												assign(l);
 												//conditionIdentifier = newString("l");
-												debugbison("Push replay stream");
+												debugbison("Push replay stream\n");
 												stringStackPush(&conditionIdentifiers, newString("l"));
 												//streamWaiting = copyTokenStream(userFunc);
 												pushTokenStream(copyTokenStream(userFunc));
@@ -202,11 +202,11 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 	| SEMIC valueList namedFunc		{debugbison("bison: User function call with params.\n");}
 	| SEMIC namedFunc				{debugbison("bison: User function call.\n");}
 
-	| OPDELIM valueList ASSIGN IDENT	{debugbison("bison: Assigning value to variable: %s\n", $4->valID);
+	| OPDELIM valueList IDENT ASSIGN	{debugbison("bison: Assigning value to variable: %s\n", $3->valID);
 										if (isTrueVal(topOfConditionStack())){
-											mergeAssign($4, $2);
-											$$ = readVar($4->valID, vrmInternal);
-											freeVal($4);
+											mergeAssign($3, $2);
+											$$ = readVar($3->valID, vrmInternal);
+											freeVal($3);
 											free($2);//I know this looks wrong but trust me it's fine, we don't want freeVal()
 											printVal($$);
 										}
