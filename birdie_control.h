@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "birdie_types.h"
 #include "birdie_funcs.h"
@@ -60,5 +61,7 @@ struct token_stream_token *getUserFunc(char *);
 void defineFunction(char *, struct token_stream_token *);
 
 void freeAllFunctions();
+
+void dieWithMessage(int, char *, ...);
 
 #endif //BIRDIE_CONTROL_INCLUDE

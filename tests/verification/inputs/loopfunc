@@ -1,8 +1,8 @@
 #//Call a user function from a loop.
 
-'10=foo
+'10foo=
 ('fooP)BAR;
-('-foo1=foo'BAR)foo;
+(''foo1-foo='BAR)foo;
 '"
 'P
 

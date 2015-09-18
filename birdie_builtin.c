@@ -403,8 +403,9 @@ void recHuman(struct val_struct_t *inputs, char* indent){
 		return;
 	}
 
+	printf("%s", indent);
 	if (inputs->valueType==vtList){
-
+		printf("List...\n");
 		ITERLIST_DEF(thisItem)
 		ITERLIST_BEGIN(inputs->list,thisItem)
 			char *longerIndent = malloc(indentLen +4);

@@ -37,6 +37,7 @@ struct val_struct_t *intAddVal(int64_t a, struct val_struct_t *b){
 			out = wrapList(outlist);
 		break;
 	}
+
 	return out;
 }
 

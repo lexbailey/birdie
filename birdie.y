@@ -110,10 +110,10 @@ void pushTokenStream(struct token_stream_token *stream){
 
 %type <anyval> anyNumber rawNumber command commands block
 %type <noval> start
-%type <anyval> value procVal anyVal namedIdent namedFunc valueList
+%type <anyval> value anyVal namedIdent namedFunc valueList
+//%type <anyval> procVal
 %type <twoOp> valop2 comparisonOp binOp
 %type <oneOp> valop1
-
 
 %%
 
@@ -292,22 +292,21 @@ valueList:	  anyVal				{debugbison("bison: value in list.\n"); $$ = $1;}
 									}
 		;
 
-anyVal: procVal
-	;
+//anyVal: procVal
+//	;
 
-procVal: value				        {$$=$1;}
-	| valop1 procVal			    {debugbison("bison: Value oneOp.\n"); 
+anyVal: value				        {$$=$1;}
+	| OPDELIM valueList valop1	    {debugbison("bison: Value oneOp.\n");
 										$$=createValStruct();
-										$$ = reduceExpression1($2, $1);
+										$$ = reduceExpression1($2, $3);
 										//$2 has been consumed
 										freeVal($2);
 										printVal($$);
 									}
-	| binOp procVal procVal 	    {debugbison("bison: Value twoOp.\n");
-										$$ = reduceExpression2($2, $3, $1);
+	| OPDELIM valueList binOp	{debugbison("bison: Value twoOp.\n");
+										$$ = reduceExpression2($2, $3);
 										//$2 and $3 have been consumed
 										freeVal($2);
-										freeVal($3);
 										printVal($$);
 									}
 	;

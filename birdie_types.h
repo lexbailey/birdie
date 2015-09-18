@@ -250,17 +250,25 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem);
 ///Concatenates two lists a list to the end of another list. All data is copied recursively. Items can be lists or single items.
 void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo);
 
+///Split truncates the input list so that it has numItems item in it. Returns a pointer to the remainder of the list.
+struct val_list_item *splitList(struct val_list_item *input, int numItems);
+
 ///Sets pointers within a val_struct_t to be null to ensure they can be handle correctly when not initialised.
-void initValStruct(struct val_struct_t* val);
+void initValStruct(struct val_struct_t *val);
 
 ///Allocates space for a val_struct_t and initialises it
 struct val_struct_t* createValStruct();
 
+///Returns the length of a list
+int valListLen(struct val_list_item *list);
+
 ///Sets pointers within a val_list_item to be null to ensure they can be handle correctly when not initialised.
-void initValListItem(struct val_list_item* val);
+void initValListItem(struct val_list_item *val);
 
 ///Alocates space for a val_list_item and initialises it.
 struct val_list_item* createValListItem();
+
+
 
 ///Sets pointers within a stack_state_item_t to be null to ensure they can be handle correctly when not initialised.
 void initStackStateItem(struct stack_state_item_t* val);

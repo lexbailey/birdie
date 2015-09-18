@@ -1,7 +1,7 @@
 #//Condition stack test
 
-'"False'=false
-'!false=true
+'"False'false=
+''false! true=
 
 '"True is: 'true"
 'P

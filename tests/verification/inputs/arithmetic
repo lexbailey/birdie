@@ -1,22 +1,22 @@
 #//Do some maths!
 
-'+1 2"
+''1 2+"
 'P #//should print 3
 
-'-1 2"
+''1 2-"
 'P #//should print -1
 
-'/8 2"
+''8 2/"
 'P #//should print 4
 
-'*11 2"
+''11 2*"
 'P #//should print 22
 
-'+1 2-"
+''1 -2+"
 'P #//should print -1
 
-'*!1 2"
+'''1! 2*"
 'P #//should print 0
 
-'*!0 2"
+'''0! 2*"
 'P #//should print 2

@@ -17,33 +17,64 @@ void debugFuncs(const char* s, ...){
 	#endif
 }
 
-struct val_struct_t *reduceExpression2(struct val_struct_t *a, struct val_struct_t *b, val_operation_2 op){
+struct val_struct_t *reduceExpression2(struct val_struct_t *input, val_operation_2 op){
+	if (input->valueType != vtList){
+		return NULL;
+	}
+	struct val_struct_t *listEnd = wrapList(splitList(input->list, 2));
+
+	if (valListLen(input->list) <2){
+		return NULL;
+	}
+
+	struct val_struct_t *a = input->list->item;
+	struct val_struct_t *b = input->list->nextItem->item;
+
+	struct val_struct_t *result = NULL;
+
 	switch(op){
 		case voAdd:
-			return valAdd(a,b);
+			result = valAdd(a,b);
+			break;
 		case voSubtract:
-			return valSub(a,b);
+			result = valSub(a,b);
+			break;
 		case voMultiply:
-			return valMul(a,b);
+			result = valMul(a,b);
+			break;
 		case voDivide:
-			return valDiv(a,b);
+			result = valDiv(a,b);
+			break;
 
 		//case voModulus:
-		//	return valMod(a,b);
+		//	result = valMod(a,b);
+			break;
 		case voBoolAnd:
-			return valBoolAnd(a,b);
+			result = valBoolAnd(a,b);
+			break;
 		case voBoolOr:
-			return valBoolOr(a,b);
+			result = valBoolOr(a,b);
+			break;
 		case voBoolXor:
-			return valBoolXor(a,b);
+			result = valBoolXor(a,b);
+			break;
 		//case voBitAnd:
-		//	return valBitAnd(a,b);
+		//	result = valBitAnd(a,b);
+			break;
 		//case voBitOr:
-		//	return valBitOr(a,b);
+		//	result = valBitOr(a,b);
+			break;
 		//case voBitXor:
-		//	return valBitXor(a,b);
+		//	result = valBitXor(a,b);
+			break;
 	}
-	return NULL;
+
+	//Do further calculations if needed.
+	appendList(result, reduceExpression2(listEnd, op));
+
+	freeVal(listEnd);
+
+	return result;
 }
 
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op){

@@ -122,14 +122,16 @@ void freeStackStateStackItem(struct stack_state_stack_item_t *victim){
 	}
 }
 */
+
+
 struct val_struct_t* copyVal(struct val_struct_t *data){
     if (data == NULL) return NULL;
-    struct val_struct_t* newVal;
-    newVal = createValStruct();
-    newVal->valID =
-    		newString(data->valID);
-    newVal->valName =
-    		newString(data->valName);
+	struct val_struct_t* newVal;
+	newVal = createValStruct();
+	newVal->valID =
+			newString(data->valID);
+	newVal->valName =
+			newString(data->valName);
 	newVal->valueType = data->valueType;
 	newVal->valS =
 			newString(data->valS);
@@ -201,6 +203,12 @@ struct stack_state_stack_item_t* createStackStateStackItem(){
 }
 */
 void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
+
+	if (newItem == NULL || existing == NULL){
+		//Nothing to do for blank item
+		return;
+	}
+
 	debugTypes("Append Incoming existing list\n");
 	debugVal(existing);
 	debugTypes("Append Incoming item\n");
@@ -315,6 +323,40 @@ struct val_struct_t *wrapList(struct val_list_item *input){
 	output->valueType=vtList;
 	output->list = input;
 	return output;
+}
+
+struct val_list_item *splitList(struct val_list_item *input, int numItems){
+	//Take the input as current
+	struct val_list_item *current = input;
+	int gotItems = 0;
+	// As long as current is valid
+	while (current != NULL) {
+		//We have a new item
+		gotItems++;
+		//If we have enough items...
+		if (gotItems >= numItems){
+			//Everything boyond this point is the sub list
+			struct val_list_item *subList = current->nextItem;
+			//Ensure that this list now stops here
+			current->nextItem = NULL;
+			//Return the sub list
+			return subList;
+		}
+		//Move to next item
+		current = current->nextItem;
+	}
+	//If we can't go further or were given a null list, return null as there is no sub list
+	return NULL;
+}
+
+int valListLen(struct val_list_item *list){
+	int len = 0;
+	struct val_list_item *thisItem = list;
+	while (thisItem!= NULL){
+		len ++;
+		thisItem = thisItem->nextItem;
+	}
+	return len;
 }
 
 void debugVal(struct val_struct_t *val){

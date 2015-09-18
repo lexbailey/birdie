@@ -1,28 +1,28 @@
 #//Boolean operations
 
-'1=true
-'0=false
+'1true=
+'0false=
 
-'&false falseP
-'&false trueP
-'&true falseP
-'&true true"
+''false false&P
+''false true&P
+''true false&P
+''true true&"
 'P
 
 #//Should print 0001
 
-'|false falseP
-'|false trueP
-'|true falseP
-'|true true"
+''false false|P
+''false true|P
+''true false|P
+''true true|"
 'P
 
 #//Should print 0111
 
-'|^false falseP
-'|^false trueP
-'|^true falseP
-'|^true true"
+''false false|^P
+''false true|^P
+''true false|^P
+''true true|^"
 'P
 
 #//Should print 0110

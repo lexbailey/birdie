@@ -110,16 +110,10 @@
     }
 	
 	int64_t parseNum(char *number){
-	    if (number[0]==' '){ //first char is a space, this is a negative number
-	    	number[0]='-';
-	    }
 	    return atoi(number);
 	}
 	
 	double parseNumf(char *number){
-		if (number[0]==' '){ //first char is a space, this is a negative number
-			number[0]='-';
-		}
 		return atof(number);
 	}
 
@@ -275,7 +269,7 @@
 							FREEVAL;
 						}
 
-[ ]?[0-9]				{
+[-]?[0-9]+				{
 							debug("\tflex: found NUMBER\n");
 							INITVAL;
 							anyval_p->valueType = vtInt;
@@ -284,7 +278,7 @@
 							FREEVAL;
 						}
 
-([0-9]*\.?[0-9]+|[0]9+\.)[-+]?	{
+[-]?([0-9]*\.?[0-9]+|[0]9+\.)	{
 							debug("\tflex: found FLOAT\n");
 							INITVAL;
 							anyval_p->valueType = vtFloat;
