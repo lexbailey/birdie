@@ -197,22 +197,25 @@
 	}
 
 	void executePendingStreams(){
-		debug("Token replay?????? %p\n", streamsWaiting);
+		//debug("Token replay?????? %p\n", streamsWaiting);
+
 		if (streamsWaiting!=NULL){
+			printf("Replay token stream: %p\n", streamsWaiting);
 			debug("YAY!\n");
 			while (streamsWaiting != NULL){
 				char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-				
+				printf("End condition for stream %p: %s\n", streamsWaiting, thisID);
 				struct val_struct_t *cond = readVar(thisID, vrmUser);
 				while(isTrueVal(cond)){
-					debug("Replay iteration\n");
+					printf("\tReplay iteration\n");
 					char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
+					printf("\t\tIteration: End condition for stream %p: %s\n", streamsWaiting, thisID);
 					parseStream(getLastStream());
 					freeVal(cond);
 					cond = readVar(thisID, vrmUser);
 				}
 				freeVal(cond);
-				debug("Pop replay stream\n");
+				printf("\tPop replay stream\n");
 				stringStackPop(&conditionIdentifiers);
 				popStream();
 			}

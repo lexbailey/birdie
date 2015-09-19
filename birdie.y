@@ -108,7 +108,7 @@ void pushTokenStream(struct token_stream_token *stream){
 %token <noval> ERR
 
 
-%type <anyval> anyNumber rawNumber command commands block
+%type <anyval> anyNumber rawNumber command block blocks
 %type <noval> start
 %type <anyval> value anyVal namedIdent namedFunc valueList
 //%type <anyval> procVal
@@ -121,14 +121,18 @@ start:	  block 		{freeVal($1);}
 	| start block 		{/*freeVal($2);*/}
 	;
 	
+blocks: block
+	| blocks block
+
 block:	command										{$$ = $1;debugbison("bison: single command as block\n");}
-	| BLOCKSTART commands BLOCKEND namedFunc SEMIC	{
+	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as function\n");
 											defineFunction($4->valName, funcStream);
 										}
-	| BLOCKSTART commands BLOCKEND namedIdent SEMIC	{
+	| BLOCKSTART blocks BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
+											if (isTrueVal(topOfConditionStack())){
 											debugbison("bison: multi command block as loop\n");
 											//TODO push waiting stream to stack
 											debugbison("Push replay stream\n");
@@ -137,12 +141,9 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 											funcStream = NULL;
 											//conditionIdentifier = newString($4->valID);
 											stringStackPush(&conditionIdentifiers, newString($4->valID));
-
+											}
 										}
-	;
-	
-commands: command
-	|commands command				{$$=$1;}
+
 	;
 
 command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);

@@ -113,7 +113,7 @@ birdieFuncPtr_t getFunction(char* name){
 }
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
-//TODO find a better way to lookup functions that using strcmp.
+//TODO find a better way to lookup functions than using strcmp.
 	
 	if (strcmp(funcName, "P") == 0){
 		return print(inputs);
