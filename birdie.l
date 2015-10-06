@@ -56,6 +56,7 @@
 		nextToken.value=copyVal(val);
 		YYSTYPE yylval = {.anyval=copyVal(val)};
 		if (capturemode){
+			EXPAND(FUNC_FLOW)("Capture token");
 			debug("Capturing this token.\n");
 			funcStreamEnd->token = copyPostLexToken(&nextToken);
 			funcStreamEnd->nextItem = createTokenStreamToken();
@@ -208,34 +209,29 @@
 
 	void executePendingStreams(){
 		EXPAND(FUNC_TRACE);
-		//debug("Token replay?????? %p\n", streamsWaiting);
-
 		if (streamsWaiting!=NULL){
 			EXPAND(BASIC_FLOW)("Replay parsed code (location: %p)", streamsWaiting);
-			printf("Replay token stream: %p\n", streamsWaiting);
-			debug("YAY!\n");
 			while (streamsWaiting != NULL){
 				char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-				printf("End condition for stream %p: %s\n", streamsWaiting, thisID);
+				EXPAND(FUNC_FLOW)("Next stream waiting, condition is %s", thisID);
 				struct val_struct_t *cond = readVar(thisID, vrmUser);
 				while(isTrueVal(cond)){
-					printf("\tReplay iteration\n");
+					EXPAND(FUNC_FLOW)("Condition is true");
 					char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-					printf("\t\tIteration: End condition for stream %p: %s\n", streamsWaiting, thisID);
 					parseStream(getLastStream());
 					freeVal(cond);
 					cond = readVar(thisID, vrmUser);
 				}
+				EXPAND(FUNC_FLOW)("Condition is false");
 				freeVal(cond);
-				printf("\tPop replay stream\n");
 				stringStackPop(&conditionIdentifiers);
 				popStream();
 			}
 			EXPAND(BASIC_FLOW)("Replay complete");
 		}
-		else{
-			debug("nope\n");
-		}
+		//else{
+		//
+		//}
 	}
 
 %}
@@ -338,10 +334,12 @@
 
 							//This results in blocks being parsed before they are executed. This is good.
 
-							//Prepare to capture stuff...
-							funcStream = createTokenStreamToken();
-							funcStreamEnd = funcStream;
-							funcStreamEndPointer = NULL;
+							if (capturemode <= 0){
+								//Prepare to capture stuff...
+								funcStream = createTokenStreamToken();
+								funcStreamEnd = funcStream;
+								funcStreamEndPointer = NULL;
+							}
 
 							//Now start capturing tokens
 							capturemode++;
@@ -349,8 +347,10 @@
 						}
 ")"						{debug("\tflex: found BLOCKEND\n");
 
-							freeTokenStream(funcStreamEnd);
-							*funcStreamEndPointer = NULL;
+							if (capturemode <= 0){
+								freeTokenStream(funcStreamEnd);
+								*funcStreamEndPointer = NULL;
+							}
 
 							capturemode--;
 

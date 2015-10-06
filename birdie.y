@@ -58,6 +58,7 @@ struct token_stream_list_item *streamsWaiting;
 extern struct string_stack_item_t *conditionIdentifiers;
 
 void pushTokenStream(struct token_stream_token *stream){
+	EXPAND(FUNC_TRACE);
 	if (streamsWaiting == NULL){
 		streamsWaiting = createTokenStreamListItem();
 		streamsWaiting->stream = stream;
@@ -409,10 +410,12 @@ void parseStream(struct token_stream_token *stream){
 */
 
 void yyerror(const char* s){
+	EXPAND(FUNC_TRACE);
 	fprintf(stderr, "Error on line %lu: %s\n", line, s);
 }
 
 void yywarn(char* s){
+	EXPAND(FUNC_TRACE);
 	fprintf(stderr, "Warning for line %lu: %s\n", line, s);
 }
 
