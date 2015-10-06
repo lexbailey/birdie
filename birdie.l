@@ -5,6 +5,7 @@
 	#include "birdie.tab.h"
 	#include "birdie_token_stream.h"
 	#include "birdie_control.h"
+    #include "birdie_version.h"
 	#include <stdarg.h>
 
 	#ifdef GLOBAL_DEBUG
@@ -47,6 +48,7 @@
 	struct token_stream_token **funcStreamEndPointer;
 
 	int parse(enum yytokentype tok, struct val_struct_t *val, yypstate *ps){
+		EXPAND(FUNC_TRACE);
 		nextToken.token=tok;
 		if(nextToken.value !=NULL){
 			freeVal(nextToken.value);
@@ -88,6 +90,7 @@
 	unsigned long line = 1;
 
 	void synError(const char* s, ...){
+		EXPAND(FUNC_TRACE);
 		printf("Syntax error on line %lu: ", line);
 		va_list arglist;
 		va_start( arglist, s );
@@ -106,19 +109,23 @@
     
 
     int yylex(){
+		EXPAND(FUNC_TRACE);
     	return yylexMulti();
     }
 	
 	int64_t parseNum(char *number){
+		EXPAND(FUNC_TRACE);
 	    return atoi(number);
 	}
 	
 	double parseNumf(char *number){
+		EXPAND(FUNC_TRACE);
 		return atof(number);
 	}
 
 	// Parse literal string (remove end double quotes, turn pairs of double quotes into single quotes)
 	void parseLit(char **source){
+		EXPAND(FUNC_TRACE);
 		char *input;
 		input = *source;
 		int len = strlen(input);
@@ -155,6 +162,7 @@
 	struct string_stack_item_t *conditionIdentifiers = NULL;
 	
 	struct token_stream_token *getLastStream(){
+		EXPAND(FUNC_TRACE);
 		struct token_stream_list_item *output = streamsWaiting;
 		if (output == NULL){
 			return NULL;
@@ -166,6 +174,7 @@
 	}
 	
 	void popStream(){
+		EXPAND(FUNC_TRACE);
 		struct token_stream_list_item *item = streamsWaiting;
 		if (item == NULL){
 			return;
@@ -186,6 +195,7 @@
 	}
 	
 	void parseStream(struct token_stream_token *stream){
+		EXPAND(FUNC_TRACE);
 
 		struct token_stream_token *thisToken = stream;
 		while (thisToken != NULL){
@@ -197,9 +207,11 @@
 	}
 
 	void executePendingStreams(){
+		EXPAND(FUNC_TRACE);
 		//debug("Token replay?????? %p\n", streamsWaiting);
 
 		if (streamsWaiting!=NULL){
+			EXPAND(BASIC_FLOW)("Replay parsed code (location: %p)", streamsWaiting);
 			printf("Replay token stream: %p\n", streamsWaiting);
 			debug("YAY!\n");
 			while (streamsWaiting != NULL){
@@ -219,6 +231,7 @@
 				stringStackPop(&conditionIdentifiers);
 				popStream();
 			}
+			EXPAND(BASIC_FLOW)("Replay complete");
 		}
 		else{
 			debug("nope\n");
@@ -311,6 +324,7 @@
 "["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
 "("						{debug("\tflex: found BLOCKSTART\n");
+							EXPAND(BASIC_FLOW)("Start token capture (new depth: %d)", capturemode+1);
 							//Parse the block start
 							PARSE_TOKEN(BLOCKSTART);
 							//Ugly hack, push a false to the condition stack
@@ -331,6 +345,7 @@
 
 							//Now start capturing tokens
 							capturemode++;
+
 						}
 ")"						{debug("\tflex: found BLOCKEND\n");
 
@@ -338,6 +353,8 @@
 							*funcStreamEndPointer = NULL;
 
 							capturemode--;
+
+							EXPAND(BASIC_FLOW)("End token capture (new depth: %d)", capturemode);
 
 
 							PARSE_TOKEN(POPCOND);
@@ -400,12 +417,15 @@
 FILE *argIn = NULL;
 
 int main(int argc, char ** argv){
+	EXPAND(FUNC_TRACE);
+	EXPAND(FUNDAMENTAL)("Start birdie version %s (%s)", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
 	nextToken.value=NULL;
 	init();
 	anyval_p = createValStruct();
 	//Where is my input?
 	if (argc > 1){
 		char * inputFile = argv[1];
+		EXPAND(FUNDAMENTAL)("Program input is file \"%s\"", inputFile);
 		argIn = fopen(inputFile, "r");
 		if (argIn == NULL){
 			printf("Error opening input file.\n");
@@ -413,9 +433,12 @@ int main(int argc, char ** argv){
 		}
 	}
 	else{
+		EXPAND(FUNDAMENTAL)("Program input is stdin");
 		argIn = stdin;
 	}
+	EXPAND(FUNDAMENTAL)("Begin parse");
 	int result = yylex();
+	EXPAND(FUNDAMENTAL)("End parse");
 
 	//....Cleanup....
 	//release file
@@ -433,10 +456,12 @@ int main(int argc, char ** argv){
 	//Free variables
 	freeAllVariables();
 
+	EXPAND(FUNDAMENTAL)("Exit birdie with status %d", result);
 	return result;
 }
 
 int flexInput( char *buf, int *read, int max) {
+	EXPAND(FUNC_TRACE);
 
 	if ( argIn == stdin ) //Interactive mode, read until a newline
 	{ 

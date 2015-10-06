@@ -124,7 +124,7 @@ start:	  block 		{freeVal($1);}
 blocks: block
 	| blocks block
 
-block:	command										{$$ = $1;debugbison("bison: single command as block\n");}
+block:	command										{$$ = $1;  debugbison("bison: single command as block\n");}
 	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as function\n");
@@ -146,7 +146,7 @@ block:	command										{$$ = $1;debugbison("bison: single command as block\n");
 
 	;
 
-command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valName);
+command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s\"", $2->valName); debugbison("bison: Function call: %s\n", $2->valName);
 										if (isTrueVal(topOfConditionStack())){
 											struct token_stream_token *userFunc = getUserFunc($2->valName);
 											if (userFunc != NULL){
@@ -173,7 +173,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 										}
 									}
 
-	| OPDELIM valueList namedFunc	{debugbison("bison: Function call with params: %s\n", $3->valName);
+	| OPDELIM valueList namedFunc	{ EXPAND(BASIC_FLOW)("Function call with params \"%s\"", $3->valName); debugbison("bison: Function call with params: %s\n", $3->valName);
 										if (isTrueVal(topOfConditionStack())){
 											//$$=createValStruct();
 
@@ -203,7 +203,7 @@ command: OPDELIM namedFunc			{debugbison("bison: Function call: %s\n", $2->valNa
 	| SEMIC valueList namedFunc		{debugbison("bison: User function call with params.\n");}
 	| SEMIC namedFunc				{debugbison("bison: User function call.\n");}
 
-	| OPDELIM valueList IDENT ASSIGN	{debugbison("bison: Assigning value to variable: %s\n", $3->valID);
+	| OPDELIM valueList IDENT ASSIGN	{EXPAND(BASIC_FLOW)("Assign to variable \"%s\"", $3->valID); debugbison("bison: Assigning value to variable: %s\n", $3->valID);
 										if (isTrueVal(topOfConditionStack())){
 											mergeAssign($3, $2);
 											$$ = readVar($3->valID, vrmInternal);

@@ -17,21 +17,14 @@ void debugTypes(const char* s, ...){
 	#endif
 }
 
-//#define debugTypes(x,...) (debugTypes("%s:%d - ", __FILE__, __LINE__),debugTypes(x,##__VA_ARGS__))
-
-
-
-
-
-
-
-
 void stringStackItemInit(struct string_stack_item_t *in){
+	EXPAND(FUNC_TRACE);
 	in->stringVal = NULL;
 	in->nextItem = NULL;
 }
 
 struct string_stack_item_t *createNewStringStackItem(){
+	EXPAND(FUNC_TRACE);
 	struct string_stack_item_t *output;
 	output = (struct string_stack_item_t *)malloc(sizeof(struct string_stack_item_t));
 	stringStackItemInit(output);
@@ -39,6 +32,7 @@ struct string_stack_item_t *createNewStringStackItem(){
 }
 
 struct string_stack_item_t *stringStackTop(struct string_stack_item_t *stack){
+	EXPAND(FUNC_TRACE);
 	struct string_stack_item_t *item = stack;
 	if (item == NULL){return NULL;}
 	while (item->nextItem != NULL){
@@ -48,6 +42,7 @@ struct string_stack_item_t *stringStackTop(struct string_stack_item_t *stack){
 }
 
 void stringStackPush(struct string_stack_item_t **stack, char *newString){
+	EXPAND(FUNC_TRACE);
 	struct string_stack_item_t *item = *stack;
 	if (item == NULL){
 		*stack = createNewStringStackItem();
@@ -62,6 +57,7 @@ void stringStackPush(struct string_stack_item_t **stack, char *newString){
 }
 
 void stringStackPop(struct string_stack_item_t **stack){
+	EXPAND(FUNC_TRACE);
 	if (stack == NULL){fprintf(stderr, "String stack pop with null stack pointer pointer.\n");return;} //Already empty
 	struct string_stack_item_t *item = *stack;
 	if (item == NULL){return;}
@@ -78,6 +74,7 @@ void stringStackPop(struct string_stack_item_t **stack){
 
 
 void freeStringStack(struct string_stack_item_t *victim){
+	EXPAND(FUNC_TRACE);
 	if (victim->stringVal != NULL){free(victim->stringVal);}
 	if (victim->nextItem != NULL){freeStringStack(victim->nextItem);}
 	free(victim);
@@ -86,6 +83,7 @@ void freeStringStack(struct string_stack_item_t *victim){
 
 
 void freeStackStateItem(struct stack_state_item_t* victim){
+	EXPAND(FUNC_TRACE);
 	if (victim != NULL){
 	    if (victim->nextStackState != NULL){freeStackStateItem(victim->nextStackState);}
 	    free(victim);
@@ -93,6 +91,7 @@ void freeStackStateItem(struct stack_state_item_t* victim){
 }
 
 void freeListItem(struct val_list_item *victim){
+	EXPAND(FUNC_TRACE);
 	if (victim != NULL){
 	    if (victim->item != NULL){freeVal(victim->item);}
 	    if (victim->nextItem != NULL){freeListItem(victim->nextItem);}
@@ -101,6 +100,7 @@ void freeListItem(struct val_list_item *victim){
 }
 
 void freeVal(struct val_struct_t *victim){
+	EXPAND(FUNC_TRACE);
 	if (victim != NULL){
 	
 		if (victim->valueType==vtList){
@@ -125,6 +125,7 @@ void freeStackStateStackItem(struct stack_state_stack_item_t *victim){
 
 
 struct val_struct_t* copyVal(struct val_struct_t *data){
+	EXPAND(FUNC_TRACE);
     if (data == NULL) return NULL;
 	struct val_struct_t* newVal;
 	newVal = createValStruct();
@@ -142,6 +143,7 @@ struct val_struct_t* copyVal(struct val_struct_t *data){
 }
 
 struct val_list_item* copyValList(struct val_list_item *data){
+	EXPAND(FUNC_TRACE);
     if (data == NULL) return NULL;
     struct val_list_item* newVal;
     newVal = createValListItem();
@@ -151,6 +153,7 @@ struct val_list_item* copyValList(struct val_list_item *data){
 }
 
 void initValStruct(struct val_struct_t* val){
+	EXPAND(FUNC_TRACE);
     val->valID = NULL;
     val->valName = NULL;
 	val->valS = NULL;
@@ -163,29 +166,34 @@ void initValStruct(struct val_struct_t* val){
 }
 
 struct val_struct_t* createValStruct(){
+	EXPAND(FUNC_TRACE);
     struct val_struct_t* newVal = (struct val_struct_t *)malloc(sizeof(struct val_struct_t));
     initValStruct(newVal);
 	return newVal;
 }
 
 void initValListItem(struct val_list_item* val){
+	EXPAND(FUNC_TRACE);
     val->item = NULL;
     val->nextItem = NULL;
 }
 
 struct val_list_item* createValListItem(){
+	EXPAND(FUNC_TRACE);
     struct val_list_item* newVal = (struct val_list_item *)malloc(sizeof(struct val_list_item));
     initValListItem(newVal);
 	return newVal;
 }
 
 void initStackStateItem(struct stack_state_item_t* val){
+	EXPAND(FUNC_TRACE);
 	val->nextStackState = NULL;
 	val->stackMode = 0;
 	val->autoPush = 1;
 }
 
 struct stack_state_item_t* createStackStateItem(){
+	EXPAND(FUNC_TRACE);
 	struct stack_state_item_t* newVal = (struct stack_state_item_t *)malloc(sizeof(struct stack_state_item_t));
 	initStackStateItem(newVal);
 	return newVal;
@@ -203,6 +211,7 @@ struct stack_state_stack_item_t* createStackStateStackItem(){
 }
 */
 void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
+	EXPAND(FUNC_TRACE);
 
 	if (newItem == NULL || existing == NULL){
 		//Nothing to do for blank item
@@ -250,6 +259,7 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 }
 
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
+	EXPAND(FUNC_TRACE);
 	debugTypes("Prepend Incoming existing list\n");
 	debugVal(existing);
 	debugTypes("Prepend Incoming item\n");
@@ -283,6 +293,7 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 }
 
 void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
+	EXPAND(FUNC_TRACE);
 	debugTypes("Conc Incoming and outgoing list\n");
 	debugVal(listInOut);
 	debugTypes("Conc Incoming list 2\n");
@@ -319,6 +330,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 }
 
 struct val_struct_t *wrapList(struct val_list_item *input){
+	EXPAND(FUNC_TRACE);
 	struct val_struct_t *output = createValStruct();
 	output->valueType=vtList;
 	output->list = input;
@@ -326,6 +338,7 @@ struct val_struct_t *wrapList(struct val_list_item *input){
 }
 
 struct val_list_item *splitList(struct val_list_item *input, int numItems){
+	EXPAND(FUNC_TRACE);
 	//Take the input as current
 	struct val_list_item *current = input;
 	int gotItems = 0;
@@ -350,6 +363,7 @@ struct val_list_item *splitList(struct val_list_item *input, int numItems){
 }
 
 int valListLen(struct val_list_item *list){
+	EXPAND(FUNC_TRACE);
 	int len = 0;
 	struct val_list_item *thisItem = list;
 	while (thisItem!= NULL){
@@ -360,6 +374,7 @@ int valListLen(struct val_list_item *list){
 }
 
 void debugVal(struct val_struct_t *val){
+	EXPAND(FUNC_TRACE);
 	debugTypes("Debugging value...\n");
 	debugTypes("\tvalID: \t%s\n", val->valID);
 	debugTypes("\tat address: \t%p\n", (void*)val);
@@ -389,6 +404,8 @@ void debugVal(struct val_struct_t *val){
 }
 
 char *newString(const char *source){
+	EXPAND(FUNC_TRACE);
+	FUNC_TRACE;
 	if (source == NULL) { return NULL; }
 	char *result;
 	size_t sourceLen = sizeof(char) * (strlen(source)+1);
@@ -433,6 +450,7 @@ char *newString(const char *source){
 #define CHARLEN (sizeof(char)) //Most likely just a 1
 
 uint64_t calculateValStructSerialSizeBytes(struct val_struct_t *in){
+	EXPAND(FUNC_TRACE);
 	uint64_t result = VAL_STRUCT_SERIAL_HEADER_SIZE; //Each item is at least six bytes
 	if (in->valID != NULL){
 		result += strlen(in->valID);
@@ -462,10 +480,12 @@ uint64_t calculateValStructSerialSizeBytes(struct val_struct_t *in){
 }
 
 char *initialiseValStructOutputBuffer(struct val_struct_t *in){
+	EXPAND(FUNC_TRACE);
 	return malloc(calculateValStructSerialSizeBytes(in));
 }
 
 char *serializeValStruct(struct val_struct_t *in, char *outputBuffer){
+	EXPAND(FUNC_TRACE);
 
 	//Get the total size including header
 	uint64_t size = calculateValStructSerialSizeBytes(in);
@@ -548,6 +568,7 @@ char *serializeValStruct(struct val_struct_t *in, char *outputBuffer){
 }
 
 struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
+	EXPAND(FUNC_TRACE);
 
 	//output structure
 	struct val_struct_t *output = createValStruct();
@@ -634,6 +655,8 @@ struct val_struct_t *deserializeValStructLEN(char *in, uint64_t *readLength){
 }
 
 struct val_struct_t *deserializeValStruct(char *in){
+	EXPAND(FUNC_TRACE);
+
 	//Slightly more convenient version that ignores the output length
 	uint64_t ignore;
 	return deserializeValStructLEN(in, &ignore);
@@ -652,6 +675,7 @@ int tokenNeedsAnyval(uint16_t tokenID);
 #define POST_LEX_TOKEN_SERIAL_HEADER_SIZE (sizeof(uint16_t) + sizeof(uint32_t))
 
 uint64_t calculatePostLexTokenSerialSizeBytes(struct post_lex_token_t *in){
+	EXPAND(FUNC_TRACE);
 	uint64_t len = POST_LEX_TOKEN_SERIAL_HEADER_SIZE;
 
 	if (tokenNeedsAnyval(in->token)){
@@ -663,6 +687,7 @@ uint64_t calculatePostLexTokenSerialSizeBytes(struct post_lex_token_t *in){
 }
 
 char *serializePostLexToken(struct post_lex_token_t * in, char *outputBuffer){
+	EXPAND(FUNC_TRACE);
 
 	char *output;
 	uint64_t len = calculatePostLexTokenSerialSizeBytes(in);
@@ -691,20 +716,24 @@ char *serializePostLexToken(struct post_lex_token_t * in, char *outputBuffer){
 }
 
 struct post_lex_token_t *deserializePostLexToken(char *in){
+	EXPAND(FUNC_TRACE);
 	return NULL;//TODO
 }
 
 void initPostLexToken(struct post_lex_token_t *in){
+	EXPAND(FUNC_TRACE);
 	in->value = NULL;
 }
 
 struct post_lex_token_t *createPostLexToken(){
+	EXPAND(FUNC_TRACE);
 	struct post_lex_token_t *output = malloc(sizeof(struct post_lex_token_t));
 	initPostLexToken(output);
 	return output;
 }
 
 struct post_lex_token_t *copyPostLexToken(struct post_lex_token_t *in){
+	EXPAND(FUNC_TRACE);
 	if (in==NULL) return NULL;
 	struct post_lex_token_t *output = createPostLexToken();
 	output->token = in->token;
@@ -713,6 +742,7 @@ struct post_lex_token_t *copyPostLexToken(struct post_lex_token_t *in){
 }
 
 void freePostLexToken(struct post_lex_token_t *victim){
+	EXPAND(FUNC_TRACE);
 	freeVal(victim->value);
 	free(victim);
 }

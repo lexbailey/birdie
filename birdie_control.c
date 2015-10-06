@@ -21,10 +21,12 @@ void debugControl(const char* s, ...){
 }
 
 void freeAllVariables(){
+	EXPAND(FUNC_TRACE);
 	freeListItem(variables);
 }
 
 void assign(struct val_struct_t *assignee){
+	EXPAND(FUNC_TRACE);
 	//walk the list, look for the assignee
 	struct val_list_item *currentItem;
 	currentItem = variables;
@@ -48,6 +50,7 @@ void assign(struct val_struct_t *assignee){
 }
 
 void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
+	EXPAND(FUNC_TRACE);
 	if(assignee->valName != NULL){free(assignee->valName);}assignee->valName = data->valName;
 	assignee->valueType = data->valueType;
 	if(assignee->valS != NULL){free(assignee->valS);}assignee->valS = data->valS;
@@ -58,6 +61,7 @@ void mergeAssign(struct val_struct_t *assignee, struct val_struct_t *data){
 }
 
 struct val_struct_t *readVar(const char *name, var_read_mode mode){
+	EXPAND(FUNC_TRACE);
 	//walk the list, look for the target
 	struct val_list_item *currentItem;
 	currentItem = variables;
@@ -97,6 +101,7 @@ struct val_struct_t *readVar(const char *name, var_read_mode mode){
 
 
 struct token_stream_token *getUserFunc(char* name){
+	EXPAND(FUNC_TRACE);
 	struct token_stream_list_item *thisFunc = functions;
 	while (thisFunc !=NULL){
 		if (strcmp(thisFunc->ID, name) == 0){
@@ -108,11 +113,13 @@ struct token_stream_token *getUserFunc(char* name){
 }
 
 birdieFuncPtr_t getFunction(char* name){
+	EXPAND(FUNC_TRACE);
 	//MmmmHmmm
 	return NULL;
 }
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
+	EXPAND(FUNC_TRACE);
 //TODO find a better way to lookup functions than using strcmp.
 	
 	if (strcmp(funcName, "P") == 0){
@@ -176,6 +183,7 @@ struct val_struct_t *functionCall(const char *funcName){
 */
 
 void defineFunction(char *name, struct token_stream_token *newFunc){
+	EXPAND(FUNC_TRACE);
 	//Step 1, is this an override?
 	//Walk list and find out...
 	struct token_stream_list_item *thisItem = functions;
@@ -211,11 +219,13 @@ void defineFunction(char *name, struct token_stream_token *newFunc){
 }
 
 void freeAllFunctions(){
+	EXPAND(FUNC_TRACE);
 	freeTokenStreamList(functions);
 	functions = NULL;
 }
 
 void dieWithMessage(int exitCode, char* messageFormat, ...){
+	EXPAND(FUNC_TRACE);
 	va_list arglist;
 	va_start( arglist, messageFormat );
 	vprintf( messageFormat, arglist );

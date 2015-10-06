@@ -12,6 +12,8 @@
 #ifndef BIRDIE_TYPE_INCLUDE
 #define BIRDIE_TYPE_INCLUDE
 
+#include "debug_firehose.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
