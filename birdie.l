@@ -67,9 +67,17 @@
 		return yypush_parse(ps, nextToken.token, &yylval);
 	}
 
-    #define PARSE(tok,val) do{int status=parse(tok,val,ps);if(status!=YYPUSH_MORE){return status;}executePendingStreams();}while(0)
+    #define PARSE(tok,val) do{ \
+		EXPAND(FUNC_FLOW)("PARSE+val"); \
+    	int status=parse(tok,val,ps); \
+    	if(status!=YYPUSH_MORE){return status;} \
+    	executePendingStreams(); \
+    }while(0)
+
+	void executePendingStreams();
 
   	#define PARSE_TOKEN(tok) do { \
+		EXPAND(FUNC_FLOW)("PARSE"); \
 		nextToken.token=tok; \
 		int status = parse(tok,NULL,ps); \
 	    if (status != YYPUSH_MORE) return status; \
@@ -195,15 +203,97 @@
 		item->nextItem = NULL;
 	}
 	
+	int startBlockCapture(int doPushcond){
+		EXPAND(FUNC_TRACE);
+		EXPAND(BASIC_FLOW)("Start token capture (new depth: %d)", capturemode+1);
+
+
+		if (doPushcond){
+			//Parse the block start
+			PARSE_TOKEN(BLOCKSTART);
+			//Ugly hack, push a false to the condition stack
+			INITVAL;
+			anyval_p->valueType = vtInt;
+			anyval_p->valI = 0;
+
+			PARSE_TOKEN(OPDELIM);
+			PARSE(NUMBER,(anyval_p));
+			PARSE_TOKEN(PUSHCOND);
+
+			FREEVAL;
+		}
+
+		//This results in blocks being parsed before they are executed. This is good.
+
+		if (capturemode <= 0){
+			//Prepare to capture stuff...
+			funcStream = createTokenStreamToken();
+			funcStreamEnd = funcStream;
+			funcStreamEndPointer = NULL;
+		}
+
+		//Now start capturing tokens
+		capturemode++;
+
+		return YYPUSH_MORE;
+	}
+
+	int stopBlockCapture(int doPopcond){
+		EXPAND(FUNC_TRACE);
+
+
+		capturemode--;
+		if (capturemode <= 0){
+			freeTokenStream(funcStreamEnd);
+			if (funcStreamEndPointer != NULL){
+				*funcStreamEndPointer = NULL;
+			}
+		}
+
+		EXPAND(BASIC_FLOW)("End token capture (new depth: %d)", capturemode);
+
+		if (doPopcond){
+			PARSE_TOKEN(POPCOND);
+
+			PARSE_TOKEN(BLOCKEND);
+		}
+		return YYPUSH_MORE;
+	}
+
 	void parseStream(struct token_stream_token *stream){
 		EXPAND(FUNC_TRACE);
 
 		struct token_stream_token *thisToken = stream;
+
+		printf("Show entire stream:\n");
 		while (thisToken != NULL){
-			debug("Parse %d\n", thisToken->token->token);
-			YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
-			yypush_parse(ps, thisToken->token->token, &yylval);
+			printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
 			thisToken = thisToken->nextItem;
+		}
+		printf("Stream complete\n");
+
+		thisToken = stream;
+
+		while (thisToken != NULL){
+			if (thisToken->token == NULL && thisToken->nextItem != NULL){
+				yyerror("Internal error."); exit(1);
+			}
+			if (thisToken->token != NULL){
+				printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
+				debug("Parse %d\n", thisToken->token->token);
+				if (thisToken->token->token == BLOCKSTART){
+					startBlockCapture(0);
+				}
+				else if (thisToken->token->token == BLOCKEND){
+					stopBlockCapture(0);
+				}
+				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
+				yypush_parse(ps, thisToken->token->token, &yylval);
+				thisToken = thisToken->nextItem;
+			}
+			else{
+				break;
+			}
 		}
 	}
 
@@ -320,45 +410,16 @@
 "["						{debug("\tflex: found POP\n"); PARSE_TOKEN(POP);}
 
 "("						{debug("\tflex: found BLOCKSTART\n");
-							EXPAND(BASIC_FLOW)("Start token capture (new depth: %d)", capturemode+1);
-							//Parse the block start
-							PARSE_TOKEN(BLOCKSTART);
-							//Ugly hack, push a false to the condition stack
-							INITVAL;
-							anyval_p->valueType = vtInt;
-							anyval_p->valI = 0;
-							PARSE_TOKEN(OPDELIM);
-							PARSE(NUMBER,(anyval_p));
-							PARSE_TOKEN(PUSHCOND);
-							FREEVAL;
-
-							//This results in blocks being parsed before they are executed. This is good.
-
-							if (capturemode <= 0){
-								//Prepare to capture stuff...
-								funcStream = createTokenStreamToken();
-								funcStreamEnd = funcStream;
-								funcStreamEndPointer = NULL;
+							int status;
+							if (status = startBlockCapture(1) != YYPUSH_MORE){
+								return status;
 							}
-
-							//Now start capturing tokens
-							capturemode++;
-
 						}
 ")"						{debug("\tflex: found BLOCKEND\n");
-
-							if (capturemode <= 0){
-								freeTokenStream(funcStreamEnd);
-								*funcStreamEndPointer = NULL;
+							int status;
+							if (status = stopBlockCapture(1) != YYPUSH_MORE){
+								return status;
 							}
-
-							capturemode--;
-
-							EXPAND(BASIC_FLOW)("End token capture (new depth: %d)", capturemode);
-
-
-							PARSE_TOKEN(POPCOND);
-							PARSE_TOKEN(BLOCKEND);
 						}
 
 "?"						{debug("\tflex: found PUSH2COND\n"); PARSE_TOKEN(PUSH2COND);}
