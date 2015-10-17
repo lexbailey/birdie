@@ -20,6 +20,11 @@
 		#endif
 	}
 
+	void waitEnter(){
+		char c;
+		scanf("%c", &c);
+	}
+
 	yypstate *ps;
 
 	struct val_struct_t *anyval_p;
@@ -47,6 +52,14 @@
 	struct token_stream_token *funcStreamEnd;
 	struct token_stream_token **funcStreamEndPointer;
 
+	void captureToken(struct post_lex_token_t *token){
+		EXPAND(FUNC_TRACE);
+		funcStreamEnd->token = copyPostLexToken(token);
+		funcStreamEnd->nextItem = createTokenStreamToken();
+		funcStreamEndPointer = &(funcStreamEnd->nextItem);
+		funcStreamEnd = funcStreamEnd->nextItem;
+	}
+
 	int parse(enum yytokentype tok, struct val_struct_t *val, yypstate *ps){
 		EXPAND(FUNC_TRACE);
 		nextToken.token=tok;
@@ -56,12 +69,7 @@
 		nextToken.value=copyVal(val);
 		YYSTYPE yylval = {.anyval=copyVal(val)};
 		if (capturemode){
-			EXPAND(FUNC_FLOW)("Capture token");
-			debug("Capturing this token.\n");
-			funcStreamEnd->token = copyPostLexToken(&nextToken);
-			funcStreamEnd->nextItem = createTokenStreamToken();
-			funcStreamEndPointer = &(funcStreamEnd->nextItem);
-			funcStreamEnd = funcStreamEnd->nextItem;
+			captureToken(&nextToken);
 		}
 		debug("Parse %d\n", nextToken.token);
 		return yypush_parse(ps, nextToken.token, &yylval);
@@ -170,14 +178,26 @@
 
 	struct string_stack_item_t *conditionIdentifiers = NULL;
 	
-	struct token_stream_token *getLastStream(){
+	struct token_stream_token *getLastStream(int level){
 		EXPAND(FUNC_TRACE);
 		struct token_stream_list_item *output = streamsWaiting;
 		if (output == NULL){
 			return NULL;
 		}
+		int num = 0;
 		while (output->nextItem != NULL){
 			output = output->nextItem;
+			num++;
+		}
+		if (level == 0){
+			return output->stream;
+		}
+		int target = num-level-1;
+		num = 0;
+		output = streamsWaiting;
+		while (num<target){
+			output = output->nextItem;
+			num++;
 		}
 		return output->stream;
 	}
@@ -264,14 +284,14 @@
 		EXPAND(FUNC_TRACE);
 
 		struct token_stream_token *thisToken = stream;
-
+/*
 		printf("Show entire stream:\n");
 		while (thisToken != NULL){
 			printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
 			thisToken = thisToken->nextItem;
 		}
 		printf("Stream complete\n");
-
+*/
 		thisToken = stream;
 
 		while (thisToken != NULL){
@@ -279,13 +299,16 @@
 				yyerror("Internal error."); exit(1);
 			}
 			if (thisToken->token != NULL){
-				printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
+				//printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
 				debug("Parse %d\n", thisToken->token->token);
 				if (thisToken->token->token == BLOCKSTART){
 					startBlockCapture(0);
 				}
 				else if (thisToken->token->token == BLOCKEND){
 					stopBlockCapture(0);
+				}
+				else if (capturemode){
+					captureToken(thisToken->token);
 				}
 				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
 				yypush_parse(ps, thisToken->token->token, &yylval);
@@ -297,18 +320,24 @@
 		}
 	}
 
+	int streamExecLevel = -1;
+
 	void executePendingStreams(){
 		EXPAND(FUNC_TRACE);
 		if (streamsWaiting!=NULL){
 			EXPAND(BASIC_FLOW)("Replay parsed code (location: %p)", streamsWaiting);
 			while (streamsWaiting != NULL){
+				streamExecLevel++;
 				char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
 				EXPAND(FUNC_FLOW)("Next stream waiting, condition is %s", thisID);
+				struct token_stream_token *curStream = getLastStream(streamExecLevel);
 				struct val_struct_t *cond = readVar(thisID, vrmUser);
 				while(isTrueVal(cond)){
-					EXPAND(FUNC_FLOW)("Condition is true");
-					char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-					parseStream(getLastStream());
+					EXPAND(FUNC_FLOW)("Condition (%s) is true", thisID);
+					printf("Press enter to execute this itteration.");
+					waitEnter();
+					//char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
+					parseStream(curStream);
 					freeVal(cond);
 					cond = readVar(thisID, vrmUser);
 				}
@@ -316,6 +345,7 @@
 				freeVal(cond);
 				stringStackPop(&conditionIdentifiers);
 				popStream();
+				streamExecLevel--;
 			}
 			EXPAND(BASIC_FLOW)("Replay complete");
 		}
