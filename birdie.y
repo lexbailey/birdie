@@ -45,28 +45,11 @@ void init(){
 	initialiseAlmightyStack(); //F*%K Yeah!
 }
 
-struct token_stream_token *loop;
+struct token_stream_token *execStream = NULL;
+char *execCond = NULL;
+int execStreamFree = 0;
 
-extern struct token_stream_token *funcStream;
-
-struct token_stream_list_item *streamsWaiting;
-
-//struct token_stream_token *streamWaiting;
-
-//extern char *conditionIdentifier;
-
-extern struct string_stack_item_t *conditionIdentifiers;
-
-void pushTokenStream(struct token_stream_token *stream){
-	EXPAND(FUNC_TRACE);
-	if (streamsWaiting == NULL){
-		streamsWaiting = createTokenStreamListItem();
-		streamsWaiting->stream = stream;
-	}
-	else{
-		streamListAppendStream(streamsWaiting, stream);
-	}
-}
+extern struct token_stream_token *blockStream;
 
 //void parseStream(struct token_stream_token *stream);
 
@@ -129,19 +112,19 @@ block:	command										{$$ = $1;  debugbison("bison: single command as block\n"
 	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as function\n");
-											defineFunction($4->valName, funcStream);
+											defineFunction($4->valName, blockStream);
 										}
 	| BLOCKSTART blocks BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
 											if (isTrueVal(topOfConditionStack())){
-											debugbison("bison: multi command block as loop\n");
-											//TODO push waiting stream to stack
-											debugbison("Push replay stream\n");
-											pushTokenStream(copyTokenStream(funcStream));
-											//streamWaiting = copyTokenStream(funcStream);
-											funcStream = NULL;
-											//conditionIdentifier = newString($4->valID);
-											stringStackPush(&conditionIdentifiers, newString($4->valID));
+												debugbison("bison: multi command block as loop\n");
+												//TODO push waiting stream to stack
+												debugbison("Push replay stream\n");
+
+												char *cond = newString($4->valID);
+												execStream = blockStream;
+												execCond = cond;
+												execStreamFree = 1;
 											}
 										}
 
@@ -157,12 +140,11 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												l->valueType = vtInt;
 												l->valI = 1;
 												assign(l);
-												//conditionIdentifier = newString("l");
 												debugbison("Push replay stream\n");
-												stringStackPush(&conditionIdentifiers, newString("l"));
-												//TODO Push waiting stream to stack
-												pushTokenStream(copyTokenStream(userFunc));
-												//streamWaiting = copyTokenStream(userFunc);
+												char *cond = newString("l");
+												execStream = userFunc;
+												execCond = cond;
+												execStreamFree = 0;
 											}
 											else{
 												$$=functionCallArgs($2->valName,NULL);
@@ -185,11 +167,11 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												l->valueType = vtInt;
 												l->valI = 1;
 												assign(l);
-												//conditionIdentifier = newString("l");
 												debugbison("Push replay stream\n");
-												stringStackPush(&conditionIdentifiers, newString("l"));
-												//streamWaiting = copyTokenStream(userFunc);
-												pushTokenStream(copyTokenStream(userFunc));
+												char *cond = newString("l");
+												execStream = userFunc;
+												execCond = cond;
+												execStreamFree = 0;
 											}
 											else{
 												$$=functionCallArgs($3->valName, $2);

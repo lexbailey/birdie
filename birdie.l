@@ -20,6 +20,11 @@
 		#endif
 	}
 
+	extern struct token_stream_token *execStream;
+	extern char *execCond;
+	extern int execStreamFree;
+	void executeStream();
+
 	void waitEnter(){
 		char c;
 		scanf("%c", &c);
@@ -47,17 +52,18 @@
 		} \
     }while(0)
     
-	//Token streams for capturing functions
-	struct token_stream_token *funcStream;
-	struct token_stream_token *funcStreamEnd;
-	struct token_stream_token **funcStreamEndPointer;
+	//Token stream for capturing functions and loop bodies
+	struct token_stream_token *blockStream;
+	struct token_stream_token *lastInBlockStream;
 
 	void captureToken(struct post_lex_token_t *token){
 		EXPAND(FUNC_TRACE);
-		funcStreamEnd->token = copyPostLexToken(token);
-		funcStreamEnd->nextItem = createTokenStreamToken();
-		funcStreamEndPointer = &(funcStreamEnd->nextItem);
-		funcStreamEnd = funcStreamEnd->nextItem;
+		if (lastInBlockStream == NULL){
+			//internal error
+		}
+		lastInBlockStream->token = copyPostLexToken(token);
+		lastInBlockStream->nextItem = createTokenStreamToken();
+		lastInBlockStream = lastInBlockStream->nextItem;
 	}
 
 	int parse(enum yytokentype tok, struct val_struct_t *val, yypstate *ps){
@@ -78,25 +84,23 @@
     #define PARSE(tok,val) do{ \
 		EXPAND(FUNC_FLOW)("PARSE+val"); \
     	int status=parse(tok,val,ps); \
+    	executeStream(); \
     	if(status!=YYPUSH_MORE){return status;} \
-    	executePendingStreams(); \
     }while(0)
-
-	void executePendingStreams();
 
   	#define PARSE_TOKEN(tok) do { \
 		EXPAND(FUNC_FLOW)("PARSE"); \
 		nextToken.token=tok; \
 		int status = parse(tok,NULL,ps); \
+		executeStream(); \
 	    if (status != YYPUSH_MORE) return status; \
-	    executePendingStreams(); \
   	} while(0)
 
 	#define PARSE_AGAIN do { \
 		YYSTYPE yylval = {.anyval=copyVal(nextToken.value)}; \
     	int status = yypush_parse(ps, nextToken.token, &yylval); \
+    	executeStream(); \
     	if (status != YYPUSH_MORE) return status; \
-    	executePendingStreams(); \
   	} while(0)
     
     //Take input from file argument if specified
@@ -172,56 +176,8 @@
 		output[o++] = '\0';
 		*source = realloc(output, sizeof(char) * (o)); //Realloc, only changes things if we removed some quotes
 	}
-	
-	
-	extern struct token_stream_list_item *streamsWaiting;	
 
 	struct string_stack_item_t *conditionIdentifiers = NULL;
-	
-	struct token_stream_token *getLastStream(int level){
-		EXPAND(FUNC_TRACE);
-		struct token_stream_list_item *output = streamsWaiting;
-		if (output == NULL){
-			return NULL;
-		}
-		int num = 0;
-		while (output->nextItem != NULL){
-			output = output->nextItem;
-			num++;
-		}
-		if (level == 0){
-			return output->stream;
-		}
-		int target = num-level-1;
-		num = 0;
-		output = streamsWaiting;
-		while (num<target){
-			output = output->nextItem;
-			num++;
-		}
-		return output->stream;
-	}
-	
-	void popStream(){
-		EXPAND(FUNC_TRACE);
-		struct token_stream_list_item *item = streamsWaiting;
-		if (item == NULL){
-			return;
-		}
-		
-		if (item->nextItem == NULL){
-			freeTokenStreamList(item);
-			streamsWaiting = NULL;
-			return;
-		}
-		
-		while (item->nextItem->nextItem != NULL){
-			item = item->nextItem;
-		}
-		
-		freeTokenStreamList(item->nextItem);
-		item->nextItem = NULL;
-	}
 	
 	int startBlockCapture(int doPushcond){
 		EXPAND(FUNC_TRACE);
@@ -247,9 +203,8 @@
 
 		if (capturemode <= 0){
 			//Prepare to capture stuff...
-			funcStream = createTokenStreamToken();
-			funcStreamEnd = funcStream;
-			funcStreamEndPointer = NULL;
+			blockStream = createTokenStreamToken();
+			lastInBlockStream = blockStream;
 		}
 
 		//Now start capturing tokens
@@ -263,12 +218,6 @@
 
 
 		capturemode--;
-		if (capturemode <= 0){
-			freeTokenStream(funcStreamEnd);
-			if (funcStreamEndPointer != NULL){
-				*funcStreamEndPointer = NULL;
-			}
-		}
 
 		EXPAND(BASIC_FLOW)("End token capture (new depth: %d)", capturemode);
 
@@ -280,18 +229,28 @@
 		return YYPUSH_MORE;
 	}
 
+	int DELETEME = 0;
+	int DELETEMETOO = 10;
+	void LIMIT(){
+		DELETEME ++;
+		if (DELETEME > DELETEMETOO){
+			exit(1);
+		}
+	}
+
 	void parseStream(struct token_stream_token *stream){
 		EXPAND(FUNC_TRACE);
-
+		//LIMIT();
 		struct token_stream_token *thisToken = stream;
-/*
+		/*
 		printf("Show entire stream:\n");
 		while (thisToken != NULL){
-			printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
+			printf("this stream: %p token: %p, tokenID: %d, nextItem: %p\n", thisToken, thisToken->token, thisToken->token!=NULL?thisToken->token->token:0, thisToken->nextItem);
 			thisToken = thisToken->nextItem;
 		}
 		printf("Stream complete\n");
-*/
+		*/
+
 		thisToken = stream;
 
 		while (thisToken != NULL){
@@ -302,10 +261,18 @@
 				//printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
 				debug("Parse %d\n", thisToken->token->token);
 				if (thisToken->token->token == BLOCKSTART){
-					startBlockCapture(0);
+					startBlockCapture(1);
+					//Assumptions made here:
+					//There is a push 0 command in the capture stream
+					//(this is OPDELIM, NUMBER(0), PUSHCOND)
+					thisToken = thisToken->nextItem->nextItem->nextItem;
 				}
 				else if (thisToken->token->token == BLOCKEND){
-					stopBlockCapture(0);
+					stopBlockCapture(1);
+					//Assumptions made here:
+					//There is a pop command in the capture stream
+					//(this is POPCOND)
+					thisToken = thisToken->nextItem;
 				}
 				else if (capturemode){
 					captureToken(thisToken->token);
@@ -313,6 +280,7 @@
 				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
 				yypush_parse(ps, thisToken->token->token, &yylval);
 				thisToken = thisToken->nextItem;
+
 			}
 			else{
 				break;
@@ -320,38 +288,25 @@
 		}
 	}
 
-	int streamExecLevel = -1;
+	int shouldContinue(char *cond){
+		return isTrueVal(readVar(cond, vrmUser));
+	}
 
-	void executePendingStreams(){
-		EXPAND(FUNC_TRACE);
-		if (streamsWaiting!=NULL){
-			EXPAND(BASIC_FLOW)("Replay parsed code (location: %p)", streamsWaiting);
-			while (streamsWaiting != NULL){
-				streamExecLevel++;
-				char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-				EXPAND(FUNC_FLOW)("Next stream waiting, condition is %s", thisID);
-				struct token_stream_token *curStream = getLastStream(streamExecLevel);
-				struct val_struct_t *cond = readVar(thisID, vrmUser);
-				while(isTrueVal(cond)){
-					EXPAND(FUNC_FLOW)("Condition (%s) is true", thisID);
-					printf("Press enter to execute this itteration.");
-					waitEnter();
-					//char *thisID = stringStackTop(conditionIdentifiers)->stringVal;
-					parseStream(curStream);
-					freeVal(cond);
-					cond = readVar(thisID, vrmUser);
-				}
-				EXPAND(FUNC_FLOW)("Condition is false");
-				freeVal(cond);
-				stringStackPop(&conditionIdentifiers);
-				popStream();
-				streamExecLevel--;
+	void executeStream(){
+		if (execStream != NULL){
+			struct token_stream_token *myExecStream = execStream;
+			char *myExecCond = execCond;
+			int myExecStreamFree = execStreamFree;
+			execCond = NULL;
+			execStream = NULL;
+			while(shouldContinue(myExecCond)){
+				parseStream(myExecStream);
 			}
-			EXPAND(BASIC_FLOW)("Replay complete");
+			free(myExecCond);
+			if (myExecStreamFree){
+				freeTokenStream(myExecStream);
+			}
 		}
-		//else{
-		//
-		//}
 	}
 
 %}
