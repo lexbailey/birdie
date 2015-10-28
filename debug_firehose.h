@@ -6,8 +6,11 @@
 #define DEBUG_LEVEL_FUNC_LINES (4)
 #define DEBUG_LEVEL_ALL (5)
 
-#define DEBUG_MAX_LEVEL (-1)
-//#define DEBUG_MAX_LEVEL (5)
+extern int currentDebugLevel;
+
+//#define DEBUG_MAX_LEVEL (-1)
+//#define DEBUG_MAX_LEVEL (1)
+#define DEBUG_MAX_LEVEL (currentDebugLevel)
 
 #define debugFH(file,level,fmt,...) \
             do { if (level <= DEBUG_MAX_LEVEL){char* indent = malloc(sizeof(char)*(level+1)); indent[level] = '\0'; memset(indent, '\t', level); fprintf(stderr, "%s (L%d): %s"fmt"\n", file, level, indent, ## __VA_ARGS__);} } while (0)

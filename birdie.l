@@ -254,6 +254,7 @@
 		thisToken = stream;
 
 		while (thisToken != NULL){
+			EXPAND(BASIC_FLOW)("Push token for stream %p", stream);
 			if (thisToken->token == NULL && thisToken->nextItem != NULL){
 				yyerror("Internal error."); exit(1);
 			}
@@ -462,7 +463,10 @@
 %%
 FILE *argIn = NULL;
 
+extern int currentDebugLevel;
+
 int main(int argc, char ** argv){
+	currentDebugLevel = 2;
 	EXPAND(FUNC_TRACE);
 	EXPAND(FUNDAMENTAL)("Start birdie version %s (%s)", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
 	nextToken.value=NULL;

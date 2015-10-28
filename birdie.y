@@ -134,7 +134,7 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 										if (isTrueVal(topOfConditionStack())){
 											struct token_stream_token *userFunc = getUserFunc($2->valName);
 											if (userFunc != NULL){
-
+												EXPAND(BASIC_FLOW)("Exec user defined function %p", userFunc);
 												struct val_struct_t *l=createValStruct();
 												l->valID = newString("l");
 												l->valueType = vtInt;
@@ -159,9 +159,9 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 	| OPDELIM valueList namedFunc	{ EXPAND(BASIC_FLOW)("Function call with params \"%s\"", $3->valName); debugbison("bison: Function call with params: %s\n", $3->valName);
 										if (isTrueVal(topOfConditionStack())){
 											//$$=createValStruct();
-
 											struct token_stream_token *userFunc = getUserFunc($3->valName);
 											if (userFunc != NULL){
+												EXPAND(BASIC_FLOW)("Exec user defined function %p", userFunc);
 												struct val_struct_t *l=createValStruct();
 												l->valID = newString("l");
 												l->valueType = vtInt;
