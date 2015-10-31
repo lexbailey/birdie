@@ -477,7 +477,7 @@ extern int currentDebugLevel;
 extern void enableDebug();
 
 int main(int argc, char ** argv){
-	currentDebugLevel = 3;
+	currentDebugLevel = -1;
 	//enableDebug();
 	EXPAND(FUNC_TRACE);
 	EXPAND(FUNDAMENTAL)("Start birdie version %s (%s)", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);

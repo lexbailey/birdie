@@ -1,15 +1,12 @@
 (
-	'"First run!: 
-'P
+	'"First run!: 'P
 	(
 		''a1+a=
 		'"Run number: 'a"
 'P
 	)F;
-#//	'"SelfCall...
-#//'P
-#//	'F
-#// Still buggy, needs fixing, the self call results in recursion despite the redifinition
+	'F
+#// Still buggy, needs fixing, the self call results in recursion despite the redefinition
 )F;
 
 'F

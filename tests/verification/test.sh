@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 make -s clean
-make -s verification.log
+make -j -s verification.log
 less verification.log
