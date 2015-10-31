@@ -13,8 +13,3 @@
 	''a1-a=
 	'newlineP
 )a;
-
-
-#// birdie bug:
-#// the inner loop is executed with the condition of the outer loop
-#// could be a stack order thing

@@ -187,21 +187,28 @@ void defineFunction(char *name, struct token_stream_token *newFunc){
 	//Step 1, is this an override?
 	//Walk list and find out...
 	struct token_stream_list_item *thisItem = functions;
+	EXPAND(FUNC_FLOW)("Search for existing function definition.");
 	while (thisItem != NULL){
+		EXPAND(FUNC_FLOW)("Checking if %s is %s", thisItem->ID, name);
 		if (strcmp(name, thisItem->ID)==0){
 			//AHA! override
+			EXPAND(FUNC_FLOW)("Found existing function definition.");
 			break; //Break while thisItem points to the function to override
 		}
+		thisItem = thisItem->nextItem;
 	}
 	//Step 2, remember the new function
 	if (thisItem != NULL){
+		EXPAND(FUNC_FLOW)("Override existing function definition.");
 		//Override existing function
 		//Free existing
 		freeTokenStream(thisItem->stream);
 		//Create new
 		thisItem->stream = copyTokenStream(newFunc);
+		EXPAND(FUNC_FLOW)("Override definition is at %p", thisItem->stream);
 	}
 	else{
+		EXPAND(FUNC_FLOW)("Creating new function definition.");
 		//Not an override, add new function
 		//Prepend is now cheaper...
 		//Get a new list item
@@ -214,6 +221,7 @@ void defineFunction(char *name, struct token_stream_token *newFunc){
 		functions = newListItem;
 		//Record new function
 		newListItem->stream = copyTokenStream(newFunc);
+		EXPAND(FUNC_FLOW)("New function definition is at %p", newListItem->stream);
 	}
 
 }

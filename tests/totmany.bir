@@ -1,2 +1,13 @@
-#//''''-'II2I M C P
-'`0II I C P
+#//'''''II2-I C P
+'`1II2-I C P
+
+#//'
+#// '
+#//  '
+#//   '
+#//    'II  #// Get an input
+#//    2    #//  \_
+#//   -     #//  /  Subtract two from the input
+#//  I      #//Request two more than this number of inputs
+#// C       #//total up all of these inputs
+#//P        #//print the result

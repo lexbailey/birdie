@@ -51,6 +51,7 @@ int execStreamFree = 0;
 
 extern struct token_stream_token *blockStream;
 
+
 //void parseStream(struct token_stream_token *stream);
 
 %}
@@ -59,6 +60,8 @@ extern struct token_stream_token *blockStream;
 %define api.pure
 //%define api.pure full
 %define api.push-pull push
+
+%token-table
 
 %union {
 	struct val_struct_t *anyval;
@@ -112,7 +115,9 @@ block:	command										{$$ = $1;  debugbison("bison: single command as block\n"
 	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											debugbison("bison: multi command block as function\n");
-											defineFunction($4->valName, blockStream);
+											if (isTrueVal(topOfConditionStack())){
+												defineFunction($4->valName, blockStream);
+											}
 										}
 	| BLOCKSTART blocks BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
@@ -142,9 +147,9 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												assign(l);
 												debugbison("Push replay stream\n");
 												char *cond = newString("l");
-												execStream = userFunc;
+												execStream = copyTokenStream(userFunc);
 												execCond = cond;
-												execStreamFree = 0;
+												execStreamFree = 1;
 											}
 											else{
 												$$=functionCallArgs($2->valName,NULL);
@@ -169,7 +174,7 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												assign(l);
 												debugbison("Push replay stream\n");
 												char *cond = newString("l");
-												execStream = userFunc;
+												execStream = copyTokenStream(userFunc);
 												execCond = cond;
 												execStreamFree = 0;
 											}
@@ -401,4 +406,12 @@ void yywarn(char* s){
 	fprintf(stderr, "Warning for line %lu: %s\n", line, s);
 }
 
+const char *yytokenname(int tok){
+	return yytname[YYTRANSLATE(tok)];
+}
 
+void enableDebug(){
+#if YYDEBUG
+	yydebug = 1;
+#endif
+}

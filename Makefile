@@ -9,7 +9,8 @@ Objects += birdie_control.o birdie_builtin.o birdie_stackman.o
 Objects += debug_firehose.o
 
 #GlobalConfig = -ggdb -DGLOBAL_DEBUG -Wreturn-type
-GlobalConfig = -ggdb -Wreturn-type
+#GlobalConfig = -ggdb -Wreturn-type
+GlobalConfig = -ggdb -Wreturn-type -DYYDEBUG=1
 
 FixedConfig = 
 

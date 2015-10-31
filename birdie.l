@@ -20,6 +20,8 @@
 		#endif
 	}
 
+	extern const char* yytokenname(int);
+
 	extern struct token_stream_token *execStream;
 	extern char *execCond;
 	extern int execStreamFree;
@@ -78,6 +80,7 @@
 			captureToken(&nextToken);
 		}
 		debug("Parse %d\n", nextToken.token);
+		EXPAND(FUNC_FLOW)("Pushing token: %s", yytokenname(nextToken.token));
 		return yypush_parse(ps, nextToken.token, &yylval);
 	}
 
@@ -242,49 +245,56 @@
 		EXPAND(FUNC_TRACE);
 		//LIMIT();
 		struct token_stream_token *thisToken = stream;
-		/*
+/*
 		printf("Show entire stream:\n");
 		while (thisToken != NULL){
 			printf("this stream: %p token: %p, tokenID: %d, nextItem: %p\n", thisToken, thisToken->token, thisToken->token!=NULL?thisToken->token->token:0, thisToken->nextItem);
 			thisToken = thisToken->nextItem;
 		}
 		printf("Stream complete\n");
-		*/
+*/
 
 		thisToken = stream;
 
-		while (thisToken != NULL){
-			EXPAND(BASIC_FLOW)("Push token for stream %p", stream);
-			if (thisToken->token == NULL && thisToken->nextItem != NULL){
-				yyerror("Internal error."); exit(1);
-			}
-			if (thisToken->token != NULL){
-				//printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
-				debug("Parse %d\n", thisToken->token->token);
-				if (thisToken->token->token == BLOCKSTART){
-					startBlockCapture(1);
-					//Assumptions made here:
-					//There is a push 0 command in the capture stream
-					//(this is OPDELIM, NUMBER(0), PUSHCOND)
-					thisToken = thisToken->nextItem->nextItem->nextItem;
-				}
-				else if (thisToken->token->token == BLOCKEND){
-					stopBlockCapture(1);
-					//Assumptions made here:
-					//There is a pop command in the capture stream
-					//(this is POPCOND)
-					thisToken = thisToken->nextItem;
-				}
-				else if (capturemode){
-					captureToken(thisToken->token);
-				}
-				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
-				yypush_parse(ps, thisToken->token->token, &yylval);
-				thisToken = thisToken->nextItem;
+		while (thisToken != NULL && thisToken->token != NULL){
 
+			const char * tokName = yytokenname(thisToken->token->token);
+
+			EXPAND(BASIC_FLOW)("Next token is %s for stream %p", tokName, stream);
+
+			//printf("this stream: %p token: %p, nextItem: %p\n", thisToken, thisToken->token, thisToken->nextItem);
+			debug("Parse %d\n", thisToken->token->token);
+			//We can be lazy with the pattern matching here, a blockstart is always followed by '0?? (OPDELIM, NUMBER '0', PUSHCOND)
+			if (thisToken->token->token == BLOCKSTART){
+				startBlockCapture(1);
+				//Assumptions made here:
+				//There is a push 0 command in the capture stream
+				//(this is OPDELIM, NUMBER(0), PUSHCOND)
+				EXPAND(FUNC_FLOW)("Skipping duplicate token: %s", yytokenname(thisToken->nextItem->token->token));
+				EXPAND(FUNC_FLOW)("Skipping duplicate token: %s", yytokenname(thisToken->nextItem->nextItem->token->token));
+				EXPAND(FUNC_FLOW)("Skipping duplicate token: %s", yytokenname(thisToken->nextItem->nextItem->nextItem->token->token));
+				thisToken = thisToken->nextItem->nextItem->nextItem;
+			}
+			//More in-depth pattern matching for POPCOND followed by BLOCKEND. Other POPCONDs may exist without BLOCKENDs
+			else if (thisToken->token->token == POPCOND
+					&& thisToken->nextItem != NULL
+					&& thisToken->nextItem->token != NULL
+					&& thisToken->nextItem->token->token == BLOCKEND){
+				stopBlockCapture(1);
+				EXPAND(FUNC_FLOW)("Skipping duplicate token: %s", yytokenname(thisToken->nextItem->token->token));
+				thisToken = thisToken->nextItem;
 			}
 			else{
-				break;
+				if (capturemode){
+					captureToken(thisToken->token);
+				}
+				EXPAND(FUNC_FLOW)("Next token to push: %s", yytokenname(thisToken->token->token));
+				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
+				yypush_parse(ps, thisToken->token->token, &yylval);
+			}
+			thisToken = thisToken->nextItem;
+			if (thisToken != NULL && thisToken->token != NULL){
+				EXPAND(FUNC_FLOW)("More tokens available, next is: %s", yytokenname(thisToken->token->token));
 			}
 		}
 	}
@@ -464,9 +474,11 @@
 FILE *argIn = NULL;
 
 extern int currentDebugLevel;
+extern void enableDebug();
 
 int main(int argc, char ** argv){
-	currentDebugLevel = 2;
+	currentDebugLevel = 3;
+	//enableDebug();
 	EXPAND(FUNC_TRACE);
 	EXPAND(FUNDAMENTAL)("Start birdie version %s (%s)", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
 	nextToken.value=NULL;
