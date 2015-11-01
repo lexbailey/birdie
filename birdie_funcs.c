@@ -94,7 +94,7 @@ struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 o
 
 
 void printVal(struct val_struct_t *a){
-	if (a == NULL){debugFuncs("Null value passsed to printVal.\n"); return;}
+	if (a == NULL){debugFuncs("Null value passed to printVal.\n"); return;}
     if (a->valueType==vtList){
         debugFuncs("'%s' (Identifier '%s') is a list.\n", a->valName, a->valID);
         struct val_list_item *thisItem = a->list;
