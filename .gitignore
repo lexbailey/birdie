@@ -15,5 +15,6 @@ user_doxy/
 user_dox/
 tests/verification/outputs/
 tests/verification/errors/
+tests/verification/timeouts/
 tests/verification/verification.log
 
