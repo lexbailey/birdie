@@ -68,6 +68,7 @@ struct val_struct_t *print(struct val_struct_t *inputs){
 	returnVal->valName = newString("P");
 	returnVal->valueType = vtInt;
 	returnVal->valI = recPrint(inputs);
+	fflush(stdout);
 	return returnVal;
 	
 }
