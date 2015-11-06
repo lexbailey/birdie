@@ -231,12 +231,3 @@ void freeAllFunctions(){
 	freeTokenStreamList(functions);
 	functions = NULL;
 }
-
-void dieWithMessage(int exitCode, char* messageFormat, ...){
-	EXPAND(FUNC_TRACE);
-	va_list arglist;
-	va_start( arglist, messageFormat );
-	vprintf( messageFormat, arglist );
-	va_end( arglist );
-	exit(exitCode);
-}

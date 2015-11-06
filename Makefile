@@ -6,6 +6,7 @@ Objects += birdie_funcs_booland.o birdie_funcs_boolor.o birdie_funcs_boolxor.o
 Objects += birdie_funcs.o
 Objects += birdie_funcs_bool_util.o 
 Objects += birdie_control.o birdie_builtin.o birdie_stackman.o
+Objects += birdie_opts.o birdie_exits.o
 Objects += debug_firehose.o
 
 #GlobalConfig = -ggdb -DGLOBAL_DEBUG -Wreturn-type

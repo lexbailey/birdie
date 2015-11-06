@@ -1,5 +1,6 @@
 %{
 
+	#include "birdie_opts.h"
 	#include "birdie_types.h"
 	#include "birdie_funcs.h"
 	#include "birdie.tab.h"
@@ -7,6 +8,8 @@
 	#include "birdie_control.h"
     #include "birdie_version.h"
 	#include <stdarg.h>
+
+    #define YY_FATAL_ERROR(msg) do{ fprintf(stderr, msg); birdie_exit(EXIT_INVALID_SYNTAX); }while(0)
 
 	#ifdef GLOBAL_DEBUG
 	#define DEBUGFLEX
@@ -477,21 +480,34 @@ extern int currentDebugLevel;
 extern void enableDebug();
 
 int main(int argc, char ** argv){
-	currentDebugLevel = -1;
+	struct birdieOptions options = parseOptions(argc, argv);
+	currentDebugLevel = options.debugLevel;
 	//enableDebug();
 	EXPAND(FUNC_TRACE);
 	EXPAND(FUNDAMENTAL)("Start birdie version %s (%s)", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
+
+	// -v option? print version and exit
+	if (options.version){
+		printf("Birdie %s (Codename: %s)\n", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
+		printf("A language for code golf.\n");
+		#ifdef __GNUC__
+		printf("Compiled with GNU GCC version %s\n", __VERSION__);
+		#endif
+
+		birdie_exit(EXIT_SUCCESS);
+	}
+
 	nextToken.value=NULL;
 	init();
 	anyval_p = createValStruct();
 	//Where is my input?
-	if (argc > 1){
-		char * inputFile = argv[1];
+	if (options.inputFile != NULL){
+		char * inputFile = options.inputFile;
 		EXPAND(FUNDAMENTAL)("Program input is file \"%s\"", inputFile);
 		argIn = fopen(inputFile, "r");
 		if (argIn == NULL){
-			printf("Error opening input file.\n");
-			return -1;
+			fprintf(stderr, "Error: Couldn't open program file '%s'\n", inputFile);
+			birdie_exit(EXIT_PROGRAM_NOT_FOUND);
 		}
 	}
 	else{
@@ -501,6 +517,7 @@ int main(int argc, char ** argv){
 	EXPAND(FUNDAMENTAL)("Begin parse");
 	int result = yylex();
 	EXPAND(FUNDAMENTAL)("End parse");
+	if (result != 0) {result = EXIT_INVALID_SYNTAX;}
 
 	//....Cleanup....
 	//release file
@@ -518,8 +535,8 @@ int main(int argc, char ** argv){
 	//Free variables
 	freeAllVariables();
 
-	EXPAND(FUNDAMENTAL)("Exit birdie with status %d", result);
-	return result;
+	birdie_exit(result);
+	return EXIT_EXIT_ERROR;
 }
 
 int flexInput( char *buf, int *read, int max) {
@@ -535,7 +552,7 @@ int flexInput( char *buf, int *read, int max) {
 		if ( c == '\n' ) 
 			buf[n++] = (char) c; 
 		if ( c == EOF && ferror( argIn ) ) 
-			fprintf(stdout, "unable to read stdin\n" ); 
+			fprintf(stdout, "Error: unable to read stdin\n" );
 		*read = n; 
 	} 
 	else { 

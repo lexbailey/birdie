@@ -62,6 +62,4 @@ void defineFunction(char *, struct token_stream_token *);
 
 void freeAllFunctions();
 
-void dieWithMessage(int, char *, ...);
-
 #endif //BIRDIE_CONTROL_INCLUDE
