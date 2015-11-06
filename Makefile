@@ -25,7 +25,18 @@ ${Program}.tab.c: ${Program}.y
 lex.yy.c: ${Program}.l ${Program}.tab.h
 	flex $<
 
-%.o: %.c %.h
+infoheader.h: gen_infoheader.sh
+	./$^ > $@
+
+-include $(Objects:.o=.d)
+
+%.d: %.c
+	@set -e; rm -f $@; \
+	gcc -M $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+%.o: %.c
 	gcc -c $< -o $@ $(GlobalConfig) $(FixedConfig)
 
 ${Program}: ${Program}.tab.c lex.yy.c ${Objects}
@@ -39,6 +50,7 @@ ${Program}.output: ${Program}.y
 clean:
 	rm -f *.o
 	rm -f *.s
+	rm -f *.d
 	rm -f *.ii
 	rm -f *.tab.* *.yy.* ${Program}
 	rm -f ${Program}.output

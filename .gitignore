@@ -7,8 +7,10 @@ birdie
 *.i
 *.s
 *.o
+*.d
 .cproject
 .project
+infoheader.h
 .settings/
 hack_doxy/
 user_doxy/
