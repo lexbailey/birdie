@@ -285,9 +285,6 @@ struct stack_state_item_t* createStackStateItem();
 ///Turns a raw list into a val_struct_t with list type
 struct val_struct_t *wrapList(struct val_list_item *input);
 
-///Debug utility for printing info about a value
-void debugVal(struct val_struct_t *val);
-
 ///Utility function for making a copy of string and returning a pointer to it
 char *newString(const char *);
 

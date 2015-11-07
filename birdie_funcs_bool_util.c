@@ -159,7 +159,6 @@ struct val_struct_t *valNegate(struct val_struct_t *in){
 			return a;
 		case vtString:
 			reverse_string(a->valS);
-			debugFuncs("String was reversed to %s", a->valS);
 			return a;
 	}
 	return a;

@@ -1,24 +1,4 @@
-
 #include "birdie_control.h"
-
-#ifdef GLOBAL_DEBUG
-//#define DEBUGCONTROL
-#endif
-
-#ifdef DEBUGCONTROL
-	#include <stdarg.h>
-#endif
-
-
-
-void debugControl(const char* s, ...){
-	#ifdef DEBUGCONTROL
-	va_list arglist;
-	va_start( arglist, s );
-	vprintf( s, arglist );
-	va_end( arglist );
-	#endif
-}
 
 void freeAllVariables(){
 	EXPAND(FUNC_TRACE);
@@ -65,13 +45,11 @@ struct val_struct_t *readVar(const char *name, var_read_mode mode){
 	//walk the list, look for the target
 	struct val_list_item *currentItem;
 	currentItem = variables;
-	debugControl("I have been asked to read the variable called %s\n", name);
 	while (currentItem != NULL){
 		//check this item
 		if (strcmp(currentItem->item->valID, name)==0){
 			//Variable found, get a copy
 			struct val_struct_t *output = copyVal(currentItem->item);
-			printVal(output);
 			//Check if we need to do any magic here (only do magic fo user reads)
 			if (mode == vrmUser){
 				if (strcmp(currentItem->item->valID, "l")==0){
@@ -80,7 +58,6 @@ struct val_struct_t *readVar(const char *name, var_read_mode mode){
 					currentItem->item->valI=0;
 				}
 			}
-			printVal(output);
 			return output;
 		}
 		//Advance to next item

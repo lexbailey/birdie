@@ -35,8 +35,4 @@ struct val_struct_t *reduceExpression2(struct val_struct_t *a, val_operation_2 o
 ///This function evaluates the result of a unary operation acting on an input
 struct val_struct_t *reduceExpression1(struct val_struct_t *a, val_operation_1 op);
 
-void printVal(struct val_struct_t *a);
-
-void fullReport();
-
 #endif //BIRDIE_FUNCS_INCLUDE

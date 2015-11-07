@@ -1,22 +1,5 @@
 #include "birdie_types.h"
 
-#ifdef GLOBAL_DEBUG
-#define DEBUGTYPES
-#endif
-
-#ifdef DEBUGTYPES
-	#include <stdarg.h>
-#endif
-
-void debugTypes(const char* s, ...){
-	#ifdef DEBUGTYPES
-	va_list arglist;
-	va_start( arglist, s );
-	vprintf( s, arglist );
-	va_end( arglist );
-	#endif
-}
-
 void stringStackItemInit(struct string_stack_item_t *in){
 	EXPAND(FUNC_TRACE);
 	in->stringVal = NULL;
@@ -217,11 +200,6 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 		//Nothing to do for blank item
 		return;
 	}
-
-	debugTypes("Append Incoming existing list\n");
-	debugVal(existing);
-	debugTypes("Append Incoming item\n");
-	debugVal(newItem);
 	
 	//Get the new value into a list item container
 	struct val_list_item *newListItem = createValListItem();
@@ -231,10 +209,8 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 		struct val_list_item *currentItem = existing->list;
 		//walk the list, look for the end
 		while (currentItem->nextItem != NULL){
-			printVal((currentItem->item));
 			currentItem = currentItem->nextItem;
 		}
-		printVal(currentItem->item);
 	    newListItem->nextItem = NULL;//this is the last item in the list
 		currentItem->nextItem = newListItem;//No longer the end of the list
 	}
@@ -260,10 +236,6 @@ void appendList(struct val_struct_t *existing, struct val_struct_t *newItem){
 
 void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 	EXPAND(FUNC_TRACE);
-	debugTypes("Prepend Incoming existing list\n");
-	debugVal(existing);
-	debugTypes("Prepend Incoming item\n");
-	debugVal(newItem);
 	//Get the new value into a list item container
 	struct val_list_item *newListItem = createValListItem();
 	newListItem->item = newItem;    //Add the new item to this list element
@@ -294,10 +266,6 @@ void prependList(struct val_struct_t *existing, struct val_struct_t *newItem){
 
 void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 	EXPAND(FUNC_TRACE);
-	debugTypes("Conc Incoming and outgoing list\n");
-	debugVal(listInOut);
-	debugTypes("Conc Incoming list 2\n");
-	debugVal(listTwo);
 
 	if (listTwo->valueType==vtList && listInOut->valueType==vtList){
 	
@@ -324,9 +292,7 @@ void concatLists(struct val_struct_t *listInOut, struct val_struct_t *listTwo){
 		appendList(listInOut, copyVal(listTwo));
 
 	}
-	debugTypes("Output list is:\n");
-	debugVal(listInOut);
-	//debugVal(listInOut->list->item);
+
 }
 
 struct val_struct_t *wrapList(struct val_list_item *input){
@@ -371,36 +337,6 @@ int valListLen(struct val_list_item *list){
 		thisItem = thisItem->nextItem;
 	}
 	return len;
-}
-
-void debugVal(struct val_struct_t *val){
-	EXPAND(FUNC_TRACE);
-	debugTypes("Debugging value...\n");
-	debugTypes("\tvalID: \t%s\n", val->valID);
-	debugTypes("\tat address: \t%p\n", (void*)val);
-	debugTypes("\tvalID address: \t%p\n", val->valID);
-	debugTypes("\tvalName address: \t%p\n", val->valName);
-	debugTypes("\tvalS address: \t%p\n", val->valS);
-	debugTypes("\tvalI: \t%d\n", val->valI);
-	debugTypes("\tvalF: \t%.3f\n", val->valF);
-	debugTypes("\tis list?: \t%d\n", val->valueType==vtList);
-	debugTypes("\tlist address: \t%p\n", val->list);
-	
-	debugTypes("\tlist pointers...\n");
-	
-	struct val_list_item *myList = val->list;
-	
-	while (myList != NULL){
-		debugTypes("\t\t\t%p\n", myList->item);
-		myList = myList->nextItem;
-	}
-	
-	myList = val->list;
-	
-	while (myList != NULL){
-		debugVal(myList->item);
-		myList = myList->nextItem;
-	}
 }
 
 char *newString(const char *source){
