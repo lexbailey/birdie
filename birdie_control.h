@@ -52,8 +52,6 @@ struct val_struct_t *readVar(const char *, var_read_mode);
 
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs);
 
-//struct val_struct_t *functionCall(const char *funcName);
-
 void freeAllVariables();
 
 struct token_stream_token *getUserFunc(char *);

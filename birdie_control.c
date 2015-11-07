@@ -89,12 +89,6 @@ struct token_stream_token *getUserFunc(char* name){
 	return NULL;
 }
 
-birdieFuncPtr_t getFunction(char* name){
-	EXPAND(FUNC_TRACE);
-	//MmmmHmmm
-	return NULL;
-}
-
 struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t *inputs){
 	EXPAND(FUNC_TRACE);
 //TODO find a better way to lookup functions than using strcmp.
@@ -137,27 +131,6 @@ struct val_struct_t *functionCallArgs(const char *funcName, struct val_struct_t 
 
 	return NULL;
 }
-
-/*
-struct val_struct_t *functionCall(const char *funcName){
-	if (strcmp(funcName, "I") == 0){
-		return magicinput(NULL);
-	}
-	
-	if (strcmp(funcName, "IS") == 0){
-		return strinput(NULL);
-	}
-	
-	if (strcmp(funcName, "II") == 0){
-		return intinput(NULL);
-	}
-	
-	if (strcmp(funcName, "IF") == 0){
-		return floatinput(NULL);
-	}
-	return NULL;
-}
-*/
 
 void defineFunction(char *name, struct token_stream_token *newFunc){
 	EXPAND(FUNC_TRACE);
