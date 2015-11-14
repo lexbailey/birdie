@@ -547,13 +547,19 @@ int initMsgDone  = 0;
 int flexInput( char *buf, int *read, int max) {
 	EXPAND(FUNC_TRACE);
 
-	if ( argIn == stdin ) //Interactive mode, read until a newline
+	if ( argIn == stdin ) //Interactive mode
 	{ 
 		if (! initMsgDone){
+			// First thing to print in interactive mode
 			initMsgDone = 1;
 			showVersion();
 		}
+
 		if (needsNewline){
+			// libreadline removes the newline chars from the ends of inputs
+			// Since white space is sometimes required by the lexer to know
+			// that a command ends, we need to add in an extra newline after
+			// every command.
 			strcpy(buf, "\n");
 			*read = 1;
 			needsNewline = 0;
@@ -561,35 +567,41 @@ int flexInput( char *buf, int *read, int max) {
 		}
 		needsNewline = 1;
 
+
 		if (rl_last_input == NULL){
-			//capturemode
-			printf("\n(%lu) ", line);
-			if (capturemode){
-				printf("...(%d)", capturemode);
-				rl_last_input = readline("\t> ");
-			}
-			else{
-				rl_last_input = readline("birdie\t> ");
-			}
-			if (rl_last_input == NULL){
-				//End of file
-				printf("\n");
-				*read = YY_NULL;
-				return 0;
-			}
+			do{
+				//Print the prompt
+				printf("\n(%lu) ", line);
+				if (capturemode){
+					printf("...(%d)", capturemode);
+					rl_last_input = readline("\t> ");
+				}
+				else{
+					//Get the next line of input
+					rl_last_input = readline("birdie\t> ");
+				}
+				if (rl_last_input == NULL){
+					//End of file
+					printf("\n");
+					*read = YY_NULL;
+					return 0;
+				}
+				//Keep asking for a new line if this one is empty
+			}while(strcmp(rl_last_input, "") == 0);
 		}
 		int len = strlen(rl_last_input);
 		if (len){
 			if (len < max){
 				*read = len;
 				strcpy(buf, rl_last_input);
-				free(rl_last_input);
-				rl_last_input = NULL;
 			}
 			else{
 				printf("Input is too long.\n");
+				//TODO chop up input into acceptable chunks
 			}
 		}
+		free(rl_last_input);
+		rl_last_input = NULL;
 
 	} 
 	else { 
