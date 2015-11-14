@@ -23,7 +23,7 @@ You can also use #!/ (shebang slash) this is to allow shebang lines if birdie is
 
 Most statements start with a single quote. To assign the number 2 to the variable `a`, you can do this:
 
-    '2=a
+    '2a=
     
 (I told you things were backwards)
 Variable names MUST be all lower case. Function names are upper case.
@@ -35,26 +35,21 @@ Because `P` is the print function and `a` is its argument.
 
 Strings start with a double quote and end with a single quote. Single quotes can be escaped by using two single quotes in a row:
 
-    ' "Hello World!' = mystring
+    ' "Hello World!' mystring =
     ' mystring P
     
-Arithmetic is prefix:
+Arithmetic is done like function calls:
 
-    + 7 - 4 2
+    '7 '4 2 - +
     
 The above is (seven plus (four minus two)) = nine
 
-Negative numeric literals have the minus sign after the number:
+Negative numeric literals work fine:
 
-    ' 7- = foo
+    ' -7 foo=
     
 foo is now minus seven
 
-Gotcha: The previous expression cannot be written like this:
-
-    + 7- 4 2
-    
-Because there is no space before the minus and so it is interpreted as (minus-seven plus four) = minus-three. The two on the end will then cause a syntax error.
 
 LOOPS!
 
@@ -67,6 +62,15 @@ This loop counts from 5 to 0:
         '-a1=a   #//Subtract one from a
         'aP      #//Print a
     )a;          #//Repeat until a is no longer a true value (is equal to 0)
+
+for now, loop conditions cannot be expressions, they must be simple identifiers
+
+
+functions are similar but end with the function name (which must be all upper case)
+
+    ( '"foo'P )PRINTFOO;
+
+    'PRINTFOO #// when this line is executed, 'foo' is printed.
     
 Other things...
 
@@ -89,7 +93,7 @@ Push two items with `'foo?` where `foo` is the condition, pop two with `/` (forw
 
 Pushing two will push the inverse and then push the value, for example:
 
-	''II = input               #//Get an integer from user
+	''II input =               #//Get an integer from user
 	'input?                    #//Push two things to the condition stack (push !input and then input)
 	    '"Input was not 0'P    #//Print a message if input is considered true
 	:                          #//Pop one value from the condition stack
