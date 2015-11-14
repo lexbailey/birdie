@@ -15,6 +15,7 @@
 
 
 extern unsigned long line;
+extern int errorRecover;
 
 void yyerror(const char* msg);
 
@@ -34,6 +35,7 @@ int execStreamFree = 0;
 
 extern struct token_stream_token *blockStream;
 
+#define handleError do{if (errorRecover){yyclearin;yyerrok;}else{YYABORT;}}while(0)
 
 //void parseStream(struct token_stream_token *stream);
 
@@ -231,6 +233,10 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 			}
 			$$ = popped;
 			freeVal(popped);
+		}
+	| error
+		{
+			handleError;
 		}
 	;
 	

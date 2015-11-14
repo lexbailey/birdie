@@ -1,5 +1,6 @@
 %{
 
+	#include <readline/readline.h>
 	#include "birdie_opts.h"
 	#include "birdie_types.h"
 	#include "birdie_funcs.h"
@@ -8,6 +9,7 @@
 	#include "birdie_control.h"
     #include "birdie_version.h"
 	#include <stdarg.h>
+
 
     #define YY_FATAL_ERROR(msg) do{ fprintf(stderr, msg); birdie_exit(EXIT_INVALID_SYNTAX); }while(0)
 
@@ -470,6 +472,16 @@ FILE *argIn = NULL;
 extern int currentDebugLevel;
 extern void enableDebug();
 
+void showVersion(){
+	printf("Birdie %s (Codename: %s)\n", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
+	printf("A language for code golf.\n");
+	#ifdef __GNUC__
+	printf("Compiled with GNU GCC version %s\n", __VERSION__);
+	#endif
+}
+
+int errorRecover = 0;
+
 int main(int argc, char ** argv){
 	struct birdieOptions options = parseOptions(argc, argv);
 	currentDebugLevel = options.debugLevel;
@@ -479,11 +491,7 @@ int main(int argc, char ** argv){
 
 	// -v option? print version and exit
 	if (options.version){
-		printf("Birdie %s (Codename: %s)\n", BIRDIE_VERSION, BIRDIE_NAMED_VERSION);
-		printf("A language for code golf.\n");
-		#ifdef __GNUC__
-		printf("Compiled with GNU GCC version %s\n", __VERSION__);
-		#endif
+		showVersion();
 
 		birdie_exit(EXIT_SUCCESS);
 	}
@@ -503,6 +511,7 @@ int main(int argc, char ** argv){
 	}
 	else{
 		EXPAND(FUNDAMENTAL)("Program input is stdin");
+		errorRecover = 1;
 		argIn = stdin;
 	}
 	EXPAND(FUNDAMENTAL)("Begin parse");
@@ -530,21 +539,58 @@ int main(int argc, char ** argv){
 	return EXIT_EXIT_ERROR;
 }
 
+char *rl_last_input = NULL;
+
+int needsNewline = 0;
+int initMsgDone  = 0;
+
 int flexInput( char *buf, int *read, int max) {
 	EXPAND(FUNC_TRACE);
 
 	if ( argIn == stdin ) //Interactive mode, read until a newline
 	{ 
-		int c = '*'; 
-		size_t n; 
-		for ( n = 0; n < max && 
-			     (c = getc( argIn )) != EOF && c != '\n'; ++n ) 
-			buf[n] = (char) c; 
-		if ( c == '\n' ) 
-			buf[n++] = (char) c; 
-		if ( c == EOF && ferror( argIn ) ) 
-			fprintf(stdout, "Error: unable to read stdin\n" );
-		*read = n; 
+		if (! initMsgDone){
+			initMsgDone = 1;
+			showVersion();
+		}
+		if (needsNewline){
+			strcpy(buf, "\n");
+			*read = 1;
+			needsNewline = 0;
+			return 0;
+		}
+		needsNewline = 1;
+
+		if (rl_last_input == NULL){
+			//capturemode
+			printf("\n(%lu) ", line);
+			if (capturemode){
+				printf("...(%d)", capturemode);
+				rl_last_input = readline("\t> ");
+			}
+			else{
+				rl_last_input = readline("birdie\t> ");
+			}
+			if (rl_last_input == NULL){
+				//End of file
+				printf("\n");
+				*read = YY_NULL;
+				return 0;
+			}
+		}
+		int len = strlen(rl_last_input);
+		if (len){
+			if (len < max){
+				*read = len;
+				strcpy(buf, rl_last_input);
+				free(rl_last_input);
+				rl_last_input = NULL;
+			}
+			else{
+				printf("Input is too long.\n");
+			}
+		}
+
 	} 
 	else { 
 		

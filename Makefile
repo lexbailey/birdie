@@ -15,7 +15,7 @@ GlobalConfig = -ggdb -Wreturn-type -DYYDEBUG=1
 
 FixedConfig = 
 
-LinkExtra = -lm
+LinkExtra = -lm -lreadline
 
 all: ${Program}
 
