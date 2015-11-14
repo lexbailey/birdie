@@ -235,18 +235,8 @@
 		return YYPUSH_MORE;
 	}
 
-	int DELETEME = 0;
-	int DELETEMETOO = 10;
-	void LIMIT(){
-		DELETEME ++;
-		if (DELETEME > DELETEMETOO){
-			exit(1);
-		}
-	}
-
 	void parseStream(struct token_stream_token *stream){
 		EXPAND(FUNC_TRACE);
-		//LIMIT();
 		struct token_stream_token *thisToken = stream;
 /*
 		printf("Show entire stream:\n");
@@ -294,6 +284,7 @@
 				EXPAND(FUNC_FLOW)("Next token to push: %s", yytokenname(thisToken->token->token));
 				YYSTYPE yylval = {.anyval=copyVal(thisToken->token->value)};
 				yypush_parse(ps, thisToken->token->token, &yylval);
+				executeStream();
 			}
 			thisToken = thisToken->nextItem;
 			if (thisToken != NULL && thisToken->token != NULL){
