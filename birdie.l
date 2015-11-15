@@ -461,9 +461,13 @@
 						}
 
 
-<<EOF>>                 {int status = yypush_parse(ps, 0, 0);
-                         yypstate_delete(ps);
-                         return status; 
+<<EOF>>                 {
+							EXPAND(FUNC_FLOW)("PARSE");
+							nextToken.token=TEOF;
+							int status = parse(TEOF,NULL,ps);
+							executeStream();
+							yypstate_delete(ps);
+							return status;
                         }
 
 %%
@@ -481,6 +485,7 @@ void showVersion(){
 }
 
 int errorRecover = 0;
+int interactive = 0;
 
 int main(int argc, char ** argv){
 	struct birdieOptions options = parseOptions(argc, argv);
@@ -512,6 +517,7 @@ int main(int argc, char ** argv){
 	else{
 		EXPAND(FUNDAMENTAL)("Program input is stdin");
 		errorRecover = 1;
+		interactive = 1;
 		argIn = stdin;
 	}
 	EXPAND(FUNDAMENTAL)("Begin parse");
@@ -600,6 +606,7 @@ int flexInput( char *buf, int *read, int max) {
 				//TODO chop up input into acceptable chunks
 			}
 		}
+		//free the last input value
 		free(rl_last_input);
 		rl_last_input = NULL;
 

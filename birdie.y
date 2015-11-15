@@ -16,6 +16,7 @@
 
 extern unsigned long line;
 extern int errorRecover;
+extern int interactive;
 
 void yyerror(const char* msg);
 
@@ -38,6 +39,13 @@ extern struct token_stream_token *blockStream;
 #define handleError do{if (errorRecover){yyclearin;yyerrok;}else{YYABORT;}}while(0)
 
 //void parseStream(struct token_stream_token *stream);
+
+void completeBlock(struct val_struct_t *val){
+	if (interactive){
+		printf("\n=");
+		print(val);
+	}
+}
 
 %}
 
@@ -78,6 +86,7 @@ extern struct token_stream_token *blockStream;
 %token <noval> BOOLOR BITOR BOOLAND BITAND BOOLXOR BITXOR
 
 %token <noval> ERR
+%token <noval> TEOF
 
 
 %type <anyval> anyNumber rawNumber command block blocks
@@ -89,19 +98,24 @@ extern struct token_stream_token *blockStream;
 
 %%
 
-start:	  block 		{freeVal($1);}
-	| start block 		{/*freeVal($2);*/}
+start:block 			{freeVal($1);}
+	| block TEOF		{freeVal($1);}
+	| start block		{/*freeVal($2);*/}
+	| start block TEOF	{/*freeVal($2);*/}
+	| TEOF				{}
 	;
 	
 blocks: block
 	| blocks block
 
-block:	command										{$$ = $1;}
+block:	command										{$$ = $1;completeBlock($$);}
 	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
 											$$ = $2;
 											if (isTrueVal(topOfConditionStack())){
 												defineFunction($4->valName, blockStream);
+												completeBlock($$);
 											}
+
 										}
 	| BLOCKSTART blocks BLOCKEND namedIdent SEMIC	{
 											$$ = $2;
@@ -112,7 +126,9 @@ block:	command										{$$ = $1;}
 												execStream = blockStream;
 												execCond = cond;
 												execStreamFree = 1;
+												completeBlock($$);
 											}
+
 										}
 
 	;
@@ -136,6 +152,7 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												$$=functionCallArgs($2->valName,NULL);
 											}
 											//TODO free $2 here?
+											completeBlock($$);
 										}
 									}
 
@@ -236,6 +253,7 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 		}
 	| error
 		{
+			$$ = NULL;
 			handleError;
 		}
 	;
