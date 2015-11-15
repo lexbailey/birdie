@@ -57,9 +57,9 @@ A loop body appears between open and close brackets, the loop condition is after
 
 This loop counts from 5 to 0:
 
-    '6=a         #//Set a to six
+    '6a=         #//Set a to six
     (
-        '-a1=a   #//Subtract one from a
+        ''a1-a=  #//Subtract one from a
         'aP      #//Print a
     )a;          #//Repeat until a is no longer a true value (is equal to 0)
 
@@ -76,7 +76,7 @@ Other things...
 
 Floats work too
 
-    '3.14159=pi
+    '3.14159 pi=
     
 input from stdin can be taken using the `I` functions:
 
