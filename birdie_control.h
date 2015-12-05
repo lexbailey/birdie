@@ -29,6 +29,12 @@ struct val_list_item			*variables;
 struct token_stream_list_item	*functions;
 
 /**
+ * Assigns a new value to a variable and sets the special flags.
+ * if any flag is set to -1, the current value is retained.
+ */
+void assignSpecial(struct val_struct_t *assignee, int lazy, int magic, int sticky);
+
+/**
  * Assigns a new value to a variable
  * If the value does not exist then it is created and assigned the new value.
  * @Param assignee[in] The value to store

@@ -12,4 +12,10 @@ struct val_struct_t *valNegate(struct val_struct_t *in);
 ///Returns 1 if the value of the input is considered to be a true value.
 int isTrueVal(struct val_struct_t *input);
 
+///Returns 1 if the value is marked as lazy
+int isLazyVal(struct val_struct_t *input);
+
+///Returns 1 if the value is marked as magic
+int isMagicVal(struct val_struct_t *input);
+
 #endif //BIRDIE_FUNCS_BOOL_UTIL_INCLUDE

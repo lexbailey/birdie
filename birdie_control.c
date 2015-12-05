@@ -5,6 +5,14 @@ void freeAllVariables(){
 	freeListItem(variables);
 }
 
+void assignSpecial(struct val_struct_t *assignee, int lazy, int magic, int sticky){
+	EXPAND(FUNC_TRACE);
+	if (lazy>-1)   assignee->isLazy   = lazy;
+	if (magic>-1)  assignee->isMagic  = magic;
+	if (sticky>-1) assignee->isSticky = sticky;
+	assign(assignee);
+}
+
 void assign(struct val_struct_t *assignee){
 	EXPAND(FUNC_TRACE);
 	//walk the list, look for the assignee
@@ -13,9 +21,15 @@ void assign(struct val_struct_t *assignee){
 	while (currentItem != NULL){
 		//check this item
 		if (strcmp(currentItem->item->valID, assignee->valID)==0){
-			//Found our variable, assign new value
+			//Found our variable, assign new value, but keep the magic flags
+			int isLazy   = currentItem->item->isLazy;
+			int isMagic  = currentItem->item->isMagic;
+			int isSticky = currentItem->item->isSticky;
 			freeVal(currentItem->item);
 			currentItem->item = copyVal(assignee);
+			currentItem->item->isLazy   = isLazy;
+			currentItem->item->isMagic  = isMagic;
+			currentItem->item->isSticky = isSticky;
 			return;
 		}
 		//Advance to next item
@@ -50,9 +64,9 @@ struct val_struct_t *readVar(const char *name, var_read_mode mode){
 		if (strcmp(currentItem->item->valID, name)==0){
 			//Variable found, get a copy
 			struct val_struct_t *output = copyVal(currentItem->item);
-			//Check if we need to do any magic here (only do magic fo user reads)
+			//Check if we need to do any magic here (only do magic for user reads)
 			if (mode == vrmUser){
-				if (strcmp(currentItem->item->valID, "l")==0){
+				if (isLazyVal(currentItem->item)){
 					//The lazy variable must reset when read.
 					currentItem->item->valueType=vtInt;
 					currentItem->item->valI=0;

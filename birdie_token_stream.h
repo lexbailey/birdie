@@ -38,6 +38,9 @@ void freeTokenStream(struct token_stream_token *);
 struct token_stream_token *copyTokenStream(struct token_stream_token *);
 
 
+///Print the contents of a token stream in a human readable format
+void printTokenStream(struct token_stream_token *);
+
 
 
 

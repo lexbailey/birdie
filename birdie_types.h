@@ -116,6 +116,15 @@ struct val_struct_t{
 	char *valID;
 	///Pointer to the start of the list if this item is a list.
 	struct val_list_item *list;
+
+	///Is this value magic?
+	int isMagic;
+
+	///Is this value lazy?
+	int isLazy;
+
+	///Is this value sticky?
+	int isSticky;
 };
 
 ///Link list element for one item in a list.

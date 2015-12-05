@@ -519,6 +519,7 @@ int main(int argc, char ** argv){
 		errorRecover = 1;
 		interactive = 1;
 		argIn = stdin;
+		using_history();
 	}
 	EXPAND(FUNDAMENTAL)("Begin parse");
 	int result = yylex();
@@ -550,6 +551,8 @@ char *rl_last_input = NULL;
 int needsNewline = 0;
 int initMsgDone  = 0;
 
+extern struct val_struct_t *returnVal;
+
 int flexInput( char *buf, int *read, int max) {
 	EXPAND(FUNC_TRACE);
 
@@ -577,14 +580,22 @@ int flexInput( char *buf, int *read, int max) {
 		if (rl_last_input == NULL){
 			do{
 				//Print the prompt
+				if (returnVal != NULL){
+					//If there is a return value to show then print it
+					printf("\n=");
+					print(returnVal);
+				}
+				//Print the current line number
 				printf("\n(%lu) ", line);
 				if (capturemode){
+					//When capturing, print the 'more expected' prompt
 					printf("...(%d)", capturemode);
 					rl_last_input = readline("\t> ");
 				}
 				else{
 					//Get the next line of input
 					rl_last_input = readline("birdie\t> ");
+					add_history(rl_last_input);
 				}
 				if (rl_last_input == NULL){
 					//End of file

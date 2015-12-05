@@ -22,7 +22,13 @@ struct val_struct_t *valBoolAnd(struct val_struct_t *a, struct val_struct_t *b){
 				if (isTrueVal(b)){
 					return copyVal(a);
 				}
+				if (isMagicVal(a) || isMagicVal(b)){
+					return  copyVal(a);
+				}
 				return valInvert(a);
+			}
+			if (isMagicVal(a) || isMagicVal(b)){
+				return  valInvert(a);
 			}
 			return copyVal(a);
 	}

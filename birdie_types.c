@@ -110,7 +110,7 @@ void freeStackStateStackItem(struct stack_state_stack_item_t *victim){
 struct val_struct_t* copyVal(struct val_struct_t *data){
 	EXPAND(FUNC_TRACE);
     if (data == NULL) return NULL;
-	struct val_struct_t* newVal;
+    struct val_struct_t* newVal;
 	newVal = createValStruct();
 	newVal->valID =
 			newString(data->valID);
@@ -122,6 +122,10 @@ struct val_struct_t* copyVal(struct val_struct_t *data){
 	newVal->valI = data->valI;
 	newVal->valF = data->valF;
 	newVal->list = copyValList(data->list);
+
+	newVal->isLazy   = data->isLazy;
+	newVal->isMagic  = data->isMagic;
+	newVal->isSticky = data->isSticky;
 	return newVal;
 }
 
@@ -137,10 +141,13 @@ struct val_list_item* copyValList(struct val_list_item *data){
 
 void initValStruct(struct val_struct_t* val){
 	EXPAND(FUNC_TRACE);
-    val->valID = NULL;
+    val->valID   = NULL;
     val->valName = NULL;
-	val->valS = NULL;
-	val->list = NULL;
+	val->valS    = NULL;
+	val->list    = NULL;
+	val->isLazy  = 0;
+	val->isMagic = 0;
+	val->isSticky= 0;
 	/*
 	val->valueType = 0;
 	val->valI = 0;

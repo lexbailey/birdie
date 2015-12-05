@@ -37,6 +37,24 @@ struct token_stream_token *copyTokenStream(struct token_stream_token *in){
 	return output;
 }
 
+extern const char *yytokenname(int tok);
+
+void printTokenStream(struct token_stream_token *in){
+	if (in==NULL) return;
+	struct token_stream_token *thisToken = in;
+	printf("Stream %p: ", in);
+	while (thisToken != NULL && thisToken->token != NULL){
+		printf("%s (", yytokenname(thisToken->token->token));
+		if (thisToken->token->value != NULL){
+		printf("%p'%s'", thisToken->token->value->valID, thisToken->token->value->valID);
+		printf(":%p'%s'", thisToken->token->value->valName, thisToken->token->value->valName);
+		}
+		printf("), ");
+		thisToken = thisToken->nextItem;
+	}
+	printf("\b\b \n");
+}
+
 
 
 

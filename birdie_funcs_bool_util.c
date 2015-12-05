@@ -216,3 +216,13 @@ int isTrueVal(struct val_struct_t *input){
 	}
 	return 0; //erm?
 }
+
+int isLazyVal(struct val_struct_t *input){
+	EXPAND(FUNC_TRACE);
+	return(input->isLazy);
+}
+
+int isMagicVal(struct val_struct_t *input){
+	EXPAND(FUNC_TRACE);
+	return(input->isMagic);
+}

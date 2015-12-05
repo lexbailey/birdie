@@ -26,7 +26,17 @@ void yyerror(const char* msg);
 	int autoPush = 1; //Autopush mode, on by defailt
 
 void init(){
+	EXPAND(FUNC_TRACE);
 	variables = NULL;
+	struct val_struct_t *l = createValStruct();
+	struct val_struct_t *m = createValStruct();
+	struct val_struct_t *s = createValStruct();
+	l->valID = newString("l"); l->valueType=vtInt; l->valI=0;
+	m->valID = newString("m"); m->valueType=vtInt; m->valI=1;
+	s->valID = newString("s"); s->valueType=vtInt; s->valI=0;
+	assignSpecial(l,  1, -1, -1);
+	assignSpecial(m, -1,  1, -1);
+	assignSpecial(s, -1, -1,  1);
 	initialiseAlmightyStack(); //F*%K Yeah!
 }
 
@@ -40,10 +50,14 @@ extern struct token_stream_token *blockStream;
 
 //void parseStream(struct token_stream_token *stream);
 
+struct val_struct_t *returnVal = NULL;
+
 void completeBlock(struct val_struct_t *val){
 	if (interactive){
-		printf("\n=");
-		print(val);
+		if (returnVal != NULL){
+			freeVal(returnVal);
+		}
+		returnVal = copyVal(val);
 	}
 }
 
@@ -98,15 +112,15 @@ void completeBlock(struct val_struct_t *val){
 
 %%
 
-start:block 			{freeVal($1);}
+start:block 			{/*freeVal($1);*/}
 	| block TEOF		{freeVal($1);}
 	| start block		{/*freeVal($2);*/}
 	| start block TEOF	{/*freeVal($2);*/}
 	| TEOF				{}
 	;
 	
-blocks: block
-	| blocks block
+blocks: block			{$$ = $1;}
+	| blocks block		{$$ = $2;}
 
 block:	command										{$$ = $1;completeBlock($$);}
 	| BLOCKSTART blocks BLOCKEND namedFunc SEMIC	{
@@ -138,7 +152,7 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 											struct token_stream_token *userFunc = getUserFunc($2->valName);
 											if (userFunc != NULL){
 												EXPAND(BASIC_FLOW)("Exec user defined function %p", userFunc);
-												struct val_struct_t *l=createValStruct();
+												struct val_struct_t *l=readVar("l", vrmInternal);
 												l->valID = newString("l");
 												l->valueType = vtInt;
 												l->valI = 1;
@@ -152,7 +166,6 @@ command: OPDELIM namedFunc			{EXPAND(BASIC_FLOW)("Function call with params \"%s
 												$$=functionCallArgs($2->valName,NULL);
 											}
 											//TODO free $2 here?
-											completeBlock($$);
 										}
 									}
 
